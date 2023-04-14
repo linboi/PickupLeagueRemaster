@@ -3,7 +3,7 @@ import json
 from riotwatcher import LolWatcher, ApiError
 
 intents = discord.Intents.default()
-intents.messages = True
+intents.message_content = True
 
 client = discord.Client(intents=intents)
 
@@ -22,6 +22,7 @@ async def on_message(message):
 
 	if message.content.startswith('$hello'):
 		await message.channel.send('Hello!')
+
 	if message.content.startswith('$rank'):
 		words = message.content.split(" ")
 		summoner_info = lol_watcher.summoner.by_name(region, words[1])
