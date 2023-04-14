@@ -8,7 +8,7 @@ https://discordpy.readthedocs.io/en/stable/
 # For running the bot locally
 ## Prerequisites
 
-Installed python interpreter
+Installed python interpreter\
 Installed discord.py library https://pypi.org/project/discord.py/
 
 ## Setting up a bot
