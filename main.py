@@ -1,7 +1,8 @@
 import discord
 import json
+import sqlite3
 
-
+cursor = None
 intents = discord.Intents.default()
 intents.message_content = True
 
@@ -37,7 +38,14 @@ def main():
 
 	client.run(secret['BOT_TOKEN'])
  
-	
+	cursor = connectPlayerDatabase()
+ 
+# Create a connection to the Player Database
+def connectPlayerDatabase():
+    con = sqlite3.connect('example.db')
+    cur = con.cursor()
+    print("Connected")
+    return cur
         
 if __name__ == '__main__':
 	main()
