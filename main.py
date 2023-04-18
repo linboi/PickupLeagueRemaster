@@ -1,6 +1,6 @@
 import discord
 import json
-import mariadb
+
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -25,22 +25,6 @@ async def on_message(message):
         await message.channel.send('Exit')
         
         
-def connectPlayerDatabase(message):
-    # Connect to MariaDB Platform
-	try:
-		conn = mariadb.connect(
-			user="root",
-			password="cailean",
-			host="127.0.0.1",
-			port=3306,
-			database="league-test"
-		)
-	except mariadb.Error as e:
-		print(f"Error connecting to MariaDB Platform: {e}")
-
-	# Get Cursor
-	cur = conn.cursor()
-	return cur
 
 def main():
 	with open('./secret.json') as f:
@@ -52,7 +36,6 @@ def main():
 		settings = json.load(f)
 
 	client.run(secret['BOT_TOKEN'])
-	connectPlayerDatabase()
  
 	
         
