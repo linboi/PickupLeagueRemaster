@@ -11,6 +11,8 @@ https://discordpy.readthedocs.io/en/stable/
 Installed python interpreter\
 Installed discord.py library https://pypi.org/project/discord.py/
 
+## Add Notes for Intents
+
 ## Setting up a bot
 1. Log into discord here:
 https://discord.com/developers/applications
