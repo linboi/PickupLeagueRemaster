@@ -3,12 +3,17 @@ import json
 import sqlite3
 import requests
 import urllib3
+import os
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
 
 # Setup connection to database
 con = sqlite3.connect('irishl.db')
 cursor = con.cursor()
 print("Connected")
+
+# Load Environment variables
+load_dotenv()
 
 # Define Intents
 intents = discord.Intents.all()
@@ -132,16 +137,12 @@ async def opggWebScrape(msg_content, discord_id):
     
     return rank_str.upper(), summoner_name
 
-def main():
-	with open('./secret.json') as f:
-	
-		secret = json.load(f)
-				
+def main():	
 	with open('./settings.json') as f:
 	
 		settings = json.load(f)
     
-	client.run(secret['BOT_TOKEN'])
+	client.run(os.getenv('BOT_TOKEN'))
 
 if __name__ == '__main__':
 	main()
