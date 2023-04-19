@@ -131,18 +131,17 @@ async def opggWebScrape(msg_content, discord_id):
     
     
     return rank_str.upper(), summoner_name
-               
+
 def main():
 	with open('./secret.json') as f:
 	
 		secret = json.load(f)
-                
+				
 	with open('./settings.json') as f:
 	
 		settings = json.load(f)
     
 	client.run(secret['BOT_TOKEN'])
 
-        
 if __name__ == '__main__':
 	main()
