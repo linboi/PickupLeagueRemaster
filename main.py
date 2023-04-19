@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 con = sqlite3.connect('irishl.db')
 cursor = con.cursor()
 print("Connected")
-
+#hi
 # Define Intents
 intents = discord.Intents.all()
 intents.message_content = True
