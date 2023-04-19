@@ -10,7 +10,10 @@ from dotenv import load_dotenv
 # Setup connection to database
 con = sqlite3.connect('irishl.db')
 cursor = con.cursor()
-print("Connected")
+print("Connected to SQL Database ✨")
+
+# Load Environment variables
+load_dotenv()
 
 # Load Environment variables
 load_dotenv()
@@ -31,16 +34,15 @@ async def on_ready():
     for guild in client.guilds:
         for channel in guild.text_channels:
             if str(channel).strip() == "select-role":
-                global channel_id
-                channel_id = channel.id
-                print("✨")
+                # #select-role text channel
+                global select_role_channel
+                select_role_channel = channel
+                
             if str(channel).strip() == "testing":
+                # #testing channel
                 global main_channel
                 main_channel = channel
-                print(str(main_channel))
-    
-    async for member in guild.fetch_members(limit=150):
-        print(member.name)
+                
     
     
 # Event handeler
@@ -61,14 +63,20 @@ async def on_message(message):
         msg_content = message.content
         msg_content = msg_content.replace("!signup", "")
         # Scrape op.gg link
-        pRank, pName = await opggWebScrape(msg_content, message.author)
+        pRank, pName, signUpSuccess = await opggWebScrape(msg_content, message.author)
         # Give access to '#select-roles' channel
-        await message.channel.send(pName + " (" + pRank + ")" + "\n" + str(message.author.id))
+        if(signUpSuccess):
+            await message.channel.send(pName + " (" + pRank + ")" + "\n" + str(message.author.id))
+            await message.channel.send("Succes 😁 head over to #select-role to assign your primary and secondary role!")
+        else:
+            await message.channel.send(pName + " (" + pRank + ")" + "\n" + str(message.author.id))
+            await message.channel.send("Failed 😔 please try again!")
+        
    
 # Select Role based on Reaction 
 @client.event
 async def on_raw_reaction_add(reaction):
-    if reaction.channel_id == channel_id and str(reaction.message_id) == '1098222182997442611':
+    if reaction.channel_id == select_role_channel.id and str(reaction.message_id) == '1098222182997442611':
         # Jungle Selected
         if str(reaction.emoji) == "✨"  :
             print("Set Role as Jungle")  
@@ -113,6 +121,7 @@ async def opggWebScrape(msg_content, discord_id):
     except:
         summoner_name = "Invalid Account"
         rank_str = "Invalid Link"
+        success = False
         
     # Try scraping valid OP.GG URL - Rank, Summoner Name.
     try:
@@ -127,15 +136,28 @@ async def opggWebScrape(msg_content, discord_id):
         summoner_name = doc.find_all(class_="summoner-name")
         summoner_name = summoner_name[0].decode_contents().strip()
         
+        
+        # Give access to #select-role text channel (change permissions)
+        for guild in client.guilds:
+            for member in guild.members:
+                if (member.id == discord_id.id):
+                    overwrite = discord.PermissionOverwrite()
+                    overwrite.send_messages = False
+                    overwrite.read_messages = True
+                    await select_role_channel.set_permissions(member, overwrite=overwrite)
+                    print(f"Access granted to #select-role 🙌 for {member.name}")
+        
         # Insert into DB - discord ID✅, Name✅, Rank✅
-        # Give access to #select-role text channel
+        success = True
+        
        
     except:
         rank_str = "Invalid Account"
         summoner_name = "Invalid Account"
+        success = False
     
     
-    return rank_str.upper(), summoner_name
+    return rank_str.upper(), summoner_name, success
 
 def main():	
 	with open('./settings.json') as f:
