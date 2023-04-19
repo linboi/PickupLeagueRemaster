@@ -6,6 +6,8 @@ import urllib3
 import os
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+from commands import commands
+from serverInstance import serverInstance
 
 # Setup connection to database
 con = sqlite3.connect('irishl.db')
@@ -21,12 +23,13 @@ intents.message_content = True
 intents.members= True
 
 client = discord.Client(intents=intents)
+inst = serverInstance()
 
 # Connection to Client is established
 @client.event
 async def on_ready():
     print(f'We have logged in as {client.user}')
-    
+    inst.ready(client, 1098221994555740190)
     # Create Global Variables for #select-role, and #testing channels
     for guild in client.guilds:
         for channel in guild.text_channels:
@@ -46,24 +49,25 @@ async def on_ready():
 # Event handeler
 @client.event
 async def on_message(message):
-    if message.author == client.user:
-        return
-    
-    if message.content.startswith('$hello'):
-        await message.channel.send('Fionn is a dog 🐶!')
-        
-    if message.content.startswith('$fetch'):
-        await message.channel.send('Exit')
-    
-    # Signup command
-    if(message.content.startswith('!signup')):
-        # Remove command from msg
-        msg_content = message.content
-        msg_content = msg_content.replace("!signup", "")
-        # Scrape op.gg link
-        pRank, pName = await opggWebScrape(msg_content, message.author)
-        # Give access to '#select-roles' channel
-        await message.channel.send(pName + " (" + pRank + ")" + "\n" + str(message.author.id))
+     await commands.parse(message, inst)
+    #if message.author == client.user:
+    #    return
+    #
+    #if message.content.startswith('$hello'):
+    #    await message.channel.send('Fionn is a dog 🐶!')
+    #    
+    #if message.content.startswith('$fetch'):
+    #    await message.channel.send('Exit')
+    #
+    ## Signup command
+    #if(message.content.startswith('!signup')):
+    #    # Remove command from msg
+    #    msg_content = message.content
+    #    msg_content = msg_content.replace("!signup", "")
+    #    # Scrape op.gg link
+    #    pRank, pName = await opggWebScrape(msg_content, message.author)
+    #    # Give access to '#select-roles' channel
+    #    await message.channel.send(pName + " (" + pRank + ")" + "\n" + str(message.author.id))
    
 # Select Role based on Reaction 
 @client.event
