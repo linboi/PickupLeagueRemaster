@@ -78,12 +78,14 @@ async def on_message(message):
         # Remove command from msg
         msg_content = message.content
         msg_content = msg_content.replace("!signup", "")
+        
         # Scrape op.gg link
         pRank, pName, signUpSuccess = await opggWebScrape(msg_content, message)
+        
         # Give access to '#select-roles' channel
         if(signUpSuccess):
             await message.channel.send(pName + " (" + pRank + ")" + "\n" + str(message.author.id))
-            await message.channel.send(f"Succes 😁 head over to {select_role_channel.mention} to assign your primary and secondary role!")
+            await message.channel.send(f"Succes 😁 head over to {select_role_channel.mention} to assign your Primary and Secondary role!")
         else:
             await message.channel.send(pName + " (" + pRank + ")" + "\n" + str(message.author.id))
             await message.channel.send("Failed 😔 please try again!")
@@ -92,6 +94,7 @@ async def on_message(message):
 # Select Role based on Reaction 
 @client.event
 async def on_raw_reaction_add(reaction):
+    # Select PRIMARY ROLE 
     if reaction.channel_id == select_role_channel.id and str(reaction.message_id) == '1098222182997442611':
         # Jungle Selected
         if str(reaction.emoji) == "✨"  :
@@ -117,8 +120,32 @@ async def on_raw_reaction_add(reaction):
         elif str(reaction.emoji) == "🤡"  :
             print("Set Role as SUP")  
             user_name = await client.fetch_user(reaction.user_id)
-            await main_channel.send(f"✨ {user_name} has changed their primary role to SUP")     
-        
+            await main_channel.send(f"✨ {user_name} has changed their primary role to SUP")   
+    
+    # Select SECONDARY ROLE
+    if reaction.channel_id == select_role_channel.id and str(reaction.message_id) == '1098680816961335408':
+        # Jungle Selected
+        if str(reaction.emoji) == "✨"  :
+            user_name = await client.fetch_user(reaction.user_id)
+            await main_channel.send(f"✨ {user_name} has changed their secondary role to JG") 
+        # Mid Selected
+        elif str(reaction.emoji) == "😎"  :
+            user_name = await client.fetch_user(reaction.user_id)
+            await main_channel.send(f"✨ {user_name} has changed their secondary role to MID")
+        # Top Selected
+        elif str(reaction.emoji) == "🥶"  :
+            user_name = await client.fetch_user(reaction.user_id)
+            await main_channel.send(f"✨ {user_name} has changed their secondary role to TOP")
+        # AD Selected
+        elif str(reaction.emoji) == "😭"  :
+            user_name = await client.fetch_user(reaction.user_id)
+            await main_channel.send(f"✨ {user_name} has changed their secondary role to AD")
+        # Support Selected
+        elif str(reaction.emoji) == "🤡"  : 
+            user_name = await client.fetch_user(reaction.user_id)
+            await main_channel.send(f"✨ {user_name} has changed their secondary role to SUP")
+      
+    #print(reaction.message_id)  
     
 # Scrape rank details from op.gg page
 async def opggWebScrape(msg_content, message_obj):
