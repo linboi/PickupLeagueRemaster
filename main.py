@@ -53,25 +53,6 @@ async def on_message(message):
     
     if message.content.startswith('$hello'):
         await message.channel.send('Fionn is a dog 🐶!')
-        
-    if message.content.startswith('$add'):
-        # Test function to add player to db, and check if that players exists already
-        
-        # Discord id
-        discordID = message.author.id
-        
-        # Check if the discordID already exists in DB
-        res = cursor.execute(f"SELECT COUNT(*) FROM Player WHERE discordID = '{discordID}'")
-        result = res.fetchone()
-        
-        if result[0] > 0:
-            await message.channel.send('😭 Player exists in the table, unable to register again!')
-        else:
-            await message.channel.send('😁 Player does not exist in the table')
-            await message.channel.send('🥰 Adding to table..')
-            cursor.execute(f"INSERT INTO Player (discordID, winCount, lossCount, internalRating) VALUES ({discordID}, 0, 0, 1500)")
-            con.commit()
-            # Add player account to Account table
     
     # Signup command
     if(message.content.startswith('!signup')):
@@ -84,10 +65,10 @@ async def on_message(message):
         
         # Give access to '#select-roles' channel
         if(signUpSuccess):
-            await message.channel.send(pName + " (" + pRank + ")" + "\n" + str(message.author.id))
+            await message.channel.send(pName + " (" + pRank + ")")
             await message.channel.send(f"Succes 😁 head over to {select_role_channel.mention} to assign your Primary and Secondary role!")
         else:
-            await message.channel.send(pName + " (" + pRank + ")" + "\n" + str(message.author.id))
+            await message.channel.send(pName + " (" + pRank + ")")
             await message.channel.send("Failed 😔 please try again!")
         
    
@@ -159,7 +140,7 @@ async def opggWebScrape(msg_content, message_obj):
     # Try scrape OP.GG URL
     try:
         op_url = msg_content
-        res_url = requests.get(op_url, headers=headers)
+        res_url = await requests.get(op_url, headers=headers)
         doc = BeautifulSoup(res_url.text, "html.parser")
     except:
         summoner_name = "Invalid Account"
@@ -175,7 +156,12 @@ async def opggWebScrape(msg_content, message_obj):
         rank_str = ""
         for char in rank:
             rank_str += char[0]
-                
+    
+        # Add rank division for Masters, GM, and Challenger players
+        if len(rank) == 1:
+            rank.append('1')
+            
+        
         summoner_name = doc.find_all(class_="summoner-name")
         summoner_name = summoner_name[0].decode_contents().strip()
         
@@ -190,7 +176,32 @@ async def opggWebScrape(msg_content, message_obj):
                     await select_role_channel.set_permissions(member, overwrite=overwrite)
                     print(f"Access granted to #select-role 🙌 for {member.name}")
         
+        # Discord id
+        discordID = message_obj.author.id
         
+        # Check if the discordID already exists in DB
+        res = cursor.execute(f"SELECT COUNT(*) FROM Player WHERE discordID = '{discordID}'")
+        result = res.fetchone()
+        
+        if result[0] > 0:
+            await message_obj.channel.send('😭 Player exists in the table, unable to register again!')
+        else:
+            await message_obj.channel.send('😁 Player does not exist in the table \n🥰 Adding to table..')
+            cursor.execute(f"INSERT INTO Player (discordID, winCount, lossCount, internalRating) VALUES ({discordID}, 0, 0, 1500)")
+            con.commit()
+            
+            # Add player account to Account table
+            
+            # Fetch PlayerID value from Player Table w/ DiscordID
+            res = cursor.execute(f"SELECT playerID from Player where discordID={discordID}")
+            fetchedPlayerID = res.fetchone()
+            
+            # Add information into Account Table
+            
+            # Name, OPGG, PID, Rank, Rank DIV
+            cursor.execute(f"INSERT INTO Account (name, opgg, playerID, rankTier, rankDivision) VALUES ('{summoner_name}', '{op_url}', {fetchedPlayerID[0]}, '{rank[0]}', {rank[1]})")
+            con.commit()
+            
         success = True
         
        
@@ -198,6 +209,7 @@ async def opggWebScrape(msg_content, message_obj):
         rank_str = "Invalid Account"
         summoner_name = "Invalid Account"
         success = False
+        
     
     
     return rank_str.upper(), summoner_name, success
