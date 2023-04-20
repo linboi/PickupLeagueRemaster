@@ -1,14 +1,34 @@
+
+
 class commands:
+	COMMAND_SYMBOL = "!"
 	
-	async def parse(message, client, inst):
-		if message.author == client.user:
+	async def hello(message, inst, args):
+		print("working")
+		await message.channel.send("hiya")
+
+	async def queue(message, inst, args):
+		await inst.addToQueue(message.author, message.channel)
+
+	async def dequeue(message, inst, args):
+		await inst.removeFromQueue(message.author, message.channel)
+
+	userCommands = {
+		'hello' : hello,
+		'queue' : queue,
+		'dequeue' : dequeue
+		}
+
+	async def parse(message, inst):
+		client = inst.client
+		if message.author == client.user or not message.content.startswith(commands.COMMAND_SYMBOL):
 			return
+		text = message.content.split(" ")
+		command = (text[0][1:]).lower()
+		args = text[1:]
 
-		if message.content.startswith('$hello'):
-			await message.channel.send('Hello!')
+		try:
+			await commands.userCommands[command](message, inst, args)
+		except:
+			await message.channel.send(f"Command '{command}' not recognised")
 
-		if message.content.startswith('$queue'):
-			await inst.addToQueue(message.author, message.channel)
-
-		if message.content.startswith('$dequeue'):
-			await inst.addToQueue(message.author, message.channel)
