@@ -54,8 +54,24 @@ async def on_message(message):
     if message.content.startswith('$hello'):
         await message.channel.send('Fionn is a dog 🐶!')
         
-    if message.content.startswith('$fetch'):
-        await message.channel.send('Exit')
+    if message.content.startswith('$add'):
+        # Test function to add player to db, and check if that players exists already
+        
+        # Discord id
+        discordID = message.author.id
+        
+        # Check if the discordID already exists in DB
+        res = cursor.execute(f"SELECT COUNT(*) FROM Player WHERE discordID = '{discordID}'")
+        result = res.fetchone()
+        
+        if result[0] > 0:
+            await message.channel.send('😭 Player exists in the table, unable to register again!')
+        else:
+            await message.channel.send('😁 Player does not exist in the table')
+            await message.channel.send('🥰 Adding to table..')
+            cursor.execute(f"INSERT INTO Player (discordID, winCount, lossCount, internalRating) VALUES ({discordID}, 0, 0, 1500)")
+            con.commit()
+            # Add player account to Account table
     
     # Signup command
     if(message.content.startswith('!signup')):
@@ -63,7 +79,7 @@ async def on_message(message):
         msg_content = message.content
         msg_content = msg_content.replace("!signup", "")
         # Scrape op.gg link
-        pRank, pName, signUpSuccess = await opggWebScrape(msg_content, message.author)
+        pRank, pName, signUpSuccess = await opggWebScrape(msg_content, message)
         # Give access to '#select-roles' channel
         if(signUpSuccess):
             await message.channel.send(pName + " (" + pRank + ")" + "\n" + str(message.author.id))
@@ -105,7 +121,7 @@ async def on_raw_reaction_add(reaction):
         
     
 # Scrape rank details from op.gg page
-async def opggWebScrape(msg_content, discord_id):
+async def opggWebScrape(msg_content, message_obj):
     
     # Assign Headers, so scraping is not BLOCKED
     headers = requests.utils.default_headers()
@@ -140,14 +156,14 @@ async def opggWebScrape(msg_content, discord_id):
         # Give access to #select-role text channel (change permissions)
         for guild in client.guilds:
             for member in guild.members:
-                if (member.id == discord_id.id):
+                if (member.id == message_obj.author.id):
                     overwrite = discord.PermissionOverwrite()
                     overwrite.send_messages = False
                     overwrite.read_messages = True
                     await select_role_channel.set_permissions(member, overwrite=overwrite)
                     print(f"Access granted to #select-role 🙌 for {member.name}")
         
-        # Insert into DB - discord ID✅, Name✅, Rank✅
+        
         success = True
         
        
