@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
 # Setup connection to database
-con = sqlite3.connect('irishl.db')
+con = sqlite3.connect('copy.db')
 cursor = con.cursor()
 print("Connected to SQL Database ✨")
 
@@ -83,7 +83,7 @@ async def on_message(message):
         # Give access to '#select-roles' channel
         if(signUpSuccess):
             await message.channel.send(pName + " (" + pRank + ")" + "\n" + str(message.author.id))
-            await message.channel.send("Succes 😁 head over to #select-role to assign your primary and secondary role!")
+            await message.channel.send(f"Succes 😁 head over to {select_role_channel.mention} to assign your primary and secondary role!")
         else:
             await message.channel.send(pName + " (" + pRank + ")" + "\n" + str(message.author.id))
             await message.channel.send("Failed 😔 please try again!")
