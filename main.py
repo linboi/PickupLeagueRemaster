@@ -65,11 +65,9 @@ async def on_message(message):
         
         # Give access to '#select-roles' channel
         if(signUpSuccess):
-            await message.channel.send(pName + " (" + pRank + ")")
-            await message.channel.send(f"Succes 😁 head over to {select_role_channel.mention} to assign your Primary and Secondary role!")
+            await message.channel.send(f"{pName}" + " (" + f"{pRank}\n" + f"Succes 😁 head over to {select_role_channel.mention} to assign your Primary and Secondary role!")
         else:
-            await message.channel.send(pName + " (" + pRank + ")")
-            await message.channel.send("Failed 😔 please try again!")
+            await message.channel.send(pRank + " (" + pName + ") \nFailed 😔 please try again!")
         
    
 # Select Role based on Reaction 
@@ -186,7 +184,6 @@ async def opggWebScrape(msg_content, message_obj):
         if result[0] > 0:
             await message_obj.channel.send('😭 Player exists in the table, unable to register again!')
         else:
-            await message_obj.channel.send('😁 Player does not exist in the table \n🥰 Adding to table..')
             cursor.execute(f"INSERT INTO Player (discordID, winCount, lossCount, internalRating) VALUES ({discordID}, 0, 0, 1500)")
             con.commit()
             
