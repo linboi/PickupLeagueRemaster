@@ -1,5 +1,7 @@
 
 from player import Player
+from team import Team
+from match import Match
 
 class commands:
 	COMMAND_SYMBOL = "!"
