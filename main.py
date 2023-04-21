@@ -7,16 +7,13 @@ from dotenv import load_dotenv
 from commands import commands
 from serverInstance import serverInstance
 
+# Load Environment variables
+load_dotenv()
+
 # Setup connection to database
-con = sqlite3.connect('irishl.db')
+con = sqlite3.connect(os.getenv('DATABASE'))
 cursor = con.cursor()
 print("Connected to SQL Database ✨")
-
-# Load Environment variables
-load_dotenv()
-
-# Load Environment variables
-load_dotenv()
 
 # Define Intents
 intents = discord.Intents.all()
@@ -29,57 +26,328 @@ inst = serverInstance()
 # Connection to Client is established
 @client.event
 async def on_ready():
-	print(f'We have logged in as {client.user}')
-	inst.ready(client, 1098221994555740190)
-	# Create Global Variables for #select-role, and #testing channels
-	for guild in client.guilds:
-		for channel in guild.text_channels:
-			if str(channel).strip() == "select-role":
-				global channel_id
-				channel_id = channel.id
-
-			if str(channel).strip() == "testing":
-				global main_channel
-				main_channel = channel
-		
-		
+    print(f'We have logged in as {client.user}')
+    inst.ready(client, 1098221994555740190)
+    
+    # Create Global Variables for #select-role, and #testing channels
+    for guild in client.guilds:
+        for channel in guild.text_channels:
+            if str(channel).strip() == "select-role":
+                # #select-role text channel
+                global select_role_channel
+                select_role_channel = channel
+                
+            if str(channel).strip() == "testing":
+                # #testing channel
+                global main_channel
+                main_channel = channel
+                
+    
+    
 # Event handeler
 @client.event
 async def on_message(message):
-	 await commands.parse(message, inst)
+    await commands.parse(message, inst)
+    
+    if message.author == client.user:
+        return
+    
+    if message.content.startswith('$hello'):
+        await message.channel.send('Fionn is a dog 🐶!')
+        
+    if message.content.startswith('$fetch'):
+        await message.channel.send('Exit')
+    
+    # Signup command
+    if(message.content.startswith('!signup')):
+        # Remove command from msg
+        msg_content = message.content
+        msg_content = msg_content.replace("!signup", "")
+        # Scrape op.gg link
+        pRank, pName, signUpSuccess = await opggWebScrape(msg_content, message.author)
+        # Give access to '#select-roles' channel
+        if(signUpSuccess):
+            await message.channel.send(pName + " (" + pRank + ")" + "\n" + str(message.author.id))
+            await message.channel.send("Succes 😁 head over to #select-role to assign your primary and secondary role!")
+        else:
+            await message.channel.send(pName + " (" + pRank + ")" + "\n" + str(message.author.id))
+            await message.channel.send("Failed 😔 please try again!")
+        
    
 # Select Role based on Reaction 
 @client.event
 async def on_raw_reaction_add(reaction):
-	if reaction.channel_id == channel_id and str(reaction.message_id) == '1098222182997442611':
-		# Jungle Selected
-		if str(reaction.emoji) == "✨"  :
-			print("Set Role as Jungle")  
-			user_name = await client.fetch_user(reaction.user_id)
-			await main_channel.send(f"✨ {user_name} has changed their primary role to JG") 
-		# Mid Selected
-		elif str(reaction.emoji) == "😎"  :
-			print("Set Role as Mid")  
-			user_name = await client.fetch_user(reaction.user_id)
-			await main_channel.send(f"✨ {user_name} has changed their primary role to MID")
-		# Top Selected
-		elif str(reaction.emoji) == "🥶"  :
-			print("Set Role as TOP")  
-			user_name = await client.fetch_user(reaction.user_id)
-			await main_channel.send(f"✨ {user_name} has changed their primary role to TOP")
-		# AD Selected
-		elif str(reaction.emoji) == "😭"  :
-			print("Set Role as AD")  
-			user_name = await client.fetch_user(reaction.user_id)
-			await main_channel.send(f"✨ {user_name} has changed their primary role to AD")
-		# Support Selected
-		elif str(reaction.emoji) == "🤡"  :
-			print("Set Role as SUP")  
-			user_name = await client.fetch_user(reaction.user_id)
-			await main_channel.send(f"✨ {user_name} has changed their primary role to SUP")	 
-		
+    
+    # Message ID's for #select-role channel
+    primary_role_message = '1098222182997442611'
+    secondary_role_message = '1098680816961335408'
+    
+    # Select PRIMARY ROLE 
+    if reaction.channel_id == select_role_channel.id and str(reaction.message_id) == primary_role_message:
+        # Jungle Selected
+        if str(reaction.emoji) == "✨"  : 
+            await updatePlayerRole(reaction, 1, "JNG")   
+        # Mid Selected
+        elif str(reaction.emoji) == "😎"  : 
+            await updatePlayerRole(reaction, 1, "MID")   
+        # Top Selected
+        elif str(reaction.emoji) == "🥶"  : 
+            await updatePlayerRole(reaction, 1, "TOP")   
+        # AD Selected
+        elif str(reaction.emoji) == "😭"  :
+            await updatePlayerRole(reaction, 1, "ADC")   
+        # Support Selected
+        elif str(reaction.emoji) == "🤡"  :
+            await updatePlayerRole(reaction, 1, "SUP")   
 
+    # Select SECONDARY ROLE
+    if reaction.channel_id == select_role_channel.id and str(reaction.message_id) == secondary_role_message:
+        # Jungle Selected
+        if str(reaction.emoji) == "✨"  :
+            await updatePlayerRole(reaction, 2, "JNG")  
+        # Mid Selected
+        elif str(reaction.emoji) == "😎"  :
+            await updatePlayerRole(reaction, 2, "MID")  
+        # Top Selected
+        elif str(reaction.emoji) == "🥶"  :
+            await updatePlayerRole(reaction, 2, "TOP")  
+        # AD Selected
+        elif str(reaction.emoji) == "😭"  :
+            await updatePlayerRole(reaction, 2, "ADC")  
+        # Support Selected
+        elif str(reaction.emoji) == "🤡"  : 
+            await updatePlayerRole(reaction, 2, "SUP")   
+        
+# Scrape rank details from op.gg page
+async def opggWebScrape(msg_content, message_obj):
+    
+    # Assign Headers, so scraping is not BLOCKED
+    headers = requests.utils.default_headers()
+    headers.update({
+            'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0',
+    })
+    
+    # Try scrape OP.GG URL
+    try:
+        op_url = msg_content
+        res_url = requests.get(op_url, headers=headers)
+        doc = BeautifulSoup(res_url.text, "html.parser")
+    except:
+        summoner_name = "Invalid Account"
+        rank_str = "Invalid Link"
+        success = False
+        
+    # Try scraping valid OP.GG URL - Rank, Summoner Name.
+    try:
+        rank = doc.find_all(class_="tier")
+        rank = rank[0].decode_contents().strip()
+        rank = rank.replace("<!-- -->", "")
+        rank = rank.split()
+        rank_str = ""
+        for char in rank:
+            rank_str += char[0]
+    
+        # Add rank division for Masters, GM, and Challenger players
+        if len(rank) == 1:
+            rank.append('1')
+        
+        
+        # Check if player suggested rank is formatted right
+            
+        summoner_name = doc.find_all(class_="summoner-name")
+        summoner_name = summoner_name[0].decode_contents().strip()
+        
+        # Discord ID
+        discordID = message_obj.author.id
+        
+        # Check if player exists in Player DB, returns a boolean
+        doesPlayerExist = await checkPlayerExsits(discordID)
+        
+        if doesPlayerExist:
+            # Player already exists
+            await message_obj.channel.send('😭 Player exists in the table, unable to register again!')
+        else:
+            # Add player
+            addPlayer(discordID, summoner_name, op_url, rank)
+            # Give access to #select-role text channel (change permissions)
+            for guild in client.guilds:
+                for member in guild.members:
+                    if (member.id == message_obj.author.id):
+                        overwrite = discord.PermissionOverwrite()
+                        overwrite.send_messages = False
+                        overwrite.read_messages = True
+                        await select_role_channel.set_permissions(member, overwrite=overwrite)
+                        await message_obj.channel.send(f"Success, head over to {select_role_channel.mention} to assign your Primary and Secondary role!")
+        success = True
+        
+       
+    except:
+        rank_str = "Invalid Account"
+        summoner_name = "Invalid Account"
+        success = False
+        
+    return rank_str.upper(), summoner_name, success
 
+# Add other accounts
+async def addAccount(msg_content, message_obj):
+    
+    # Assign Headers, so scraping is not BLOCKED
+    headers = requests.utils.default_headers()
+    headers.update({
+            'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0',
+    })
+    
+    # Try scrape OP.GG URL
+    try:
+        op_url = msg_content
+        res_url = requests.get(op_url, headers=headers)
+        doc = BeautifulSoup(res_url.text, "html.parser")
+    except:
+        summoner_name = "Invalid Account"
+        rank_str = "Invalid Link"
+        success = False
+        
+    # Try scraping valid OP.GG URL - Rank, Summoner Name.
+    try:
+        rank = doc.find_all(class_="tier")
+        rank = rank[0].decode_contents().strip()
+        rank = rank.replace("<!-- -->", "")
+        rank = rank.split()
+        rank_str = ""
+        for char in rank:
+            rank_str += char[0]
+    
+        # Add rank division for Masters, GM, and Challenger players
+        if len(rank) == 1:
+            rank.append('1')
+            
+        summoner_name = doc.find_all(class_="summoner-name")
+        summoner_name = summoner_name[0].decode_contents().strip()
+        
+        # Discord ID
+        discordID = message_obj.author.id
+        
+        # Check if player exists in Player DB, returns a boolean
+        doesPlayerExist = await checkPlayerExsits(discordID)
+        
+        if doesPlayerExist:
+            # Player already exists, add account
+            addExtraAccount(discordID, summoner_name, op_url, rank)
+            success = True
+        else:
+            success = False
+        
+        
+       
+    except:
+        rank_str = "Signup first before adding an account!"
+        summoner_name = "Invalid Account"
+        success = False
+        
+    return rank_str.upper(), summoner_name, success
+
+# Check if player exists in Table DB, returns a boolean
+async def checkPlayerExsits(discordID):
+    
+    # Check if the discordID already exists in DB
+    res = cursor.execute(f"SELECT COUNT(*) FROM Player WHERE discordID = '{discordID}'")
+    result = res.fetchone()
+    
+    if result[0] > 0:
+        return True
+    else:
+        return False
+        
+# Adds player to Player & Account DB
+def addPlayer(discordID, summoner_name, op_url, rank):
+    
+    cursor.execute(f"INSERT INTO Player (discordID, winCount, lossCount, internalRating) VALUES ({discordID}, 0, 0, 1500)")
+    con.commit()
+    
+    # Add player account to Account table
+    
+    # Fetch PlayerID value from Player Table w/ DiscordID
+    res = cursor.execute(f"SELECT playerID from Player where discordID={discordID}")
+    fetchedPlayerID = res.fetchone()
+    
+    # Add information into Account Table
+    
+    # Name, OPGG, PID, Rank, Rank DIV
+    cursor.execute(f"INSERT INTO Account (name, opgg, playerID, rankTier, rankDivision) VALUES ('{summoner_name}', '{op_url}', {fetchedPlayerID[0]}, '{rank[0]}', {rank[1]})")
+    con.commit()
+    
+# Adds another Account to Account DB
+def addExtraAccount(discordID, summoner_name, op_url, rank):
+    
+    # Add player account to Account table
+    
+    # Fetch PlayerID value from Player Table w/ DiscordID
+    res = cursor.execute(f"SELECT playerID from Player where discordID={discordID}")
+    fetchedPlayerID = res.fetchone()
+    
+    # Add information into Account Table
+    
+    # Name, OPGG, PID, Rank, Rank DIV
+    cursor.execute(f"INSERT INTO Account (name, opgg, playerID, rankTier, rankDivision) VALUES ('{summoner_name}', '{op_url}', {fetchedPlayerID[0]}, '{rank[0]}', {rank[1]})")
+    con.commit()
+    
+# Update roles of player
+async def updatePlayerRole(reaction, roleType, position):
+    
+    # Set discordID of reaction
+    discordID = reaction.user_id
+    
+    # Fetch Player's Username
+    user_name = await client.fetch_user(reaction.user_id)
+    # Check if player exists in DB
+    doesPlayerExist = await checkPlayerExsits(discordID)
+    if(doesPlayerExist):
+        # Update role in DB
+        
+        # Primary Role
+        if(roleType == 1):
+            
+            # Check if duplicate position
+            canChangeRole = checkDupPos(discordID, roleType, position)
+            if canChangeRole:
+                cursor.execute(f"UPDATE Player SET primaryRole = '{position}' WHERE discordID = {discordID}")
+                con.commit()
+                await main_channel.send(f"✨ {user_name} has changed their PRIMARY role to {position}")
+            else:
+                await main_channel.send(f"✨ {user_name}'s SECONDARY role is already set to {position} ")
+            
+        # Secondary Role
+        else:
+            
+            # Check if duplicate position
+            canChangeRole = checkDupPos(discordID, roleType, position)
+            if canChangeRole:
+                cursor.execute(f"UPDATE Player SET secondaryRole = '{position}' WHERE discordID = {discordID}")
+                con.commit()
+                await main_channel.send(f"✨ {user_name} has changed their SECONDARY role to {position}")
+            else:
+                await main_channel.send(f"✨ {user_name}'s PRIMARY role is already set to {position}")
+
+# Check if position is aleady set in other role
+def checkDupPos(discordID, newRoleType, position):
+    
+    # Get position in other roleType
+    if newRoleType == 1:
+        res = cursor.execute(f"SELECT secondaryRole FROM Player WHERE discordID = {discordID}")
+        currentPosition = res.fetchone()
+        if currentPosition[0] != position:
+            return True
+        else:
+            return False
+        
+    elif newRoleType == 2:
+        res = cursor.execute(f"SELECT primaryRole FROM Player WHERE discordID = {discordID}")
+        currentPosition = res.fetchone()
+        if currentPosition[0] != position:
+            return True
+        else:
+            return False
+ 
 def main():	
 	with open('./settings.json') as f:
 	
