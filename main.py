@@ -10,7 +10,10 @@ from serverInstance import serverInstance
 # Setup connection to database
 con = sqlite3.connect('irishl.db')
 cursor = con.cursor()
-print("Connected")
+print("Connected to SQL Database ✨")
+
+# Load Environment variables
+load_dotenv()
 
 # Load Environment variables
 load_dotenv()
@@ -34,14 +37,10 @@ async def on_ready():
 			if str(channel).strip() == "select-role":
 				global channel_id
 				channel_id = channel.id
-				print("✨")
+
 			if str(channel).strip() == "testing":
 				global main_channel
 				main_channel = channel
-				print(str(main_channel))
-		
-	async for member in guild.fetch_members(limit=150):
-		print(member.name)
 		
 		
 # Event handeler
