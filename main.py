@@ -79,56 +79,36 @@ async def on_raw_reaction_add(reaction):
     if reaction.channel_id == select_role_channel.id and str(reaction.message_id) == primary_role_message:
         # Jungle Selected
         if str(reaction.emoji) == "✨"  : 
-            user_name = await client.fetch_user(reaction.user_id)
-            await main_channel.send(f"✨ {user_name} has changed their primary role to JNG") 
             await updatePlayerRole(reaction, 1, "JNG")   
         # Mid Selected
         elif str(reaction.emoji) == "😎"  : 
-            user_name = await client.fetch_user(reaction.user_id)
-            await main_channel.send(f"✨ {user_name} has changed their primary role to MID")
             await updatePlayerRole(reaction, 1, "MID")   
         # Top Selected
         elif str(reaction.emoji) == "🥶"  : 
-            user_name = await client.fetch_user(reaction.user_id)
-            await main_channel.send(f"✨ {user_name} has changed their primary role to TOP")
             await updatePlayerRole(reaction, 1, "TOP")   
         # AD Selected
         elif str(reaction.emoji) == "😭"  :
-            user_name = await client.fetch_user(reaction.user_id)
-            await main_channel.send(f"✨ {user_name} has changed their primary role to ADC")
             await updatePlayerRole(reaction, 1, "ADC")   
         # Support Selected
         elif str(reaction.emoji) == "🤡"  :
-            user_name = await client.fetch_user(reaction.user_id)
-            await main_channel.send(f"✨ {user_name} has changed their primary role to SUP")
             await updatePlayerRole(reaction, 1, "SUP")   
 
     # Select SECONDARY ROLE
     if reaction.channel_id == select_role_channel.id and str(reaction.message_id) == secondary_role_message:
         # Jungle Selected
         if str(reaction.emoji) == "✨"  :
-            user_name = await client.fetch_user(reaction.user_id)
-            await main_channel.send(f"✨ {user_name} has changed their secondary role to JNG") 
             await updatePlayerRole(reaction, 2, "JNG")  
         # Mid Selected
         elif str(reaction.emoji) == "😎"  :
-            user_name = await client.fetch_user(reaction.user_id)
-            await main_channel.send(f"✨ {user_name} has changed their secondary role to MID")
             await updatePlayerRole(reaction, 2, "MID")  
         # Top Selected
         elif str(reaction.emoji) == "🥶"  :
-            user_name = await client.fetch_user(reaction.user_id)
-            await main_channel.send(f"✨ {user_name} has changed their secondary role to TOP")
             await updatePlayerRole(reaction, 2, "TOP")  
         # AD Selected
         elif str(reaction.emoji) == "😭"  :
-            user_name = await client.fetch_user(reaction.user_id)
-            await main_channel.send(f"✨ {user_name} has changed their secondary role to ADC")
             await updatePlayerRole(reaction, 2, "ADC")  
         # Support Selected
         elif str(reaction.emoji) == "🤡"  : 
-            user_name = await client.fetch_user(reaction.user_id)
-            await main_channel.send(f"✨ {user_name} has changed their secondary role to SUP")
             await updatePlayerRole(reaction, 2, "SUP")   
     
 # Scrape rank details from op.gg page
@@ -265,7 +245,9 @@ async def updatePlayerRole(reaction, roleType, position):
             else:
                 await main_channel.send(f"✨ {user_name}'s PRIMARY role is already set to {position}")
 
+# Check if position is aleady set in other role
 def checkDupPos(discordID, newRoleType, position):
+    
     # Get position in other roleType
     if newRoleType == 1:
         res = cursor.execute(f"SELECT secondaryRole FROM Player WHERE discordID = {discordID}")
@@ -274,6 +256,7 @@ def checkDupPos(discordID, newRoleType, position):
             return True
         else:
             return False
+        
     elif newRoleType == 2:
         res = cursor.execute(f"SELECT primaryRole FROM Player WHERE discordID = {discordID}")
         currentPosition = res.fetchone()
