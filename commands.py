@@ -1,4 +1,5 @@
 
+from player import Player
 
 class commands:
 	COMMAND_SYMBOL = "!"
@@ -29,6 +30,11 @@ class commands:
 			await message.channel.send("🗃️ Account Added: " + pName)
 		else:
 			await message.channel.send(pName + " (" + pRank + ")")
+   
+	async def player(message, inst, args):
+		test = await inst.createPlayerObject(24)
+		test.addWin()
+		test.update()
 		
   
   
@@ -37,7 +43,8 @@ class commands:
 		'queue' : queue,
 		'dequeue' : dequeue,
 		'signup' : signup,
-		'add-acc': addAccount
+		'add-acc': addAccount,
+		'player': player
 		}
 
 	async def parseReaction(reaction, inst):

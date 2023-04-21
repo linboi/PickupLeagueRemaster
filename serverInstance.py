@@ -1,6 +1,7 @@
 import requests
 import discord
 from bs4 import BeautifulSoup
+from player import Player
 
 class serverInstance:
 	def __init__(self):
@@ -310,3 +311,20 @@ class serverInstance:
 				return True
 			else:
 				return False
+
+	# Fetch player detials -> returns a player object
+	async def createPlayerObject(self, playerID):
+		
+		# Fetch player details
+		res = self.cursor.execute(f"SELECT * FROM Player WHERE playerID = {playerID}")
+		player_details = res.fetchone()
+  
+		# Fetch account details
+		res = self.cursor.execute(f"SELECT * FROM Account WHERE playerID = {playerID}")
+		player_acc_detials = res.fetchall()
+		
+		# Create player
+		player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_acc_detials, self.cursor, self.con)
+		
+		return player
+  
