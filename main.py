@@ -70,7 +70,7 @@ async def on_message(message):
     if(message.content.startswith('!signup')):
         # Remove command from msg
         msg_content = message.content
-        msg_content = msg_content.replace("!signup", "")
+        msg_content = msg_content.replace("!signup ", "")
         
         # Scrape op.gg link
         pRank, pName, signUpSuccess = await opggWebScrape(msg_content, message)
@@ -157,6 +157,9 @@ async def opggWebScrape(msg_content, message_obj):
         # Add rank division for Masters, GM, and Challenger players
         if len(rank) == 1:
             rank.append('1')
+        
+        
+        # Check if player suggested rank is formatted right
             
         summoner_name = doc.find_all(class_="summoner-name")
         summoner_name = summoner_name[0].decode_contents().strip()
@@ -279,7 +282,7 @@ def addPlayer(discordID, summoner_name, op_url, rank):
     # Name, OPGG, PID, Rank, Rank DIV
     cursor.execute(f"INSERT INTO Account (name, opgg, playerID, rankTier, rankDivision) VALUES ('{summoner_name}', '{op_url}', {fetchedPlayerID[0]}, '{rank[0]}', {rank[1]})")
     con.commit()
-
+    
 # Adds another Account to Account DB
 def addExtraAccount(discordID, summoner_name, op_url, rank):
     
@@ -351,7 +354,7 @@ def checkDupPos(discordID, newRoleType, position):
             return True
         else:
             return False
-        
+ 
 def main():	
 	with open('./settings.json') as f:
 	
