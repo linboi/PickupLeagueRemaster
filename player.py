@@ -47,11 +47,11 @@ class Player:
         # Calculate MMR Gain -> Set MMR (Enemys AVG MMR)
         
     def addLoss(self):
-        self.winLoss += 1
+        self.lossCount += 1
         # Calculate MMR Loss -> Set MMR (Enemys AVG MMR)
         
     def update(self):
-        self.cursor.execute(f"UPDATE Player SET winCount = {self.winCount}, lossCount = {self.lossCount}, internalRating = {self.internalRating}")
+        self.cursor.execute(f"UPDATE Player SET winCount = {self.winCount}, lossCount = {self.lossCount}, internalRating = {self.internalRating} WHERE playerID = {self.playerID}")
         self.con.commit()
         
     # Sets the rating of a new player based upon their highest account
