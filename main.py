@@ -7,16 +7,13 @@ import os
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
+# Load Environment variables
+load_dotenv()
+
 # Setup connection to database
-con = sqlite3.connect('copy.db')
+con = sqlite3.connect(os.getenv('DATABASE'))
 cursor = con.cursor()
 print("Connected to SQL Database ✨")
-
-# Load Environment variables
-load_dotenv()
-
-# Load Environment variables
-load_dotenv()
 
 # Define Intents
 intents = discord.Intents.all()
