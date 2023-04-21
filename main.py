@@ -1,9 +1,6 @@
 import discord
 import json
 import sqlite3
-import urllib3
-import requests
-import bs4
 import os
 from dotenv import load_dotenv
 from commands import commands
@@ -45,12 +42,12 @@ async def on_ready():
     
     inst.ready(client, 1098221994555740190, select_role_channel, main_channel, cursor, con)
                  
-# Event handeler
+# Event handeler for Messages
 @client.event
 async def on_message(message):
     await commands.parse(message, inst)
         
-# Select Role based on Reaction 
+# Event handeler for Reactions
 @client.event
 async def on_raw_reaction_add(reaction):
     await commands.parseReaction(reaction, inst)

@@ -32,7 +32,6 @@ class commands:
 		
   
   
-
 	userCommands = {
 		'hello' : hello,
 		'queue' : queue,
@@ -42,7 +41,6 @@ class commands:
 		}
 
 	async def parseReaction(reaction, inst):
-		
 		# Change Player Role
 		await inst.changePlayerRole(reaction)
   
