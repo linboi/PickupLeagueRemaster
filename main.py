@@ -52,6 +52,20 @@ async def on_message(message):
     if message.content.startswith('$hello'):
         await message.channel.send('Fionn is a dog 🐶!')
     
+    if message.content.startswith('!add-account'):
+        
+        msg_content = message.content
+        msg_content = msg_content.replace("!add-account", "")
+        
+        # Scrape op.gg link
+        pRank, pName, signUpSuccess = await addAccount(msg_content, message)
+        
+        # Give access to '#select-roles' channel
+        if(signUpSuccess):
+            await message.channel.send(f"🗃️ Account Added: {pName}" + " (" + f"{pRank})")
+        else:
+            await message.channel.send(pRank + " (" + pName + ") \nFailed 😔 please try again!")
+            
     # Signup command
     if(message.content.startswith('!signup')):
         # Remove command from msg
@@ -178,6 +192,63 @@ async def opggWebScrape(msg_content, message_obj):
         
     return rank_str.upper(), summoner_name, success
 
+# Add other accounts
+async def addAccount(msg_content, message_obj):
+    
+    # Assign Headers, so scraping is not BLOCKED
+    headers = requests.utils.default_headers()
+    headers.update({
+            'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0',
+    })
+    
+    # Try scrape OP.GG URL
+    try:
+        op_url = msg_content
+        res_url = requests.get(op_url, headers=headers)
+        doc = BeautifulSoup(res_url.text, "html.parser")
+    except:
+        summoner_name = "Invalid Account"
+        rank_str = "Invalid Link"
+        success = False
+        
+    # Try scraping valid OP.GG URL - Rank, Summoner Name.
+    try:
+        rank = doc.find_all(class_="tier")
+        rank = rank[0].decode_contents().strip()
+        rank = rank.replace("<!-- -->", "")
+        rank = rank.split()
+        rank_str = ""
+        for char in rank:
+            rank_str += char[0]
+    
+        # Add rank division for Masters, GM, and Challenger players
+        if len(rank) == 1:
+            rank.append('1')
+            
+        summoner_name = doc.find_all(class_="summoner-name")
+        summoner_name = summoner_name[0].decode_contents().strip()
+        
+        # Discord ID
+        discordID = message_obj.author.id
+        
+        # Check if player exists in Player DB, returns a boolean
+        doesPlayerExist = await checkPlayerExsits(discordID)
+        
+        if doesPlayerExist:
+            # Player already exists, add account
+            addExtraAccount(discordID, summoner_name, op_url, rank)
+            success = True
+        else:
+            success = False
+        
+        
+       
+    except:
+        rank_str = "Signup first before adding an account!"
+        summoner_name = "Invalid Account"
+        success = False
+        
+    return rank_str.upper(), summoner_name, success
 # Check if player exists in Table DB, returns a boolean
 async def checkPlayerExsits(discordID):
     
@@ -208,6 +279,21 @@ def addPlayer(discordID, summoner_name, op_url, rank):
     cursor.execute(f"INSERT INTO Account (name, opgg, playerID, rankTier, rankDivision) VALUES ('{summoner_name}', '{op_url}', {fetchedPlayerID[0]}, '{rank[0]}', {rank[1]})")
     con.commit()
 
+# Adds another Account to Account DB
+def addExtraAccount(discordID, summoner_name, op_url, rank):
+    
+    # Add player account to Account table
+    
+    # Fetch PlayerID value from Player Table w/ DiscordID
+    res = cursor.execute(f"SELECT playerID from Player where discordID={discordID}")
+    fetchedPlayerID = res.fetchone()
+    
+    # Add information into Account Table
+    
+    # Name, OPGG, PID, Rank, Rank DIV
+    cursor.execute(f"INSERT INTO Account (name, opgg, playerID, rankTier, rankDivision) VALUES ('{summoner_name}', '{op_url}', {fetchedPlayerID[0]}, '{rank[0]}', {rank[1]})")
+    con.commit()
+    
 # Update roles of player
 async def updatePlayerRole(reaction, roleType, position):
     
