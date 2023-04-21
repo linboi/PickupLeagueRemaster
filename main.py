@@ -124,7 +124,7 @@ async def on_raw_reaction_add(reaction):
         # Support Selected
         elif str(reaction.emoji) == "🤡"  : 
             await updatePlayerRole(reaction, 2, "SUP")   
-    
+        
 # Scrape rank details from op.gg page
 async def opggWebScrape(msg_content, message_obj):
     
@@ -249,6 +249,7 @@ async def addAccount(msg_content, message_obj):
         success = False
         
     return rank_str.upper(), summoner_name, success
+
 # Check if player exists in Table DB, returns a boolean
 async def checkPlayerExsits(discordID):
     
