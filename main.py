@@ -1,11 +1,11 @@
 import discord
 import json
 import sqlite3
-import requests
 import urllib3
 import os
-from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+from commands import commands
+from serverInstance import serverInstance
 
 # Load Environment variables
 load_dotenv()
@@ -21,11 +21,13 @@ intents.message_content = True
 intents.members= True
 
 client = discord.Client(intents=intents)
+inst = serverInstance()
 
 # Connection to Client is established
 @client.event
 async def on_ready():
     print(f'We have logged in as {client.user}')
+    inst.ready(client, 1098221994555740190)
     
     # Create Global Variables for #select-role, and #testing channels
     for guild in client.guilds:
@@ -40,44 +42,38 @@ async def on_ready():
                 global main_channel
                 main_channel = channel
                 
+    
+    
 # Event handeler
 @client.event
 async def on_message(message):
+    await commands.parse(message, inst)
+    
     if message.author == client.user:
         return
     
     if message.content.startswith('$hello'):
         await message.channel.send('Fionn is a dog 🐶!')
+        
+    if message.content.startswith('$fetch'):
+        await message.channel.send('Exit')
     
-    if message.content.startswith('!add-account'):
-        
-        msg_content = message.content
-        msg_content = msg_content.replace("!add-account", "")
-        
-        # Scrape op.gg link
-        pRank, pName, signUpSuccess = await addAccount(msg_content, message)
-        
-        # Give access to '#select-roles' channel
-        if(signUpSuccess):
-            await message.channel.send(f"🗃️ Account Added: {pName}" + " (" + f"{pRank})")
-        else:
-            await message.channel.send(pRank + " (" + pName + ") \nFailed 😔 please try again!")
-            
     # Signup command
     if(message.content.startswith('!signup')):
         # Remove command from msg
         msg_content = message.content
-        msg_content = msg_content.replace("!signup ", "")
-        
+        msg_content = msg_content.replace("!signup", "")
         # Scrape op.gg link
-        pRank, pName, signUpSuccess = await opggWebScrape(msg_content, message)
-        
+        pRank, pName, signUpSuccess = await opggWebScrape(msg_content, message.author)
         # Give access to '#select-roles' channel
         if(signUpSuccess):
-            await message.channel.send(f"{pName}" + " (" + f"{pRank})")
+            await message.channel.send(pName + " (" + pRank + ")" + "\n" + str(message.author.id))
+            await message.channel.send("Succes 😁 head over to #select-role to assign your primary and secondary role!")
         else:
-            await message.channel.send(pRank + " (" + pName + ") \nFailed 😔 please try again!")
+            await message.channel.send(pName + " (" + pRank + ")" + "\n" + str(message.author.id))
+            await message.channel.send("Failed 😔 please try again!")
         
+   
 # Select Role based on Reaction 
 @client.event
 async def on_raw_reaction_add(reaction):
@@ -356,7 +352,7 @@ def main():
 	with open('./settings.json') as f:
 	
 		settings = json.load(f)
-    
+		
 	client.run(os.getenv('BOT_TOKEN'))
 
 if __name__ == '__main__':
