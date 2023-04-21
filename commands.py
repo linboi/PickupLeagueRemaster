@@ -14,17 +14,37 @@ class commands:
 		await inst.removeFromQueue(message.author, message.channel)
 
 	async def signup(message, inst, args):
-		pRank, pName = await inst.opggWebScrape(args[0], message.author)
+		pRank, pName, signUpSuccess = await inst.signUpPlayer(args[0], message)
+  
 		# Give access to '#select-roles' channel
-		await message.channel.send(pName + " (" + pRank + ")" + "\n" + str(message.author.id))
-
+		if(signUpSuccess):
+			await message.channel.send(pName + " (" + pRank + ")")
+		else:
+			await message.channel.send(pName + " (" + pRank + ")")
+			await message.channel.send("Failed 😔 please try again!")
+   
+	async def addAccount(message, inst, args):
+		pRank, pName, signUpSuccess = await inst.addAccount(args[0], message)
+		if signUpSuccess:
+			await message.channel.send("🗃️ Account Added: " + pName)
+		else:
+			await message.channel.send(pName + " (" + pRank + ")")
+		
+  
+  
 	userCommands = {
 		'hello' : hello,
 		'queue' : queue,
 		'dequeue' : dequeue,
-		'signup' : signup
+		'signup' : signup,
+		'add-acc': addAccount
 		}
 
+	async def parseReaction(reaction, inst):
+		# Change Player Role
+		await inst.changePlayerRole(reaction)
+  
+  
 	async def parse(message, inst):
 		client = inst.client
 		if message.author == client.user or not message.content.startswith(commands.COMMAND_SYMBOL):
