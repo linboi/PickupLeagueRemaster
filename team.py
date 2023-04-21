@@ -9,7 +9,7 @@ class Team:
         
         self.teamMMR = 0
         
-        
+    # Setters
     def set_MMR(self, MMR):
         self.MMR = MMR
         
@@ -27,7 +27,8 @@ class Team:
         
     def set_sup(self, player):
         self.support = player
-        
+    
+    # Getters
     def get_MMR(self):
         return self.teamMMR
     
