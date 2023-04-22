@@ -1,5 +1,7 @@
+import random
+
 class Player:
-    def __init__(self, playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, playerAccounts, cursor, con):
+    def __init__(self, playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, playerAccounts, QP, cursor, con):
         self.playerID = playerID
         self.discordID = discordID
         self.winCount = winCount
@@ -8,6 +10,9 @@ class Player:
         self.primaryRole = primaryRole
         self.secondaryRole = secondaryRole
         self.playerAccounts = playerAccounts
+        self.role = None
+        self.roleMMR = None
+        self.QP = QP
         
         self.cursor = cursor
         self.con = con
@@ -16,8 +21,32 @@ class Player:
         if self.winCount == 0 and self.lossCount == 0:
             print("Setting InitMMR")
             self.setInitMMR()
+            self.update()
             
-    	
+    # Without player accounts constructor
+    def __init__(self, playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, cursor, con):
+        self.playerID = playerID
+        self.discordID = discordID
+        self.winCount = winCount
+        self.lossCount = lossCount
+        self.internalRating = internalRating
+        self.primaryRole = primaryRole
+        self.secondaryRole = secondaryRole
+        self.playerAccounts = None
+        self.role = None
+        self.roleMMR = None
+        self.QP = QP
+        
+        self.cursor = cursor
+        self.con = con
+        
+        # Sets inital MMR of player
+        if self.winCount == 0 and self.lossCount == 0:
+            print("Setting InitMMR")
+            self.setInitMMR()
+            self.update()
+            
+            
     def get_pID(self):
         return self.playerID
     
@@ -42,6 +71,22 @@ class Player:
     def get_pAccounts(self):
         return self.playerAccounts
     
+    def get_role(self):
+        return self.role
+    
+    def get_roleMMR(self):
+        return self.roleMMR
+    
+    def reset_QP(self):
+        self.QP = 0
+        self.update()
+    
+    def get_QP(self):
+        return self.QP
+    
+    def set_role(self, role):
+        self.role = role
+        
     def addWin(self):
         self.winCount += 1
         # Calculate MMR Gain -> Set MMR (Enemys AVG MMR)
@@ -51,11 +96,24 @@ class Player:
         # Calculate MMR Loss -> Set MMR (Enemys AVG MMR)
         
     def update(self):
-        self.cursor.execute(f"UPDATE Player SET winCount = {self.winCount}, lossCount = {self.lossCount}, internalRating = {self.internalRating} WHERE playerID = {self.playerID}")
+        self.cursor.execute(f"UPDATE Player SET winCount = {self.winCount}, lossCount = {self.lossCount}, internalRating = {self.internalRating}, QP = {self.QP} WHERE playerID = {self.playerID}")
         self.con.commit()
+        
+    def addQP(self, count):
+        self.QP += count
+        self.update()
+        
+    def setRoleMMR(self, autofill):
+        if autofill == 0:
+            self.roleMMR = self.internalRating
+        elif autofill == 1:
+            self.roleMMR = self.internalRating - 15
+        else:
+            self.roleMMR = self.internalRating - 30
         
     # Sets the rating of a new player based upon their highest account
     def setInitMMR(self):
+        self.QP = 5
         counterNew = 0
         counterOld = 0
         for account in self.playerAccounts:
@@ -101,8 +159,6 @@ class Player:
                 counterOld = counterNew
                 counterNew = 0
                 
-        self.internalRating = 1500 + counterOld*5
-        self.cursor.execute(f"UPDATE Player SET internalRating = {self.internalRating} WHERE playerID = {self.playerID}")     
-        self.con.commit()    
+        self.internalRating = 1500 + counterOld*5 
         
         

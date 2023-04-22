@@ -34,9 +34,8 @@ class commands:
 			await message.channel.send(pName + " (" + pRank + ")")
    
 	async def player(message, inst, args):
-		test = await inst.createPlayerObject(24)
-		test.addWin()
-		test.update()
+		await inst.matchmake()
+
 		
   
   

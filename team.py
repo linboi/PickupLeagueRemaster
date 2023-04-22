@@ -8,12 +8,11 @@ class Team:
         self.mid = None
         self.adc = None
         self.support = None
-        
-        self.teamMMR = 0
+        self.avgMMR = 0
         
     # Setters
-    def set_MMR(self, MMR):
-        self.MMR = MMR
+    def set_avgMMR(self, MMR):
+        self.avgMMR = MMR
         
     def set_top(self, player):
         self.top = player
@@ -31,8 +30,8 @@ class Team:
         self.support = player
     
     # Getters
-    def get_MMR(self):
-        return self.teamMMR
+    def get_avgMMR(self):
+        return self.avgMMR
     
     def get_top(self):
         return self.top
@@ -49,20 +48,14 @@ class Team:
     def get_sup(self):
         return self.support
     
-    # List of Open Positions
-    def fetchOpenPos(self):
-        listOfOpenPos = []
-        if self.top == None:
-            listOfOpenPos.append('TOP')
-        if self.jungle == None:
-            listOfOpenPos.append('JNG')
-        if self.mid == None:
-            listOfOpenPos.append('TOP')
-        if self.adc == None:
-            listOfOpenPos.append('JNG')
-        if self.support == None:
-            listOfOpenPos.append('TOP')
-        return listOfOpenPos
+    def calculateAvgMMR(self):
+        playerList = self.getListPlayers()
+        mmr_sum  = 0
+        for player in playerList:
+            pMMR = player.get_roleMMR()
+            mmr_sum += pMMR
+            
+        self.set_avgMMR(mmr_sum / 5)
     
     # List of players -> returns array of player objects
     def getListPlayers(self):
