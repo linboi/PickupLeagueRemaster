@@ -208,12 +208,7 @@ class Match:
         print("\nRed Team:\n")
         for player in self.redTeam.getListPlayers():
             print(f"({player.get_role()})[{player.get_pID()}][{player.get_pRole()}][{player.get_sRole()}][{player.get_roleMMR()}]")
-        
-                        
-                    
-                        
-        
-        
+                
         
     def calculateMMRDifference(self, teamR, teamB):
         # Calculate AVG MMR of Init Teams
@@ -226,10 +221,6 @@ class Match:
         mmrDifference = abs(rtMMR - btMMR)
         return mmrDifference
         
-    
-    def setFairTeams(self, team1, team2):
-        print(team1)
-        print(team2)
                 
         
     
