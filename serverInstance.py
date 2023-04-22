@@ -1,5 +1,9 @@
 import requests
 import discord
+import timing
+import datetime
+import time
+import asyncio
 from bs4 import BeautifulSoup
 from player import Player
 
@@ -35,6 +39,53 @@ class serverInstance:
 		#to be implemented
 		pass
 	
+	async def createGamesOnSchedule(self, schedule, channel):
+		await timing.sleep_until(schedule)
+		thisGameday = {}
+		for gameday in schedule:
+			if gameday['Day'] == datetime.datetime.now().weekday():
+				thisGameday = gameday
+		timeObjs = []
+		thisGameday['Times'].sort()
+		for times in thisGameday['Times']:
+			hours, minutes = times.split(":")
+			timeObjs.append(datetime.datetime.now().replace(hour=int(hours), minute=int(minutes)))
+
+		relativeTimeString = ""
+		for idx, times in enumerate(timeObjs):
+			relativeTimeString += (f"Game {idx+1}: <t:" + str(int(time.mktime(times.timetuple()))) + ":R>\n")
+
+		checkinMessage = await channel.send(f"Check in for registered players\n\
+React with the corresponding number to check in for a game\n\
+{relativeTimeString}\n\
+After a win, post a screenshot of the victory and type !win (only one player on the winning team must do this).\n\
+")
+		emojiList = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣']
+		waitSecondsAndEmoji = []
+		for idx, games in enumerate(timeObjs):
+			await checkinMessage.add_reaction(emojiList[idx])
+			waitSecondsAndEmoji.append(((games - datetime.datetime.now()).seconds, emojiList[idx]))
+		waitSecondsAndEmoji.sort()
+
+		gamesList = []
+		for idx, timeAndEmoji in enumerate(waitSecondsAndEmoji):
+			gamesList.append(self.createGames(timeAndEmoji[0], timeAndEmoji[1], channel, checkinMessage.id))
+
+		await asyncio.gather(*gamesList)
+
+		await self.createGamesOnSchedule(schedule, channel)
+	
+	async def createGames(self, numSeconds, emoji, channel, messageID):
+		await asyncio.sleep(numSeconds)
+		message = await channel.fetch_message(messageID)
+		msg = f"Users who reacted for game {emoji}:"
+		reactionList = message.reactions
+		for reaction in reactionList:
+			if reaction.emoji == emoji:
+				async for user in reaction.users():
+					msg+= "\n" + user.display_name
+		await channel.send(msg)
+
 	# Scrape rank details from op.gg page
 	async def signUpPlayer(self, msg_content, message_obj):
 	
@@ -291,7 +342,7 @@ class serverInstance:
 			# Support Selected
 			elif str(reaction.emoji) == "🤡"  : 
 				await self.updatePlayerRole(reaction, 2, "SUP")  
-     
+	 
 	# Check if position is aleady set in other role
 	def checkDupPos(self, discordID, newRoleType, position):
 		
