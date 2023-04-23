@@ -3,7 +3,6 @@ import discord
 from bs4 import BeautifulSoup
 from player import Player
 from match import Match
-from colorama import Fore, Back, Style
 import random
 
 class serverInstance:
