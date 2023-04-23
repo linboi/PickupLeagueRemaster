@@ -104,11 +104,11 @@ class serverInstance:
 		
 	# Display current matches on discord channel
 	async def displayMatch(self):
-		await self.testChannel.send(f"======================================")
+		await self.testChannel.send(f"**__Current Matches__**:\n")
 		for match in self.currentMatches:
 			msg = await self.testChannel.send(f"{match.displayMatchDetails()}\n")
 			await msg.edit(suppress=True)
-			await self.testChannel.send(f"======================================")
+			await self.testChannel.send(f"---------------------------------------------")
 	
 	async def createGamesOnSchedule(self, schedule, channel):
 		await timing.sleep_until(schedule)
