@@ -13,7 +13,7 @@ class Match:
         
     def __init__(self):
         
-        self.matchID = None
+        self.matchID = random.randint(0, 100)
         self.blueTeam = None
         self.redTeam = None
         self.startTime = None
@@ -221,6 +221,16 @@ class Match:
         mmrDifference = abs(rtMMR - btMMR)
         return mmrDifference
         
+    def displayMatchDetails(self):
+        string = f"   \nMatchID: X\t \t Match Time: XXXXX\t \t MMR Difference: {round(self.calculateMMRDifference(self.blueTeam, self.redTeam))}"
+        string += f"\n{'__Blue Team__': <20}{'':^10}{'__Red Team__':>20}\n\n"
+        string += f"{self.blueTeam.get_top().get_pID():<20}{'(top)':^10}{self.redTeam.get_top().get_pID():>20}\n"
+        string += f"{self.blueTeam.get_jg().get_pID():<20}{'(jng)':^10}{self.redTeam.get_jg().get_pID():>20}\n"
+        string += f"{self.blueTeam.get_mid().get_pID():<20}{'(mid)':^10}{self.redTeam.get_mid().get_pID():>20}\n"
+        string += f"{self.blueTeam.get_adc().get_pID():<20}{'(adc)':^10}{self.redTeam.get_adc().get_pID():>20}\n"
+        string += f"{self.blueTeam.get_sup().get_pID():<20}{'(sup)':^10}{self.redTeam.get_sup().get_pID():>20}\n"
+    
+        return string
                 
         
     

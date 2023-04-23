@@ -98,7 +98,14 @@ class serverInstance:
 			
 
 		print(f"Game Count: {len(self.currentMatches)}")
+		await self.displayMatch()
 		
+	# Display current matches on discord channel
+	async def displayMatch(self):
+		await self.testChannel.send(f"======================================")
+		for match in self.currentMatches:
+			await self.testChannel.send(f"{match.displayMatchDetails()}\n")
+			await self.testChannel.send(f"======================================")
 	
 	async def createGamesOnSchedule(self, schedule, channel):
 		await timing.sleep_until(schedule)
