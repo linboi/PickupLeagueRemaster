@@ -6,6 +6,8 @@ import time
 import asyncio
 from bs4 import BeautifulSoup
 from player import Player
+from match import Match
+import random
 
 class serverInstance:
 	def __init__(self):
@@ -18,6 +20,7 @@ class serverInstance:
 		self.cursor = cursor
 		self.con = con
 		self.testChannel = testChannel
+		self.currentMatches = []
 	
 	async def addToQueue(self, player, channel):
 		if player not in self.queue:
@@ -35,9 +38,67 @@ class serverInstance:
 			self.matchmake(self.queue)
 			self.queue = []
 	
-	def matchmake(self, listOfPlayers):
-		#to be implemented
-		pass
+	async def matchmake(self):
+     	# List of all players in Queue
+		res = self.cursor.execute(f"SELECT * FROM Player")
+		listOfPlayers = res.fetchall()
+		# Create a Player obj for each Player in Queue 
+		playerObjList = []
+		for player_details in listOfPlayers:
+			player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], self.cursor, self.con)
+			playerObjList.append(player)
+   
+		players_in_queue = len(playerObjList)
+		print(f"\nPlayers in Q: {players_in_queue}")
+		# Number of macthes to create
+		match_count = players_in_queue // 10
+		print(f"Number of Matches: {match_count}")
+		# Number of players required
+		required_players = match_count * 10
+		print(f"Required players: {required_players}")
+		# Shuffle players
+		tempMatch = Match()
+		# Ordered QP List & add PQP for players who were left out
+		ordered_pq_list = tempMatch.shuffle_orderPQ(playerObjList, required_players)
+		print(f"Order PQ List:\n")
+		for player in ordered_pq_list:
+			# Reset QP of selected players
+			print(f"[{player.get_pID()}], [{player.get_QP()}]")
+			player.reset_QP()
+		# Ordered Rank List
+		ordered_mmr_list = tempMatch.orderBasedOnMMR(ordered_pq_list)
+		print(f"\nOrdered MMR List:\n")
+		for player in ordered_mmr_list:
+			print(f"[{player.get_pID()}], [{player.get_rating()}]")
+   
+		# Init Match(s)
+		# For each match, set roles and find fairest comobination of players
+		self.currentMatches.clear()
+  
+		while len(self.currentMatches) < match_count:
+			# Get top 10 players
+			mCount = len(self.currentMatches) + 1
+			# Init a Match 
+			initMatch = Match()
+			# Shuffle Selected Players
+			ordered_player_list = ordered_mmr_list[((mCount-1)*10):(mCount*10)]
+			shuffled_list = sorted(ordered_player_list, key=lambda k: random.random())
+			# Assign roles for players & set roleMMR
+			assigned_roles = initMatch.fitRoles(shuffled_list)
+			print(f"\nAssigned Roles\n")
+			for role in assigned_roles.keys():
+				for x in assigned_roles[role]:
+					print(f"({role})[{x.get_pID()}][{x.get_pRole()}][{x.get_sRole()}][{x.get_rating()}][{x.get_roleMMR()}]\n")
+			# Set roles for each team in match
+			initMatch.setInitTeams(assigned_roles)
+			# Find fairest combination of players
+			initMatch.findFairestTeams()
+			# Add match to list of current games
+			self.currentMatches.append(initMatch)
+			
+
+		print(f"Game Count: {len(self.currentMatches)}")
+		
 	
 	async def createGamesOnSchedule(self, schedule, channel):
 		await timing.sleep_until(schedule)
@@ -363,19 +424,4 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			else:
 				return False
 
-	# Fetch player detials -> returns a player object
-	async def createPlayerObject(self, playerID):
-		
-		# Fetch player details
-		res = self.cursor.execute(f"SELECT * FROM Player WHERE playerID = {playerID}")
-		player_details = res.fetchone()
-  
-		# Fetch account details
-		res = self.cursor.execute(f"SELECT * FROM Account WHERE playerID = {playerID}")
-		player_acc_detials = res.fetchall()
-		
-		# Create player
-		player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_acc_detials, self.cursor, self.con)
-		
-		return player
   
