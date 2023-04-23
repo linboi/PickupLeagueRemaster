@@ -229,9 +229,16 @@ class Match:
         string += f"{self.blueTeam.get_mid().get_pID():<20}{'(mid)':^10}{self.redTeam.get_mid().get_pID():>20}\n"
         string += f"{self.blueTeam.get_adc().get_pID():<20}{'(adc)':^10}{self.redTeam.get_adc().get_pID():>20}\n"
         string += f"{self.blueTeam.get_sup().get_pID():<20}{'(sup)':^10}{self.redTeam.get_sup().get_pID():>20}\n"
-    
+        
+        opgg_red , opgg_blue = self.getOPGGLink()
+        string += f"\n**Blue Team OPGG:** {opgg_blue}\n**Red Team OPGG:** {opgg_red}"
+        
         return string
-                
+    
+    def getOPGGLink(self):
+        blue_link = self.blueTeam.listOPGG()
+        red_link = self.redTeam.listOPGG()
+        return blue_link, red_link
         
     
     

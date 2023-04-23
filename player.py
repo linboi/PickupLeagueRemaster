@@ -32,7 +32,7 @@ class Player:
         self.internalRating = internalRating
         self.primaryRole = primaryRole
         self.secondaryRole = secondaryRole
-        self.playerAccounts = None
+        self.playerAccounts = [(0, 'Gulag', 'X', 12, 'diamond', 1)]
         self.role = None
         self.roleMMR = None
         self.QP = QP
@@ -84,6 +84,64 @@ class Player:
     def get_QP(self):
         return self.QP
     
+    def getAccountNames(self):
+        listOfNames = []
+        for account in self.playerAccounts:
+            listOfNames.append(account[1])
+        return listOfNames
+    
+    def getHighestAccountName(self):
+        counterNew = 0
+        counterOld = 0
+        acc = None
+        
+        for account in self.playerAccounts:
+            
+            if account[4] == 'iron':
+                counterNew += 0
+                counterNew += int(account[5])
+                
+            if account[4] == 'bronze':
+                counterNew += 10
+                counterNew += int(account[5])
+                
+            if account[4] == 'silver':
+                counterNew += 20
+                counterNew += int(account[5])
+                
+            if account[4] == 'gold':
+                counterNew += 30
+                counterNew += int(account[5])
+                
+            if account[4] == 'platinum':
+                counterNew += 40
+                counterNew += int(account[5])
+                
+            if account[4] == 'diamond':
+                counterNew += 60
+                counterNew += int(account[5])
+                
+            if account[4] == 'master':
+                counterNew += 80
+                counterNew += int(account[5])
+                
+            if account[4] == 'grandmaster':
+                counterNew += 100
+                counterNew += int(account[5])
+                
+            if account[4] == 'challenger':
+                counterNew += 120
+                counterNew += int(account[5])
+                
+            
+            if (counterNew > counterOld):
+                counterOld = counterNew
+                counterNew = 0
+                acc = account[1]
+    
+        return acc
+        
+
     def set_role(self, role):
         self.role = role
         
@@ -160,5 +218,6 @@ class Player:
                 counterNew = 0
                 
         self.internalRating = 1500 + counterOld*5 
+        
         
         

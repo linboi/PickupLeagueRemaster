@@ -35,6 +35,12 @@ class commands:
    
 	async def player(message, inst, args):
 		await inst.matchmake()
+  
+	async def rank(message, inst, args):
+		await inst.displayRank(message)
+
+	async def leaderboard(message, inst, args):
+		await inst.displayLeaderboard(message)
 
 		
   
@@ -45,7 +51,9 @@ class commands:
 		'dequeue' : dequeue,
 		'signup' : signup,
 		'add-acc': addAccount,
-		'player': player
+		'player': player,
+		'rank': rank,
+		'leaderboard': leaderboard
 		}
 
 	async def parseReaction(reaction, inst):

@@ -62,5 +62,16 @@ class Team:
         listOfPlayers = [self.top, self.jungle, self.mid, self.adc, self.support]
         return listOfPlayers
         
+    # List MULTI OPGG 
+    def listOPGG(self):
+        players = self.getListPlayers()
+        player_string = "https://www.op.gg/multisearch/euw?summoners="
+        
+        for player in players:
+            ign = player.getHighestAccountName()
+            player_string += f"{ign}%2C+"
+                
+        return player_string
+                
         
 	

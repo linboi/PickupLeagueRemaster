@@ -104,7 +104,8 @@ class serverInstance:
 	async def displayMatch(self):
 		await self.testChannel.send(f"======================================")
 		for match in self.currentMatches:
-			await self.testChannel.send(f"{match.displayMatchDetails()}\n")
+			msg = await self.testChannel.send(f"{match.displayMatchDetails()}\n")
+			await msg.edit(suppress=True)
 			await self.testChannel.send(f"======================================")
 	
 	async def createGamesOnSchedule(self, schedule, channel):
@@ -430,5 +431,34 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				return True
 			else:
 				return False
+
+	# Method to get players rank and show it in discord channel
+	async def displayRank(self, message_obj):
+			discordID = message_obj.author.id
+			res = self.cursor.execute(f"SELECT internalRating FROM Player WHERE discordID = {discordID}")
+			mmr = res.fetchone()
+			res = self.cursor.execute(f"SELECT discordID FROM Player ORDER BY internalRating DESC")
+			output = res.fetchall()
+			test = []
+			for rank in output:
+				test.append(rank[0])
+			await message_obj.channel.send(f"*Current Rank* **#{test.index(discordID)}**\t\t**MMR** ({mmr[0] + 1})")
+   
+   
+	async def displayLeaderboard(self, message_obj):
+		leaderboard_channel = message_obj.channel
+		res = self.cursor.execute(f"SELECT discordID, winCount, lossCount FROM Player ORDER BY internalRating DESC")
+		output = res.fetchall()
+		positionCount = 1
+		for player in output[:10]:
+			pos = f"**#{positionCount}**"
+			pos = pos.ljust(10, '-')
+			id = f"{player[0]}"
+			win = f"\t({player[1]}**W**)"
+			win = win.rjust(5, '-')
+			loss = f"({player[2]}**L**)"
+			await leaderboard_channel.send(f"{pos}" + f"{id}" + f"{win}" + f"{loss}\n")
+			positionCount += 1
+       
 
   
