@@ -57,7 +57,7 @@ class serverInstance:
 		required_players = match_count * 10
 		print(f"Required players: {required_players}")
 		# Shuffle players
-		tempMatch = Match()
+		tempMatch = Match(self.cursor, self.con)
 		# Ordered QP List & add PQP for players who were left out
 		ordered_pq_list = tempMatch.shuffle_orderPQ(playerObjList, required_players)
 		print(f"Order PQ List:\n")
@@ -79,7 +79,7 @@ class serverInstance:
 			# Get top 10 players
 			mCount = len(self.currentMatches) + 1
 			# Init a Match 
-			initMatch = Match()
+			initMatch = Match(self.cursor, self.con)
 			# Shuffle Selected Players
 			ordered_player_list = ordered_mmr_list[((mCount-1)*10):(mCount*10)]
 			shuffled_list = sorted(ordered_player_list, key=lambda k: random.random())
@@ -93,6 +93,8 @@ class serverInstance:
 			initMatch.setInitTeams(assigned_roles)
 			# Find fairest combination of players
 			initMatch.findFairestTeams()
+			# Add Match to Match Table & Give it an ID
+			initMatch.insert()
 			# Add match to list of current games
 			self.currentMatches.append(initMatch)
 			

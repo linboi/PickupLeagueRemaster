@@ -4,25 +4,33 @@ import random
 import itertools
 
 class Match:
-    def __init__(self, matchID, blueTeam, redTeam, startTime):
+    def __init__(self, matchID, blueTeam, redTeam, startTime, cursor, con):
         
         self.matchID = matchID
         self.blueTeam = blueTeam
         self.redTeam = redTeam
         self.startTime = startTime
+        self.cursor = cursor
+        self.con = con
         
-    def __init__(self):
+    def __init__(self, cursor, con):
         
         self.matchID = random.randint(0, 100)
         self.blueTeam = None
         self.redTeam = None
         self.startTime = None
         
+        self.cursor = cursor
+        self.con = con
+        
     def set_red(self, team):
         self.redTeam = team
         
     def set_blue(self, team):
         self.blueTeam = team
+        
+    def set_matchID(self, id):
+        self.matchID = id
         
     def get_red(self):
         return self.redTeam
@@ -239,6 +247,23 @@ class Match:
         blue_link = self.blueTeam.listOPGG()
         red_link = self.redTeam.listOPGG()
         return blue_link, red_link
+    
+    def insert(self):
+        res = self.cursor.execute(f"SELECT MAX(matchID) FROM Match")
+        latest_matchID = res.fetchone()
+        print(latest_matchID)
+        if latest_matchID[0] == None:
+            matchid = 1
+        else:
+            matchid = latest_matchID[0] + 1
+            
+        self.set_matchID(matchid)
+        self.cursor.execute(f"INSERT INTO Match (matchID , matchTime) VALUES ({matchid}, 'TODAY')")
+        self.con.commit()
+
+        
+    
+        
         
     
     
