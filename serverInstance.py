@@ -41,7 +41,7 @@ class serverInstance:
 	
 	# Mehtod which creates Matches based on available Players
 	async def matchmake(self):
-     	# List of all players in Queue
+	 	# List of all players in Queue
 		res = self.cursor.execute(f"SELECT * FROM Player")
 		listOfPlayers = res.fetchall()
 		# Create a Player obj for each Player in Queue 
@@ -461,7 +461,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				test.append(rank[0])
 			await message_obj.channel.send(f"*Current Rank* **#{test.index(discordID) + 1}**\t\t**MMR** ({mmr[0]})")
    
-    # Method to display Leaderboard
+	# Method to display Leaderboard
 	async def displayLeaderboard(self, message_obj):
 		leaderboard_channel = message_obj.channel
 		res = self.cursor.execute(f"SELECT discordID, winCount, lossCount, internalRating FROM Player ORDER BY internalRating DESC")
@@ -490,7 +490,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
   
 	# Method to End a Current Match if not started or void
 	async def endMatch(self, message_obj, matchID):
-     
+	 
 		# Check if matchID is in current matches
 		for match in self.currentMatches:
 			match_id = match.get_matchID()
@@ -543,10 +543,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			
 
 
-       
+	   
 		
 
 
-       
+	   
 
   
