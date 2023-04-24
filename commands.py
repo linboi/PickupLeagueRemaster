@@ -35,17 +35,38 @@ class commands:
    
 	async def player(message, inst, args):
 		await inst.matchmake()
+  
+	async def rank(message, inst, args):
+		await inst.displayRank(message)
 
-		
+	# Make Admin Command
+	async def leaderboard(message, inst, args):
+		await inst.displayLeaderboard(message)
   
+	# Make Admin Command
+	async def endmatch(message, inst, args):
+		await inst.endMatch(message, args[0])
   
+	# Punsih player
+	async def punish(message, inst, args):
+		await inst.punishPlayer(message, args[0])
+  
+	# Ask for Swap
+	async def swap(message, inst, args):
+		await inst.swapPlayers(message, args[0])
+
 	userCommands = {
 		'hello' : hello,
 		'queue' : queue,
 		'dequeue' : dequeue,
 		'signup' : signup,
 		'add-acc': addAccount,
-		'player': player
+		'player': player,
+		'rank': rank,
+		'leaderboard': leaderboard,
+		'end-match': endmatch,
+		'punish': punish,
+		'swap': swap
 		}
 
 	async def parseReaction(reaction, inst):

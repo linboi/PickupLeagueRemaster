@@ -28,6 +28,7 @@ class Team:
         
     def set_sup(self, player):
         self.support = player
+        
     
     # Getters
     def get_avgMMR(self):
@@ -48,6 +49,7 @@ class Team:
     def get_sup(self):
         return self.support
     
+    # Sets AVGMMR of the Team
     def calculateAvgMMR(self):
         playerList = self.getListPlayers()
         mmr_sum  = 0
@@ -62,5 +64,19 @@ class Team:
         listOfPlayers = [self.top, self.jungle, self.mid, self.adc, self.support]
         return listOfPlayers
         
+    # List MULTI OPGG 
+    def listOPGG(self):
+        players = self.getListPlayers()
+        player_string = "https://www.op.gg/multisearch/euw?summoners="
+        ign = ""
+        for player in players:
+            ign = player.getHighestAccountName()
+            if ign == None:
+                ign = "placeholder"
+            ign = ign.replace(" ", "%2C")
+            player_string += f"{ign}%2C+"
+                
+        return player_string
+                
         
 	

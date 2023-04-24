@@ -2,6 +2,7 @@ import requests
 import discord
 import timing
 import datetime
+from datetime import date
 import time
 import asyncio
 from bs4 import BeautifulSoup
@@ -38,6 +39,7 @@ class serverInstance:
 			self.matchmake(self.queue)
 			self.queue = []
 	
+	# Mehtod which creates Matches based on available Players
 	async def matchmake(self):
      	# List of all players in Queue
 		res = self.cursor.execute(f"SELECT * FROM Player")
@@ -49,27 +51,25 @@ class serverInstance:
 			playerObjList.append(player)
    
 		players_in_queue = len(playerObjList)
-		print(f"\nPlayers in Q: {players_in_queue}")
+		
 		# Number of macthes to create
 		match_count = players_in_queue // 10
-		print(f"Number of Matches: {match_count}")
+		
 		# Number of players required
 		required_players = match_count * 10
-		print(f"Required players: {required_players}")
+	
 		# Shuffle players
-		tempMatch = Match()
+		tempMatch = Match(self.cursor, self.con)
 		# Ordered QP List & add PQP for players who were left out
 		ordered_pq_list = tempMatch.shuffle_orderPQ(playerObjList, required_players)
-		print(f"Order PQ List:\n")
+	
 		for player in ordered_pq_list:
 			# Reset QP of selected players
 			print(f"[{player.get_pID()}], [{player.get_QP()}]")
-			player.reset_QP()
 		# Ordered Rank List
 		ordered_mmr_list = tempMatch.orderBasedOnMMR(ordered_pq_list)
-		print(f"\nOrdered MMR List:\n")
-		for player in ordered_mmr_list:
-			print(f"[{player.get_pID()}], [{player.get_rating()}]")
+
+			
    
 		# Init Match(s)
 		# For each match, set roles and find fairest comobination of players
@@ -79,33 +79,46 @@ class serverInstance:
 			# Get top 10 players
 			mCount = len(self.currentMatches) + 1
 			# Init a Match 
-			initMatch = Match()
+			initMatch = Match(self.cursor, self.con)
 			# Shuffle Selected Players
 			ordered_player_list = ordered_mmr_list[((mCount-1)*10):(mCount*10)]
 			shuffled_list = sorted(ordered_player_list, key=lambda k: random.random())
 			# Assign roles for players & set roleMMR
 			assigned_roles = initMatch.fitRoles(shuffled_list)
-			print(f"\nAssigned Roles\n")
-			for role in assigned_roles.keys():
-				for x in assigned_roles[role]:
-					print(f"({role})[{x.get_pID()}][{x.get_pRole()}][{x.get_sRole()}][{x.get_rating()}][{x.get_roleMMR()}]\n")
+			
 			# Set roles for each team in match
 			initMatch.setInitTeams(assigned_roles)
 			# Find fairest combination of players
 			initMatch.findFairestTeams()
+			# Add Match to Match Table & Give it an ID
+			initMatch.insert()
 			# Add match to list of current games
 			self.currentMatches.append(initMatch)
 			
 
-		print(f"Game Count: {len(self.currentMatches)}")
+		
 		await self.displayMatch()
 		
 	# Display current matches on discord channel
 	async def displayMatch(self):
-		await self.testChannel.send(f"======================================")
+		await self.testChannel.send(f"**__Current Matches__**:\n")
 		for match in self.currentMatches:
-			await self.testChannel.send(f"{match.displayMatchDetails()}\n")
-			await self.testChannel.send(f"======================================")
+			# Display Details of Match
+			msg = await self.testChannel.send(f"{match.displayMatchDetails()}\n")
+			await msg.edit(suppress=True)
+			await self.testChannel.send(f"---------------------------------------------")
+   
+			# Send DM to all players
+			user_list = match.listOfUsers()
+			for user in user_list:
+				# Check if user is in member list
+				try:
+					memberFound = self.client.guilds[0].get_member(user)
+					if memberFound:
+						print(memberFound)
+						await memberFound.send(f"✨ You have been picked for a game, head over to {self.testChannel.mention} to see the teams!")
+				except:
+					pass
 	
 	async def createGamesOnSchedule(self, schedule, channel):
 		await timing.sleep_until(schedule)
@@ -284,10 +297,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			
 		return rank_str.upper(), summoner_name, success
 
-
-
-
- 	# Check if player exists in Table DB, returns a boolean
+	# Check if player exists in Table DB, returns a boolean
 	async def checkPlayerExsits(self, discordID):
 		
 		# Check if the discordID already exists in DB
@@ -430,5 +440,105 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				return True
 			else:
 				return False
+
+	# Method to get players rank and show it in discord channel
+	async def displayRank(self, message_obj):
+			discordID = message_obj.author.id
+			res = self.cursor.execute(f"SELECT internalRating FROM Player WHERE discordID = {discordID}")
+			mmr = res.fetchone()
+			res = self.cursor.execute(f"SELECT discordID FROM Player ORDER BY internalRating DESC")
+			output = res.fetchall()
+			test = []
+			for rank in output:
+				test.append(rank[0])
+			await message_obj.channel.send(f"*Current Rank* **#{test.index(discordID) + 1}**\t\t**MMR** ({mmr[0]})")
+   
+    # Method to display Leaderboard
+	async def displayLeaderboard(self, message_obj):
+		leaderboard_channel = message_obj.channel
+		res = self.cursor.execute(f"SELECT discordID, winCount, lossCount, internalRating FROM Player ORDER BY internalRating DESC")
+		output = res.fetchall()
+		all_players = ""
+		positionCount = 1
+		for player in output:
+			try:
+				discord_name = await self.client.fetch_user(player[0])
+			except:
+				discord_name = player[0]
+			pos = f"#{positionCount}"
+			pos = pos.ljust(5)
+			id = f"{discord_name}"
+			id = id.ljust(17)
+			win = f"\t({player[1]}W"
+			win = win.rjust(6)
+			loss = f"{player[2]}L)"
+			internalRating = f"{player[3]}LP"
+			internalRating = internalRating.ljust(8)
+			all_players += f"{pos}" + f"{id}" + f"{internalRating}" + f"{win}/" + f"{loss}\n"
+			positionCount += 1
+   
+		now = date.today()
+		await leaderboard_channel.send(f"**__Updated Leaderboard__***\t\tLast Updated: {now}*```{all_players}```")
+  
+	# Method to End a Current Match if not started or void
+	async def endMatch(self, message_obj, matchID):
+     
+		# Check if matchID is in current matches
+		for match in self.currentMatches:
+			match_id = match.get_matchID()
+			try:
+				if match_id == int(matchID):
+					# Delete Match
+					match.delete()
+					# Pop match off list
+					self.currentMatches.remove(match)
+					await message_obj.channel.send(f"🗑️ Match ({match_id}) Removed")
+			except:
+				pass
+
+	# Method to punish a player -> reducing LP and QP
+	async def punishPlayer(self, message_obj, discordID):
+		
+		
+		discordID = discordID.replace("<@", "")
+		discordID = discordID.replace(">", "")
+		res = self.cursor.execute(f"SELECT internalRating, QP, discordID FROM Player WHERE discordID = {discordID}")
+		result = res.fetchone()
+		new_mmr = result[0] - 50
+		new_qp = result[1] - 2
+		user = await self.client.fetch_user(discordID)
+		self.cursor.execute(f"UPDATE Player SET internalRating = {new_mmr}, QP = {new_qp} WHERE discordID = {discordID}")
+		self.con.commit()
+		await message_obj.channel.send(f"🔨 {user.mention} has been given a pentaly of -50LP and -2QP")
+		
+	# Method to swap two players on the same team
+	async def swapPlayers(self, message_obj, discordIDOtherPlayer):
+		discordIDPlayer = message_obj.author.id 
+		discordIDOtherPlayer = discordIDOtherPlayer.replace("<@", "")
+		discordIDOtherPlayer = discordIDOtherPlayer.replace(">", "")
+		try:
+			reaction, res = await self.client.wait_for(
+				"reaction_add",
+				check=lambda y, x: y.message.channel.id == message_obj.channel.id
+				and str(x.id) == str(discordIDPlayer)
+				and y.emoji == "✨",
+				timeout=60.0,)
+	
+			if str(reaction.emoji) == "✨":
+				for match in self.currentMatches:
+					try:
+						await match.swapPlayers(discordIDPlayer, discordIDOtherPlayer, message_obj)
+					except:
+						pass
+		except asyncio.TimeoutError:
+			await message_obj.channel.send(f"Swap timed out {message_obj.author.mention}")
+			
+
+
+       
+		
+
+
+       
 
   
