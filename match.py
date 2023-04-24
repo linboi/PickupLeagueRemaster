@@ -32,6 +32,9 @@ class Match:
     def set_matchID(self, id):
         self.matchID = id
         
+    def get_matchID(self):
+        return self.matchID
+        
     def get_red(self):
         return self.redTeam
     
@@ -231,7 +234,7 @@ class Match:
         
     def displayMatchDetails(self):
         string = f"   \n✨ MatchID ({self.matchID})\t \t⏲️ Match Time ({self.startTime})\t \t 🏅 MMR Difference ({round(self.calculateMMRDifference(self.blueTeam, self.redTeam))})"
-        string += f"\n```{'__Blue Team__': ^15}{'':^5}{'__Red Team__':^15}\n\n"
+        string += f"\n```{'[Blue Team]': ^15}{'':^5}{'[Red Team]':^15}\n\n"
         string += f"{self.blueTeam.get_top().getHighestAccountName():^15}{'(top)':^5}{self.redTeam.get_top().getHighestAccountName():^15}\n"
         string += f"{self.blueTeam.get_jg().getHighestAccountName():^15}{'(jng)':^5}{self.redTeam.get_jg().getHighestAccountName():^15}\n"
         string += f"{self.blueTeam.get_mid().getHighestAccountName():^15}{'(mid)':^5}{self.redTeam.get_mid().getHighestAccountName():^15}\n"
@@ -258,6 +261,10 @@ class Match:
             
         self.set_matchID(matchid)
         self.cursor.execute(f"INSERT INTO Match (matchID , matchTime) VALUES ({matchid}, 'TODAY')")
+        self.con.commit()
+        
+    def delete(self):
+        self.cursor.execute(f"DELETE FROM Match WHERE matchID = {self.matchID}")
         self.con.commit()
         
     def listOfUsers(self):

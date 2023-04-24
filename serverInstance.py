@@ -458,7 +458,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			test = []
 			for rank in output:
 				test.append(rank[0])
-			await message_obj.channel.send(f"*Current Rank* **#{test.index(discordID)}**\t\t**MMR** ({mmr[0] + 1})")
+			await message_obj.channel.send(f"*Current Rank* **#{test.index(discordID) + 1}**\t\t**MMR** ({mmr[0]})")
    
    
 	async def displayLeaderboard(self, message_obj):
@@ -486,6 +486,21 @@ After a win, post a screenshot of the victory and type !win (only one player on 
    
 		now = date.today()
 		await leaderboard_channel.send(f"**__Updated Leaderboard__***\t\tLast Updated: {now}*```{all_players}```")
+  
+  
+	async def endMatch(self, message_obj, matchID):
+     
+		# Check if matchID is in current matches
+		for match in self.currentMatches:
+			match_id = match.get_matchID()
+			if match_id == int(matchID):
+				# Delete Match
+				match.delete()
+				# Pop match off list
+				self.currentMatches.remove(match)
+				await message_obj.channel.send(f"🗑️ Match ({match_id}) Removed")
+
+
        
 
   

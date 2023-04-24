@@ -41,6 +41,9 @@ class commands:
 
 	async def leaderboard(message, inst, args):
 		await inst.displayLeaderboard(message)
+  
+	async def endmatch(message, inst, args):
+		await inst.endMatch(message, args[0])
 
 		
   
@@ -53,7 +56,8 @@ class commands:
 		'add-acc': addAccount,
 		'player': player,
 		'rank': rank,
-		'leaderboard': leaderboard
+		'leaderboard': leaderboard,
+		'end-match': endmatch
 		}
 
 	async def parseReaction(reaction, inst):
