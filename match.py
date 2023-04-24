@@ -231,12 +231,12 @@ class Match:
         
     def displayMatchDetails(self):
         string = f"   \n✨ MatchID ({self.matchID})\t \t⏲️ Match Time ({self.startTime})\t \t 🏅 MMR Difference ({round(self.calculateMMRDifference(self.blueTeam, self.redTeam))})"
-        string += f"\n```{'__Blue Team__': ^20}{'':^10}{'__Red Team__':^20}\n\n"
-        string += f"{self.blueTeam.get_top().get_pID():^20}{'(top)':^10}{self.redTeam.get_top().get_pID():^20}\n"
-        string += f"{self.blueTeam.get_jg().get_pID():^20}{'(jng)':^10}{self.redTeam.get_jg().get_pID():^20}\n"
-        string += f"{self.blueTeam.get_mid().get_pID():^20}{'(mid)':^10}{self.redTeam.get_mid().get_pID():^20}\n"
-        string += f"{self.blueTeam.get_adc().get_pID():^20}{'(adc)':^10}{self.redTeam.get_adc().get_pID():^20}\n"
-        string += f"{self.blueTeam.get_sup().get_pID():^20}{'(sup)':^10}{self.redTeam.get_sup().get_pID():^20}\n```"
+        string += f"\n```{'__Blue Team__': ^15}{'':^5}{'__Red Team__':^15}\n\n"
+        string += f"{self.blueTeam.get_top().getHighestAccountName():^15}{'(top)':^5}{self.redTeam.get_top().getHighestAccountName():^15}\n"
+        string += f"{self.blueTeam.get_jg().getHighestAccountName():^15}{'(jng)':^5}{self.redTeam.get_jg().getHighestAccountName():^15}\n"
+        string += f"{self.blueTeam.get_mid().getHighestAccountName():^15}{'(mid)':^5}{self.redTeam.get_mid().getHighestAccountName():^15}\n"
+        string += f"{self.blueTeam.get_adc().getHighestAccountName():^15}{'(adc)':^5}{self.redTeam.get_adc().getHighestAccountName():^15}\n"
+        string += f"{self.blueTeam.get_sup().getHighestAccountName():^15}{'(sup)':^5}{self.redTeam.get_sup().getHighestAccountName():^15}\n```"
         opgg_red , opgg_blue = self.getOPGGLink()
         string += f"\n🥶 [Blue Team OPGG]({opgg_blue})\t|\t😡 [Red Team OPGG]({opgg_red})"
         

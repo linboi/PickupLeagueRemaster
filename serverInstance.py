@@ -460,11 +460,11 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			except:
 				discord_name = player[0]
 			pos = f"#{positionCount}"
-			pos = pos.ljust(10)
+			pos = pos.ljust(5)
 			id = f"{discord_name}"
-			id = id.ljust(20)
+			id = id.ljust(17)
 			win = f"\t({player[1]}W"
-			win = win.rjust(5)
+			win = win.rjust(6)
 			loss = f"{player[2]}L)"
 			internalRating = f"{player[3]}LP"
 			internalRating = internalRating.ljust(8)
