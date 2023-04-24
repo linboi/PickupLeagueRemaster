@@ -2,6 +2,7 @@ import requests
 import discord
 import timing
 import datetime
+from datetime import date
 import time
 import asyncio
 from bs4 import BeautifulSoup
@@ -449,18 +450,29 @@ After a win, post a screenshot of the victory and type !win (only one player on 
    
 	async def displayLeaderboard(self, message_obj):
 		leaderboard_channel = message_obj.channel
-		res = self.cursor.execute(f"SELECT discordID, winCount, lossCount FROM Player ORDER BY internalRating DESC")
+		res = self.cursor.execute(f"SELECT discordID, winCount, lossCount, internalRating FROM Player ORDER BY internalRating DESC")
 		output = res.fetchall()
+		all_players = ""
 		positionCount = 1
-		for player in output[:10]:
-			pos = f"**#{positionCount}**"
-			pos = pos.ljust(10, '-')
-			id = f"{player[0]}"
-			win = f"\t({player[1]}**W**)"
-			win = win.rjust(5, '-')
-			loss = f"({player[2]}**L**)"
-			await leaderboard_channel.send(f"{pos}" + f"{id}" + f"{win}" + f"{loss}\n")
+		for player in output:
+			try:
+				discord_name = await self.client.fetch_user(player[0])
+			except:
+				discord_name = player[0]
+			pos = f"#{positionCount}"
+			pos = pos.ljust(10)
+			id = f"{discord_name}"
+			id = id.ljust(20)
+			win = f"\t({player[1]}W"
+			win = win.rjust(5)
+			loss = f"{player[2]}L)"
+			internalRating = f"{player[3]}LP"
+			internalRating = internalRating.ljust(8)
+			all_players += f"{pos}" + f"{id}" + f"{internalRating}" + f"{win}/" + f"{loss}\n"
 			positionCount += 1
+   
+		now = date.today()
+		await leaderboard_channel.send(f"**__Updated Leaderboard__***\t\tLast Updated: {now}*```{all_players}```")
        
 
   

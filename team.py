@@ -15,19 +15,25 @@ class Team:
         self.avgMMR = MMR
         
     def set_top(self, player):
+        player.set_role('top')
         self.top = player
         
     def set_mid(self, player):
+        player.set_role('jng')
         self.mid = player
         
     def set_jg(self, player):
+        player.set_role('mid')
         self.jungle = player
         
     def set_adc(self, player):
+        player.set_role('adc')
         self.adc = player
         
     def set_sup(self, player):
+        player.set_role('sup')
         self.support = player
+        
     
     # Getters
     def get_avgMMR(self):
