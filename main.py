@@ -34,7 +34,7 @@ secondary_role_msg = os.getenv('SECONDARY_ROLE_MSG')
 # Connection to Client is established
 @client.event
 async def on_ready():
-	inst.ready(client, 1096449962524561488, role_channel, main_channel, announcement_channel, primary_role_msg, secondary_role_msg,cursor, con)
+	inst.ready(client, role_channel, main_channel, announcement_channel, primary_role_msg, secondary_role_msg,cursor, con)
 
 	with open('./settings.json') as f:
 		settings = json.load(f)
