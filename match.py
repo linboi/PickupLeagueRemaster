@@ -235,11 +235,11 @@ class Match:
     def displayMatchDetails(self):
         string = f"   \n✨ MatchID ({self.matchID})\t \t⏲️ Match Time ({self.startTime})\t \t 🏅 MMR Difference ({round(self.calculateMMRDifference(self.blueTeam, self.redTeam))})"
         string += f"\n```{'[Blue Team]': ^15}{'':^5}{'[Red Team]':^15}\n\n"
-        string += f"{self.blueTeam.get_top().getHighestAccountName():^15}{'(top)':^5}{self.redTeam.get_top().getHighestAccountName():^15}\n"
-        string += f"{self.blueTeam.get_jg().getHighestAccountName():^15}{'(jng)':^5}{self.redTeam.get_jg().getHighestAccountName():^15}\n"
-        string += f"{self.blueTeam.get_mid().getHighestAccountName():^15}{'(mid)':^5}{self.redTeam.get_mid().getHighestAccountName():^15}\n"
-        string += f"{self.blueTeam.get_adc().getHighestAccountName():^15}{'(adc)':^5}{self.redTeam.get_adc().getHighestAccountName():^15}\n"
-        string += f"{self.blueTeam.get_sup().getHighestAccountName():^15}{'(sup)':^5}{self.redTeam.get_sup().getHighestAccountName():^15}\n```"
+        string += f"{self.blueTeam.get_top().get_dID():^15}{'(top)':^5}{self.redTeam.get_top().get_dID():^15}\n"
+        string += f"{self.blueTeam.get_jg().get_dID():^15}{'(jng)':^5}{self.redTeam.get_jg().get_dID():^15}\n"
+        string += f"{self.blueTeam.get_mid().get_dID():^15}{'(mid)':^5}{self.redTeam.get_mid().get_dID():^15}\n"
+        string += f"{self.blueTeam.get_adc().get_dID():^15}{'(adc)':^5}{self.redTeam.get_adc().get_dID():^15}\n"
+        string += f"{self.blueTeam.get_sup().get_dID():^15}{'(sup)':^5}{self.redTeam.get_sup().get_dID():^15}\n```"
         opgg_red , opgg_blue = self.getOPGGLink()
         string += f"\n🥶 [Blue Team OPGG]({opgg_blue})\t|\t😡 [Red Team OPGG]({opgg_red})"
         
@@ -249,6 +249,118 @@ class Match:
         blue_link = self.blueTeam.listOPGG()
         red_link = self.redTeam.listOPGG()
         return blue_link, red_link
+    
+    async def swapPlayers(self, discordID, otherID, message_obj):
+        listOfPlayers = [self.redTeam.getListPlayers() + self.blueTeam.getListPlayers()]
+        discordID = int(discordID)
+        otherID = int(otherID)
+        blueFound = False
+        redFound = False
+        # [player(), "red or blue", "jng"]
+        team = []
+        other_team = []
+        
+        # Check if player exists in Game
+        for player in listOfPlayers:
+           for user in player:
+               
+            if(user.get_dID() == discordID or user.get_dID() == otherID):
+                # If the player does exist, what team?
+                # Red Team
+                for player in self.redTeam.getListPlayers():
+                    if player.get_dID() == discordID:
+                        team.append(player)
+                        team.append('red')
+                        team.append(player.get_role())
+                        redFound = True
+                    elif player.get_dID() == otherID:
+                        other_team.append(player)
+                        other_team.append('red')
+                        other_team.append(player.get_role())
+                        redFound = True
+                        
+                # Blue Team
+                for player in self.blueTeam.getListPlayers():
+                    if player.get_dID() == discordID:
+                        team.append(player)
+                        team.append('blue')
+                        team.append(player.get_role())
+                        blueFound = True
+                    elif player.get_dID() == otherID:
+                        other_team.append(player)
+                        other_team.append('blue')
+                        other_team.append(player.get_role())
+                        blueFound = True
+    
+        if blueFound and redFound:
+            
+            # Parse Players
+            team = team[:len(team)-3]     
+            other_team = other_team[:len(other_team)-3]     
+        
+            # Swap roles
+            team[0].set_role(team[2])
+            other_team[0].set_role(other_team[2])
+            
+            # Swap role of original player
+            if team[1] == 'red':
+                if other_team[2] == 'top':
+                    self.blueTeam.set_top(team[0])
+                elif other_team[2] == 'jng':
+                    self.blueTeam.set_jg(team[0])
+                elif other_team[2] == 'mid':
+                    self.blueTeam.set_mid(team[0])
+                elif other_team[2] == 'adc':
+                    self.blueTeam.set_adc(team[0])
+                elif other_team[2] == 'sup':
+                    self.blueTeam.set_sup(team[0])
+            elif team[1] == 'blue':
+                if other_team[2] == 'top':
+                    self.redTeam.set_top(team[0])
+                elif other_team[2] == 'jng':
+                    self.redTeam.set_jg(team[0])
+                elif other_team[2] == 'mid':
+                    self.redTeam.set_mid(team[0])
+                elif other_team[2] == 'adc':
+                    self.redTeam.set_adc(team[0])
+                elif other_team[2] == 'sup':
+                    self.redTeam.set_sup(team[0])
+                    
+            # Swap role of other player
+            if other_team[1] == 'red':
+                if team[2] == 'top':
+                    self.blueTeam.set_top(other_team[0])
+                elif team[2] == 'jng':
+                    self.blueTeam.set_jg(other_team[0])
+                elif team[2] == 'mid':
+                    self.blueTeam.set_mid(other_team[0])
+                elif team[2] == 'adc':
+                    self.blueTeam.set_adc(other_team[0])
+                elif team[2] == 'sup':
+                    self.blueTeam.set_sup(other_team[0])
+            elif other_team[1] == 'blue':
+                if team[2] == 'top':
+                    self.redTeam.set_top(other_team[0])
+                elif team[2] == 'jng':
+                    self.redTeam.set_jg(other_team[0])
+                elif team[2] == 'mid':
+                    self.redTeam.set_mid(other_team[0])
+                elif team[2] == 'adc':
+                    self.redTeam.set_adc(other_team[0])
+                elif team[2] == 'sup':
+                    self.redTeam.set_sup(other_team[0])
+            
+            new_details = self.displayMatchDetails() 
+            await message_obj.channel.send(f"{new_details}")
+                
+            
+            
+        
+        
+                    
+        
+        
+                        
     
     def insert(self):
         res = self.cursor.execute(f"SELECT MAX(matchID) FROM Match")

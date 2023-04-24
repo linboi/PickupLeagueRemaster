@@ -65,7 +65,6 @@ class serverInstance:
 		for player in ordered_pq_list:
 			# Reset QP of selected players
 			print(f"[{player.get_pID()}], [{player.get_QP()}]")
-			player.reset_QP()
 		# Ordered Rank List
 		ordered_mmr_list = tempMatch.orderBasedOnMMR(ordered_pq_list)
 		print(f"\nOrdered MMR List:\n")
@@ -502,6 +501,31 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 					await message_obj.channel.send(f"🗑️ Match ({match_id}) Removed")
 			except:
 				pass
+
+	async def punishPlayer(self, message_obj, discordID):
+		
+		
+		discordID = discordID.replace("<@", "")
+		discordID = discordID.replace(">", "")
+		res = self.cursor.execute(f"SELECT internalRating, QP, discordID FROM Player WHERE discordID = {discordID}")
+		result = res.fetchone()
+		new_mmr = result[0] - 50
+		new_qp = result[1] - 2
+		user = await self.client.fetch_user(discordID)
+		self.cursor.execute(f"UPDATE Player SET internalRating = {new_mmr}, QP = {new_qp} WHERE discordID = {discordID}")
+		self.con.commit()
+		await message_obj.channel.send(f"🔨 {user.mention} has been given a pentaly of -50LP and -2QP")
+		
+  
+	async def swapPlayers(self, message_obj, discordIDOtherPlayer):
+		discordIDPlayer = message_obj.author.id 
+		discordIDOtherPlayer = discordIDOtherPlayer.replace("<@", "")
+		discordIDOtherPlayer = discordIDOtherPlayer.replace(">", "")
+
+		for match in self.currentMatches:
+			await match.swapPlayers(discordIDPlayer, discordIDOtherPlayer, message_obj)
+   
+		
 
 
        

@@ -46,6 +46,14 @@ class commands:
 	# Make Admin Command
 	async def endmatch(message, inst, args):
 		await inst.endMatch(message, args[0])
+  
+	# Punsih player
+	async def punish(message, inst, args):
+		await inst.punishPlayer(message, args[0])
+  
+	# Ask for Swap
+	async def swap(message, inst, args):
+		await inst.swapPlayers(message, args[0])
 
 	userCommands = {
 		'hello' : hello,
@@ -56,7 +64,9 @@ class commands:
 		'player': player,
 		'rank': rank,
 		'leaderboard': leaderboard,
-		'end-match': endmatch
+		'end-match': endmatch,
+		'punish': punish,
+		'swap': swap
 		}
 
 	async def parseReaction(reaction, inst):

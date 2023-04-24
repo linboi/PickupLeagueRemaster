@@ -32,7 +32,7 @@ class Player:
         self.internalRating = internalRating
         self.primaryRole = primaryRole
         self.secondaryRole = secondaryRole
-        self.playerAccounts = [(0, 'Gulag', 'X', 12, 'diamond', 1)]
+        self.playerAccounts = [(0, random.randint(0, 100), 'X', 12, 'diamond', 1)]
         self.role = None
         self.roleMMR = None
         self.QP = QP
