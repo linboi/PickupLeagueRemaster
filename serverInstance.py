@@ -132,6 +132,11 @@ class serverInstance:
 			hours, minutes = times.split(":")
 			timeObjs.append(datetime.datetime.now().replace(hour=int(hours), minute=int(minutes)))
 
+		await self.triggerGamesAtGivenTimes(timeObjs, channel)
+
+		await self.createGamesOnSchedule(schedule, channel)
+
+	async def triggerGamesAtGivenTimes(self, timeObjs, channel):
 		relativeTimeString = ""
 		for idx, times in enumerate(timeObjs):
 			relativeTimeString += (f"Game {idx+1}: <t:" + str(int(time.mktime(times.timetuple()))) + ":R>\n")
@@ -154,7 +159,11 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
 		await asyncio.gather(*gamesList)
 
-		await self.createGamesOnSchedule(schedule, channel)
+	async def unscheduledGames(self, minutesUntil, channel):
+		timeObjs = []
+		for minutes in minutesUntil:
+			timeObjs.append(datetime.datetime.now() + datetime.timedelta(minutes=int(minutes)))
+		await self.triggerGamesAtGivenTimes(timeObjs, channel)
 	
 	async def createGames(self, numSeconds, emoji, channel, messageID):
 		await asyncio.sleep(numSeconds)
