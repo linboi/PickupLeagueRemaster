@@ -107,9 +107,22 @@ class serverInstance:
 	async def displayMatch(self):
 		await self.testChannel.send(f"**__Current Matches__**:\n")
 		for match in self.currentMatches:
+			# Display Details of Match
 			msg = await self.testChannel.send(f"{match.displayMatchDetails()}\n")
 			await msg.edit(suppress=True)
 			await self.testChannel.send(f"---------------------------------------------")
+   
+			# Send DM to all players
+			user_list = match.listOfUsers()
+			for user in user_list:
+				# Check if user is in member list
+				try:
+					memberFound = self.client.guilds[0].get_member(user)
+					if memberFound:
+						print(memberFound)
+						await memberFound.send(f"✨ You have been picked for a game, head over to {self.testChannel.mention} to see the teams!")
+				except:
+					pass
 	
 	async def createGamesOnSchedule(self, schedule, channel):
 		await timing.sleep_until(schedule)

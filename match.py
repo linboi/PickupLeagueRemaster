@@ -259,6 +259,15 @@ class Match:
         self.set_matchID(matchid)
         self.cursor.execute(f"INSERT INTO Match (matchID , matchTime) VALUES ({matchid}, 'TODAY')")
         self.con.commit()
+        
+    def listOfUsers(self):
+        listOfPlayers = [self.redTeam.getListPlayers() + self.blueTeam.getListPlayers()]
+        listOfUsers = []
+        for player in listOfPlayers:
+           for user in player:
+            listOfUsers.append(user.get_dID())
+        return listOfUsers
+            
 
         
     
