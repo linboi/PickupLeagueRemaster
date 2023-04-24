@@ -40,7 +40,7 @@ async def on_ready():
 				global main_channel
 				main_channel = channel
 	
-	inst.ready(client, 1096449962524561488, select_role_channel, main_channel, cursor, con)
+	inst.ready(client, select_role_channel, main_channel, cursor, con)
 
 	with open('./settings.json') as f:
 		settings = json.load(f)
