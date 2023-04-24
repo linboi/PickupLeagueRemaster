@@ -73,7 +73,6 @@ class serverInstance:
    
 		# Init Match(s)
 		# For each match, set roles and find fairest comobination of players
-		self.currentMatches.clear()
   
 		while len(self.currentMatches) < match_count:
 			# Get top 10 players
