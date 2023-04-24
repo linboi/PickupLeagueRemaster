@@ -98,43 +98,43 @@ class Match:
             if len(assigned_roles['top']) < 2 and player.get_pRole() == 'TOP':
                 assigned_roles['top'].append(player)
                 player.set_role('top')
-                player.setRoleMMR(0)
+                
             elif len(assigned_roles['jng']) < 2 and player.get_pRole() == 'JNG':
                 assigned_roles['jng'].append(player)
                 player.set_role('jng')
-                player.setRoleMMR(0)
+                
             elif len(assigned_roles['mid']) < 2 and player.get_pRole() == 'MID':
                 assigned_roles['mid'].append(player)
                 player.set_role('mid')
-                player.setRoleMMR(0)
+                
             elif len(assigned_roles['adc']) < 2 and player.get_pRole() == 'ADC':
                 assigned_roles['adc'].append(player)
                 player.set_role('adc')
-                player.setRoleMMR(0)
+                
             elif len(assigned_roles['sup']) < 2 and player.get_pRole() == 'SUP':
                 assigned_roles['sup'].append(player)
                 player.set_role('sup')
-                player.setRoleMMR(0)
+               
             elif len(assigned_roles['top']) < 2 and player.get_sRole() == 'TOP':
                 assigned_roles['top'].append(player)
                 player.set_role('top')
-                player.setRoleMMR(1)
+                
             elif len(assigned_roles['jng']) < 2 and player.get_sRole() == 'JNG':
                 assigned_roles['jng'].append(player)
                 player.set_role('jng')
-                player.setRoleMMR(1)
+                
             elif len(assigned_roles['mid']) < 2 and player.get_sRole() == 'MID':
                 assigned_roles['mid'].append(player)
                 player.set_role('mid')
-                player.setRoleMMR(1)
+                
             elif len(assigned_roles['adc']) < 2 and player.get_sRole() == 'ADC':
                 assigned_roles['adc'].append(player)
                 player.set_role('adc')
-                player.setRoleMMR(1)
+                
             elif len(assigned_roles['sup']) < 2 and player.get_sRole() == 'SUP':
                 assigned_roles['sup'].append(player)
                 player.set_role('sup')
-                player.setRoleMMR(1)
+            
             else:
                 # If player pRole & sRole is taken, add to FILL
                 fill_players.append(player)
@@ -152,7 +152,6 @@ class Match:
                 assigned_roles[role].append(player)
                 # Set assigned role for game
                 player.set_role(role)
-                player.setRoleMMR(2)
         
                 
         return assigned_roles

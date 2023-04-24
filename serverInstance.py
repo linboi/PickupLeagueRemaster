@@ -39,6 +39,7 @@ class serverInstance:
 			self.matchmake(self.queue)
 			self.queue = []
 	
+	# Mehtod which creates Matches based on available Players
 	async def matchmake(self):
      	# List of all players in Queue
 		res = self.cursor.execute(f"SELECT * FROM Player")
@@ -300,10 +301,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			
 		return rank_str.upper(), summoner_name, success
 
-
-
-
- 	# Check if player exists in Table DB, returns a boolean
+	# Check if player exists in Table DB, returns a boolean
 	async def checkPlayerExsits(self, discordID):
 		
 		# Check if the discordID already exists in DB
@@ -459,7 +457,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				test.append(rank[0])
 			await message_obj.channel.send(f"*Current Rank* **#{test.index(discordID) + 1}**\t\t**MMR** ({mmr[0]})")
    
-   
+    # Method to display Leaderboard
 	async def displayLeaderboard(self, message_obj):
 		leaderboard_channel = message_obj.channel
 		res = self.cursor.execute(f"SELECT discordID, winCount, lossCount, internalRating FROM Player ORDER BY internalRating DESC")
@@ -486,7 +484,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		now = date.today()
 		await leaderboard_channel.send(f"**__Updated Leaderboard__***\t\tLast Updated: {now}*```{all_players}```")
   
-  
+	# Method to End a Current Match if not started or void
 	async def endMatch(self, message_obj, matchID):
      
 		# Check if matchID is in current matches
@@ -502,6 +500,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			except:
 				pass
 
+	# Method to punish a player -> reducing LP and QP
 	async def punishPlayer(self, message_obj, discordID):
 		
 		
@@ -516,7 +515,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		self.con.commit()
 		await message_obj.channel.send(f"🔨 {user.mention} has been given a pentaly of -50LP and -2QP")
 		
-  
+	# Method to swap two players on the same team
 	async def swapPlayers(self, message_obj, discordIDOtherPlayer):
 		discordIDPlayer = message_obj.author.id 
 		discordIDOtherPlayer = discordIDOtherPlayer.replace("<@", "")

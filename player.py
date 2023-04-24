@@ -14,6 +14,9 @@ class Player:
         self.roleMMR = None
         self.QP = QP
         
+        if self.playerAccounts == None:
+            self.playerAccounts = [(0, random.randint(0, 100), 'X', 12, 'diamond', 1)]
+        
         self.cursor = cursor
         self.con = con
         
@@ -33,13 +36,18 @@ class Player:
         self.internalRating = internalRating
         self.primaryRole = primaryRole
         self.secondaryRole = secondaryRole
-        self.playerAccounts = [(0, random.randint(0, 100), 'X', 12, 'diamond', 1)]
+        self.playerAccounts = None
         self.role = None
         self.roleMMR = None
         self.QP = QP
         
         self.cursor = cursor
         self.con = con
+        
+        try:
+            self.fetchPlayerAccounts()
+        except:
+            self.playerAccounts = [(0, random.randint(0, 100), 'X', 12, 'diamond', 1)]
         
         # Sets inital MMR & QP (2) of player
         if self.winCount == 0 and self.lossCount == 0:
@@ -86,12 +94,17 @@ class Player:
     def get_QP(self):
         return self.QP
     
-    
-        
-
     def set_role(self, role):
         self.role = role
         
+        # Set RoleMMR based on assigned role
+        if role == self.primaryRole.lower():
+            self.setRoleMMR(0)
+        elif role == self.secondaryRole.lower():
+            self.setRoleMMR(1)
+        else:
+            self.setRoleMMR(2)
+           
     def addWin(self):
         self.winCount += 1
         # Calculate MMR Gain -> Set MMR (Enemys AVG MMR)
@@ -136,39 +149,39 @@ class Player:
             
             if account[4] == 'iron':
                 counterNew += 0
-                counterNew += int(account[5])
+                counterNew += int(100/account[5])
                 
             if account[4] == 'bronze':
                 counterNew += 10
-                counterNew += int(account[5])
+                counterNew += int(100/account[5])
                 
             if account[4] == 'silver':
                 counterNew += 20
-                counterNew += int(account[5])
+                counterNew += int(100/account[5])
                 
             if account[4] == 'gold':
                 counterNew += 30
-                counterNew += int(account[5])
+                counterNew += int(100/account[5])
                 
             if account[4] == 'platinum':
                 counterNew += 40
-                counterNew += int(account[5])
+                counterNew += int(100/account[5])
                 
             if account[4] == 'diamond':
                 counterNew += 60
-                counterNew += int(account[5])
+                counterNew += int(100/account[5])
                 
             if account[4] == 'master':
                 counterNew += 80
-                counterNew += int(account[5])
+                counterNew += int(100/account[5])
                 
             if account[4] == 'grandmaster':
                 counterNew += 100
-                counterNew += int(account[5])
+                counterNew += int(100/account[5])
                 
             if account[4] == 'challenger':
                 counterNew += 120
-                counterNew += int(account[5])
+                counterNew += int(100/account[5])
                 
             
             if (counterNew > counterOld):
@@ -178,6 +191,11 @@ class Player:
     
         return acc
     
+    def fetchPlayerAccounts(self):
+        res = self.cursor.execute(f"SELECT * FROM Account WHERE playerID = {self.playerID}")
+        result = res.fetchall()
+        self.playerAccounts = result
+        
     # Sets the rating of a new player based upon their highest account
     def setInitMMR(self):
         self.QP = 5
