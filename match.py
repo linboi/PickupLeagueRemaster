@@ -41,6 +41,8 @@ class Match:
     def get_blue(self):
         return self.blueTeam
     
+    
+    # Primary fn() for Matchmaking
     def assignRoles(self, playerList):
         
         # Shuffle & Order Player for PQ Value
@@ -56,6 +58,7 @@ class Match:
         # Create a new teams w/ fair combinations
         self.setFairTeams(team1, team2)
         
+    # Order players based on QP
     def shuffle_orderPQ(self, playerList, reqPLayers):
         # Shuffle the player list
         random.shuffle(playerList)
@@ -69,11 +72,13 @@ class Match:
         # Return Final List
         return ordered_pq_list[:reqPLayers]
     
+    # Ordered list based on MMR
     def orderBasedOnMMR(self, selectedPlayerList):
         # Order selected players on MMR
         ordered_rank_list = sorted(selectedPlayerList, key=lambda p: p.get_rating(), reverse=True)
         return ordered_rank_list
         
+    # For a set of Players assign roles based on Role Preferences
     def fitRoles(self, players):
         
         # Array for filled players
@@ -173,7 +178,7 @@ class Match:
         self.redTeam = redTeam
         self.blueTeam = blueTeam
         
-        
+    # Find fairest team for group of 10 players, swap players in respective roles -> sets new teams
     def findFairestTeams(self):
         
         teamR = self.redTeam
@@ -211,16 +216,8 @@ class Match:
                     if new_difference < best_difference:
                         self.blueTeam = teamR
                         self.redTeam = teamB
-                        
-        print(f"Lowest MMR Difference: {self.calculateMMRDifference(self.blueTeam, self.redTeam)}\n")
-        print("\nBlue Team:\n")
-        for player in self.blueTeam.getListPlayers():
-            print(f"({player.get_role()})[{player.get_pID()}][{player.get_pRole()}][{player.get_sRole()}][{player.get_roleMMR()}]")
-        print("\nRed Team:\n")
-        for player in self.redTeam.getListPlayers():
-            print(f"({player.get_role()})[{player.get_pID()}][{player.get_pRole()}][{player.get_sRole()}][{player.get_roleMMR()}]")
                 
-        
+    # MMR Difference Between Both Teams
     def calculateMMRDifference(self, teamR, teamB):
         # Calculate AVG MMR of Init Teams
         teamR.calculateAvgMMR()
@@ -232,6 +229,7 @@ class Match:
         mmrDifference = abs(rtMMR - btMMR)
         return mmrDifference
         
+    # Return the details of the current match in string
     def displayMatchDetails(self):
         string = f"   \n✨ MatchID ({self.matchID})\t \t⏲️ Match Time ({self.startTime})\t \t 🏅 MMR Difference ({round(self.calculateMMRDifference(self.blueTeam, self.redTeam))})"
         string += f"\n```{'[Blue Team]': ^15}{'':^5}{'[Red Team]':^15}\n\n"
@@ -245,11 +243,13 @@ class Match:
         
         return string
     
+    # Return OPGG Link of Hightest Account per Player()
     def getOPGGLink(self):
         blue_link = self.blueTeam.listOPGG()
         red_link = self.redTeam.listOPGG()
         return blue_link, red_link
     
+    # Swap two players in a Match
     async def swapPlayers(self, discordID, otherID, message_obj):
         listOfPlayers = [self.redTeam.getListPlayers() + self.blueTeam.getListPlayers()]
         discordID = int(discordID)
@@ -292,13 +292,8 @@ class Match:
                         other_team.append(player.get_role())
                         blueFound = True
     
+        # If both players found -> swap roles & teams of players
         if blueFound and redFound:
-            
-            # Parse Players
-            #team = team[:len(team)-3]     
-            #other_team = other_team[:len(other_team)-3]     
-            print(f"{team}")
-            print(f"{other_team}")
             # Swap roles
             team[0].set_role(other_team[2])
             other_team[0].set_role(team[2])
@@ -354,15 +349,7 @@ class Match:
             new_details = self.displayMatchDetails() 
             await message_obj.channel.send(f"{new_details}")
                 
-            
-            
-        
-        
-                    
-        
-        
-                        
-    
+    # Insert initial Match & Set MatchID
     def insert(self):
         res = self.cursor.execute(f"SELECT MAX(matchID) FROM Match")
         latest_matchID = res.fetchone()
@@ -376,10 +363,12 @@ class Match:
         self.cursor.execute(f"INSERT INTO Match (matchID , matchTime) VALUES ({matchid}, 'TODAY')")
         self.con.commit()
         
+    # Delete Match from DB
     def delete(self):
         self.cursor.execute(f"DELETE FROM Match WHERE matchID = {self.matchID}")
         self.con.commit()
         
+    # Return list of Players on both team
     def listOfUsers(self):
         listOfPlayers = [self.redTeam.getListPlayers() + self.blueTeam.getListPlayers()]
         listOfUsers = []
