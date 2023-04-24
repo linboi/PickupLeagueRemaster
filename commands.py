@@ -39,15 +39,14 @@ class commands:
 	async def rank(message, inst, args):
 		await inst.displayRank(message)
 
+	# Make Admin Command
 	async def leaderboard(message, inst, args):
 		await inst.displayLeaderboard(message)
   
+	# Make Admin Command
 	async def endmatch(message, inst, args):
 		await inst.endMatch(message, args[0])
 
-		
-  
-  
 	userCommands = {
 		'hello' : hello,
 		'queue' : queue,

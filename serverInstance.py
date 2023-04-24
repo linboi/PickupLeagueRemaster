@@ -493,12 +493,15 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		# Check if matchID is in current matches
 		for match in self.currentMatches:
 			match_id = match.get_matchID()
-			if match_id == int(matchID):
-				# Delete Match
-				match.delete()
-				# Pop match off list
-				self.currentMatches.remove(match)
-				await message_obj.channel.send(f"🗑️ Match ({match_id}) Removed")
+			try:
+				if match_id == int(matchID):
+					# Delete Match
+					match.delete()
+					# Pop match off list
+					self.currentMatches.remove(match)
+					await message_obj.channel.send(f"🗑️ Match ({match_id}) Removed")
+			except:
+				pass
 
 
        
