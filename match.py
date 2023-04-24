@@ -15,7 +15,7 @@ class Match:
         
     def __init__(self, cursor, con):
         
-        self.matchID = random.randint(0, 100)
+        self.matchID = None
         self.blueTeam = None
         self.redTeam = None
         self.startTime = 'TODAY'

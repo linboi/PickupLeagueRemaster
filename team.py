@@ -49,6 +49,7 @@ class Team:
     def get_sup(self):
         return self.support
     
+    # Sets AVGMMR of the Team
     def calculateAvgMMR(self):
         playerList = self.getListPlayers()
         mmr_sum  = 0

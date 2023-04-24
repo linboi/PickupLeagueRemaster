@@ -17,10 +17,11 @@ class Player:
         self.cursor = cursor
         self.con = con
         
-        # Sets inital MMR of player
+        # Sets inital MMR & QP (2) of player 
         if self.winCount == 0 and self.lossCount == 0:
             print("Setting InitMMR")
             self.setInitMMR()
+            self.QP = 2
             self.update()
             
     # Without player accounts constructor
@@ -40,10 +41,11 @@ class Player:
         self.cursor = cursor
         self.con = con
         
-        # Sets inital MMR of player
+        # Sets inital MMR & QP (2) of player
         if self.winCount == 0 and self.lossCount == 0:
             print("Setting InitMMR")
             self.setInitMMR()
+            self.QP = 2
             self.update()
             
             
@@ -84,12 +86,47 @@ class Player:
     def get_QP(self):
         return self.QP
     
+    
+        
+
+    def set_role(self, role):
+        self.role = role
+        
+    def addWin(self):
+        self.winCount += 1
+        # Calculate MMR Gain -> Set MMR (Enemys AVG MMR)
+        
+    def addLoss(self):
+        self.lossCount += 1
+        # Calculate MMR Loss -> Set MMR (Enemys AVG MMR)
+        
+    # Updates player in DB
+    def update(self):
+        self.cursor.execute(f"UPDATE Player SET winCount = {self.winCount}, lossCount = {self.lossCount}, internalRating = {self.internalRating}, QP = {self.QP} WHERE playerID = {self.playerID}")
+        self.con.commit()
+        
+    # Adds QP +/-
+    def addQP(self, count):
+        self.QP += count
+        self.update()
+        
+    # Sets Role MMR based on Role Preferences
+    def setRoleMMR(self, autofill):
+        if autofill == 0:
+            self.roleMMR = self.internalRating
+        elif autofill == 1:
+            self.roleMMR = self.internalRating - 15
+        else:
+            self.roleMMR = self.internalRating - 30
+    
+    # Get a list of Names from a players Accounts
     def getAccountNames(self):
         listOfNames = []
         for account in self.playerAccounts:
             listOfNames.append(account[1])
         return listOfNames
     
+    # Returns the Players highest account name
     def getHighestAccountName(self):
         counterNew = 0
         counterOld = 0
@@ -140,35 +177,7 @@ class Player:
                 acc = account[1]
     
         return acc
-        
-
-    def set_role(self, role):
-        self.role = role
-        
-    def addWin(self):
-        self.winCount += 1
-        # Calculate MMR Gain -> Set MMR (Enemys AVG MMR)
-        
-    def addLoss(self):
-        self.lossCount += 1
-        # Calculate MMR Loss -> Set MMR (Enemys AVG MMR)
-        
-    def update(self):
-        self.cursor.execute(f"UPDATE Player SET winCount = {self.winCount}, lossCount = {self.lossCount}, internalRating = {self.internalRating}, QP = {self.QP} WHERE playerID = {self.playerID}")
-        self.con.commit()
-        
-    def addQP(self, count):
-        self.QP += count
-        self.update()
-        
-    def setRoleMMR(self, autofill):
-        if autofill == 0:
-            self.roleMMR = self.internalRating
-        elif autofill == 1:
-            self.roleMMR = self.internalRating - 15
-        else:
-            self.roleMMR = self.internalRating - 30
-        
+    
     # Sets the rating of a new player based upon their highest account
     def setInitMMR(self):
         self.QP = 5
