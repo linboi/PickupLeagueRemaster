@@ -34,6 +34,12 @@ class commands:
 			await message.channel.send(pName + " (" + pRank + ")")
    
 	async def player(message, inst, args):
+		test = await inst.createPlayerObject(24)
+		test.addWin()
+		test.update()
+		
+	async def unscheduledGame(message, inst, args):
+		await inst.unscheduledGames(args, message.channel)
 		await inst.matchmake()
   
 	async def rank(message, inst, args):
@@ -62,6 +68,7 @@ class commands:
 		'signup' : signup,
 		'add-acc': addAccount,
 		'player': player,
+		'unscheduledgame' : unscheduledGame,
 		'rank': rank,
 		'leaderboard': leaderboard,
 		'end-match': endmatch,

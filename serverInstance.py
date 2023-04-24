@@ -14,13 +14,15 @@ class serverInstance:
 	def __init__(self):
 		self.queue = []
 
-	def ready(self, client, announcementChannel, roleChannel, testChannel, cursor, con):
+	def ready(self, client, roleChannel, testChannel, announcementChannel, primaryRoleMsg, secondaryRoleMsg, cursor, con):
 		self.client = client
 		self.announcementChannel = announcementChannel
 		self.roleChannel = roleChannel
 		self.cursor = cursor
 		self.con = con
 		self.testChannel = testChannel
+		self.primaryRoleMSG = primaryRoleMsg
+		self.secondaryRoleMSG = secondaryRoleMsg
 		self.currentMatches = []
 	
 	async def addToQueue(self, player, channel):
@@ -132,6 +134,11 @@ class serverInstance:
 			hours, minutes = times.split(":")
 			timeObjs.append(datetime.datetime.now().replace(hour=int(hours), minute=int(minutes)))
 
+		await self.triggerGamesAtGivenTimes(timeObjs, channel)
+
+		await self.createGamesOnSchedule(schedule, channel)
+
+	async def triggerGamesAtGivenTimes(self, timeObjs, channel):
 		relativeTimeString = ""
 		for idx, times in enumerate(timeObjs):
 			relativeTimeString += (f"Game {idx+1}: <t:" + str(int(time.mktime(times.timetuple()))) + ":R>\n")
@@ -154,7 +161,11 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
 		await asyncio.gather(*gamesList)
 
-		await self.createGamesOnSchedule(schedule, channel)
+	async def unscheduledGames(self, minutesUntil, channel):
+		timeObjs = []
+		for minutes in minutesUntil:
+			timeObjs.append(datetime.datetime.now() + datetime.timedelta(minutes=int(minutes)))
+		await self.triggerGamesAtGivenTimes(timeObjs, channel)
 	
 	async def createGames(self, numSeconds, emoji, channel, messageID):
 		await asyncio.sleep(numSeconds)
@@ -382,8 +393,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 	# Function called when player reacts to a role selection
 	async def changePlayerRole(self, reaction):
 		# Message ID's for #select-role channel
-		primary_role_message = '1098222182997442611'
-		secondary_role_message = '1098680816961335408'
+		primary_role_message = self.primaryRoleMSG
+		secondary_role_message = self.secondaryRoleMSG
 		
 		# Select PRIMARY ROLE 
 		if reaction.channel_id == self.roleChannel.id and str(reaction.message_id) == primary_role_message:
