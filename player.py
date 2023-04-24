@@ -44,10 +44,9 @@ class Player:
         self.cursor = cursor
         self.con = con
         
-        try:
-            self.fetchPlayerAccounts()
-        except:
-            self.playerAccounts = [(0, random.randint(0, 100), 'X', 12, 'diamond', 1)]
+        
+        self.fetchPlayerAccounts()
+        #self.playerAccounts = [(0, 'NAME', 'X', 12, 'diamond', 1)]
         
         # Sets inital MMR & QP (2) of player
         if self.winCount == 0 and self.lossCount == 0:
@@ -149,39 +148,39 @@ class Player:
             
             if account[4] == 'iron':
                 counterNew += 0
-                counterNew += int(100/account[5])
+                counterNew += int(account[5])
                 
             if account[4] == 'bronze':
                 counterNew += 10
-                counterNew += int(100/account[5])
+                counterNew += int(account[5])
                 
             if account[4] == 'silver':
                 counterNew += 20
-                counterNew += int(100/account[5])
+                counterNew += int(account[5])
                 
             if account[4] == 'gold':
                 counterNew += 30
-                counterNew += int(100/account[5])
+                counterNew += int(account[5])
                 
             if account[4] == 'platinum':
                 counterNew += 40
-                counterNew += int(100/account[5])
+                counterNew += int(account[5])
                 
             if account[4] == 'diamond':
                 counterNew += 60
-                counterNew += int(100/account[5])
+                counterNew += int(account[5])
                 
             if account[4] == 'master':
                 counterNew += 80
-                counterNew += int(100/account[5])
+                counterNew += int(account[5])
                 
             if account[4] == 'grandmaster':
                 counterNew += 100
-                counterNew += int(100/account[5])
+                counterNew += int(account[5])
                 
             if account[4] == 'challenger':
                 counterNew += 120
-                counterNew += int(100/account[5])
+                counterNew += int(account[5])
                 
             
             if (counterNew > counterOld):

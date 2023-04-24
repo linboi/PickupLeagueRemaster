@@ -51,26 +51,25 @@ class serverInstance:
 			playerObjList.append(player)
    
 		players_in_queue = len(playerObjList)
-		print(f"\nPlayers in Q: {players_in_queue}")
+		
 		# Number of macthes to create
 		match_count = players_in_queue // 10
-		print(f"Number of Matches: {match_count}")
+		
 		# Number of players required
 		required_players = match_count * 10
-		print(f"Required players: {required_players}")
+	
 		# Shuffle players
 		tempMatch = Match(self.cursor, self.con)
 		# Ordered QP List & add PQP for players who were left out
 		ordered_pq_list = tempMatch.shuffle_orderPQ(playerObjList, required_players)
-		print(f"Order PQ List:\n")
+	
 		for player in ordered_pq_list:
 			# Reset QP of selected players
 			print(f"[{player.get_pID()}], [{player.get_QP()}]")
 		# Ordered Rank List
 		ordered_mmr_list = tempMatch.orderBasedOnMMR(ordered_pq_list)
-		print(f"\nOrdered MMR List:\n")
-		for player in ordered_mmr_list:
-			print(f"[{player.get_pID()}], [{player.get_rating()}]")
+
+			
    
 		# Init Match(s)
 		# For each match, set roles and find fairest comobination of players
@@ -86,10 +85,7 @@ class serverInstance:
 			shuffled_list = sorted(ordered_player_list, key=lambda k: random.random())
 			# Assign roles for players & set roleMMR
 			assigned_roles = initMatch.fitRoles(shuffled_list)
-			print(f"\nAssigned Roles\n")
-			for role in assigned_roles.keys():
-				for x in assigned_roles[role]:
-					print(f"({role})[{x.get_pID()}][{x.get_pRole()}][{x.get_sRole()}][{x.get_rating()}][{x.get_roleMMR()}]\n")
+			
 			# Set roles for each team in match
 			initMatch.setInitTeams(assigned_roles)
 			# Find fairest combination of players
@@ -100,7 +96,7 @@ class serverInstance:
 			self.currentMatches.append(initMatch)
 			
 
-		print(f"Game Count: {len(self.currentMatches)}")
+		
 		await self.displayMatch()
 		
 	# Display current matches on discord channel

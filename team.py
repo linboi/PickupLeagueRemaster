@@ -68,9 +68,12 @@ class Team:
     def listOPGG(self):
         players = self.getListPlayers()
         player_string = "https://www.op.gg/multisearch/euw?summoners="
-        
+        ign = ""
         for player in players:
             ign = player.getHighestAccountName()
+            if ign == None:
+                ign = "placeholder"
+            ign = ign.replace(" ", "%2C")
             player_string += f"{ign}%2C+"
                 
         return player_string
