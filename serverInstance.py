@@ -525,7 +525,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			reaction, res = await self.client.wait_for(
 				"reaction_add",
 				check=lambda y, x: y.message.channel.id == message_obj.channel.id
-				and str(x.id) == discordIDOtherPlayer
+				and str(x.id) == str(discordIDPlayer)
 				and y.emoji == "✨",
 				timeout=60.0,)
 	

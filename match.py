@@ -295,9 +295,10 @@ class Match:
         if blueFound and redFound:
             
             # Parse Players
-            team = team[:len(team)-3]     
-            other_team = other_team[:len(other_team)-3]     
-        
+            #team = team[:len(team)-3]     
+            #other_team = other_team[:len(other_team)-3]     
+            print(f"{team}")
+            print(f"{other_team}")
             # Swap roles
             team[0].set_role(team[2])
             other_team[0].set_role(other_team[2])
