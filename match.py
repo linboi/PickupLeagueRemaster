@@ -300,8 +300,8 @@ class Match:
             print(f"{team}")
             print(f"{other_team}")
             # Swap roles
-            team[0].set_role(team[2])
-            other_team[0].set_role(other_team[2])
+            team[0].set_role(other_team[2])
+            other_team[0].set_role(team[2])
             
             # Swap role of original player
             if team[1] == 'red':
