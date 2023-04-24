@@ -1,33 +1,7 @@
 import random
 
 class Player:
-    def __init__(self, playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, playerAccounts, QP, cursor, con):
-        self.playerID = playerID
-        self.discordID = discordID
-        self.winCount = winCount
-        self.lossCount = lossCount
-        self.internalRating = internalRating
-        self.primaryRole = primaryRole
-        self.secondaryRole = secondaryRole
-        self.playerAccounts = playerAccounts
-        self.role = None
-        self.roleMMR = None
-        self.QP = QP
-        
-        if self.playerAccounts == None:
-            self.playerAccounts = [(0, random.randint(0, 100), 'X', 12, 'diamond', 1)]
-        
-        self.cursor = cursor
-        self.con = con
-        
-        # Sets inital MMR & QP (2) of player 
-        if self.winCount == 0 and self.lossCount == 0:
-            print("Setting InitMMR")
-            self.setInitMMR()
-            self.QP = 2
-            self.update()
-            
-    # Without player accounts constructor
+
     def __init__(self, playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, cursor, con):
         self.playerID = playerID
         self.discordID = discordID
@@ -44,9 +18,8 @@ class Player:
         self.cursor = cursor
         self.con = con
         
-        
+        # Assign Accounts to Player
         self.fetchPlayerAccounts()
-        #self.playerAccounts = [(0, 'NAME', 'X', 12, 'diamond', 1)]
         
         # Sets inital MMR & QP (2) of player
         if self.winCount == 0 and self.lossCount == 0:
