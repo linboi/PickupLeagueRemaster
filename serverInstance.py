@@ -521,10 +521,26 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		discordIDPlayer = message_obj.author.id 
 		discordIDOtherPlayer = discordIDOtherPlayer.replace("<@", "")
 		discordIDOtherPlayer = discordIDOtherPlayer.replace(">", "")
+		try:
+			reaction, res = await self.client.wait_for(
+				"reaction_add",
+				check=lambda y, x: y.message.channel.id == message_obj.channel.id
+				and str(x.id) == discordIDOtherPlayer
+				and y.emoji == "✨",
+				timeout=60.0,)
+	
+			if str(reaction.emoji) == "✨":
+				for match in self.currentMatches:
+					try:
+						await match.swapPlayers(discordIDPlayer, discordIDOtherPlayer, message_obj)
+					except:
+						pass
+		except asyncio.TimeoutError:
+			await message_obj.channel.send(f"Swap timed out {message_obj.author.mention}")
+			
 
-		for match in self.currentMatches:
-			await match.swapPlayers(discordIDPlayer, discordIDOtherPlayer, message_obj)
-   
+
+       
 		
 
 
