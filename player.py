@@ -113,12 +113,12 @@ class Player:
     
     # Returns the Players highest account name
     def getHighestAccountName(self):
-        counterNew = 0
+        
         counterOld = 0
         acc = None
         
         for account in self.playerAccounts:
-            
+            counterNew = 0
             if account[4] == 'iron':
                 counterNew += 0
                 counterNew += int(account[5])
@@ -158,7 +158,6 @@ class Player:
             
             if (counterNew > counterOld):
                 counterOld = counterNew
-                counterNew = 0
                 acc = account[1]
     
         return acc
