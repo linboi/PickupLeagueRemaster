@@ -36,7 +36,8 @@ class commands:
 		test.addWin()
 		test.update()
 		
-  
+	async def unscheduledGame(message, inst, args):
+		await inst.unscheduledGames(args, message.channel)
   
 	userCommands = {
 		'hello' : hello,
@@ -44,7 +45,8 @@ class commands:
 		'dequeue' : dequeue,
 		'signup' : signup,
 		'add-acc': addAccount,
-		'player': player
+		'player': player,
+		'unscheduledgame' : unscheduledGame
 		}
 
 	async def parseReaction(reaction, inst):
