@@ -61,6 +61,10 @@ class commands:
 	async def swap(message, inst, args):
 		await inst.swapPlayers(message, args[0])
 
+	async def win(message, inst, args):
+		inst.win(message)
+		pass
+
 	userCommands = {
 		'hello' : hello,
 		'queue' : queue,
@@ -73,7 +77,8 @@ class commands:
 		'leaderboard': leaderboard,
 		'end-match': endmatch,
 		'punish': punish,
-		'swap': swap
+		'swap': swap,
+		'win' : win
 		}
 
 	async def parseReaction(reaction, inst):

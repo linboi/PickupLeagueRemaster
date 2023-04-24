@@ -40,9 +40,9 @@ class serverInstance:
 			self.queue = []
 	
 	# Mehtod which creates Matches based on available Players
-	async def matchmake(self):
+	async def matchmake(self, playerIDList):
 	 	# List of all players in Queue
-		res = self.cursor.execute(f"SELECT * FROM Player")
+		res = self.cursor.execute("SELECT * FROM Player WHERE playerID ({seq})".format(seq=','.join(['?']*len(playerIDList))))
 		listOfPlayers = res.fetchall()
 		# Create a Player obj for each Player in Queue 
 		playerObjList = []
@@ -174,6 +174,25 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				async for user in reaction.users():
 					msg+= "\n" + user.display_name
 		await channel.send(msg)
+
+	async def win(self, message):
+		activePlayerMatches = []
+		activePlayer = message.author.id
+		for match in self.currentMatches:
+			for player in match.blueTeam.getListPlayers():
+				if player.get_dID == activePlayer:
+					activePlayerMatches.append((match, 'BLUE'))
+			for player in match.redTeam.getListPlayers():
+				if player.get_dID == activePlayer:
+					activePlayerMatches.append((match, 'RED'))
+
+		if len(activePlayerMatches) == 0:
+			message.channel.send("Player not found in any active matches")
+		if len(activePlayerMatches) == 1:
+			activePlayerMatches[0][0].resolve(activePlayerMatches[0][1])
+			self.currentMatches.remove(activePlayerMatches[0][0])
+		if len(activePlayerMatches) > 1:
+			message.channel.send("Player found in more than one match, uh oh")
 
 	# Scrape rank details from op.gg page
 	async def signUpPlayer(self, msg_content, message_obj):

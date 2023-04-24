@@ -65,6 +65,9 @@ class Player:
 	
 	def get_QP(self):
 		return self.QP
+		
+	def set_rating(self, newRating):
+		self.internalRating = newRating
 	
 	def set_role(self, role):
 		self.role = role
