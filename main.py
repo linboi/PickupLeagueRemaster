@@ -26,6 +26,8 @@ inst = serverInstance()
 main_channel_id = os.getenv('MAIN_CHANNEL')
 role_channel_id = os.getenv('ROLE_CHANNEL')
 announcement_channel_id = os.getenv('ANNOUNCEMENT_CHANNEL')
+watched_channels = os.getenv('WATCHED_CHANNELS').split(" ")
+
 
 
 # DEFINE Messages
@@ -51,7 +53,8 @@ async def on_ready():
 # Event handeler for Messages
 @client.event
 async def on_message(message):
-	await commands.parse(message, inst)
+	if str(message.channel.id) in os.getenv('WATCHED_CHANNELS'):
+		await commands.parse(message, inst)
 		
 # Event handeler for Reactions
 @client.event
