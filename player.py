@@ -2,7 +2,7 @@ import random
 
 class Player:
 
-    def __init__(self, playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, cursor, con):
+    def __init__(self, playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, cursor, con, client, discordUser):
         self.playerID = playerID
         self.discordID = discordID
         self.winCount = winCount
@@ -14,9 +14,16 @@ class Player:
         self.role = None
         self.roleMMR = None
         self.QP = QP
+        self.username = None
+        self.discordUser = discordUser
+        
         
         self.cursor = cursor
         self.con = con
+        self.client = client
+        
+        # Set username of Player
+        self.set_username()
         
         # Assign Accounts to Player
         self.fetchPlayerAccounts()
@@ -59,12 +66,26 @@ class Player:
     def get_roleMMR(self):
         return self.roleMMR
     
+    def get_discordUser(self):
+        return self.discordID
+    
+    def get_username(self):
+        return self.username
+    
     def reset_QP(self):
         self.QP = 0
         self.update()
     
     def get_QP(self):
         return self.QP
+    
+    def set_username(self):
+        try:
+            self.username = self.discordUser.name
+            print(self.username)
+        except:
+            self.username = "404"
+        
     
     def set_role(self, role):
         self.role = role
