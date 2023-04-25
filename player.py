@@ -142,45 +142,47 @@ class Player:
             
             if account[4] == 'iron':
                 counterNew += 0
-                counterNew += int(account[5])
+                counterNew += 10/int(account[5])
                 
             if account[4] == 'bronze':
                 counterNew += 10
-                counterNew += int(account[5])
+                counterNew += 10/int(account[5])
                 
             if account[4] == 'silver':
                 counterNew += 20
-                counterNew += int(account[5])
+                counterNew += 10/int(account[5])
                 
             if account[4] == 'gold':
                 counterNew += 30
-                counterNew += int(account[5])
+                counterNew += 10/int(account[5])
                 
             if account[4] == 'platinum':
                 counterNew += 40
-                counterNew += int(account[5])
+                counterNew += 10/int(account[5])
                 
             if account[4] == 'diamond':
                 counterNew += 60
-                counterNew += int(account[5])
+                counterNew += 10/int(account[5])
                 
             if account[4] == 'master':
                 counterNew += 80
-                counterNew += int(account[5])
+                counterNew += 10/int(account[5])
                 
             if account[4] == 'grandmaster':
                 counterNew += 100
-                counterNew += int(account[5])
+                counterNew += 10/int(account[5])
                 
             if account[4] == 'challenger':
                 counterNew += 120
-                counterNew += int(account[5])
+                counterNew += 10/int(account[5])
                 
             
             if (counterNew > counterOld):
                 counterOld = counterNew
                 counterNew = 0
                 acc = account[1]
+            else:
+                counterNew = 0
     
         return acc
     
@@ -198,43 +200,45 @@ class Player:
             
             if account[4] == 'iron':
                 counterNew += 0
-                counterNew += int(account[5])
+                counterNew += 10/int(account[5])
                 
             if account[4] == 'bronze':
                 counterNew += 10
-                counterNew += int(account[5])
+                counterNew += 10/int(account[5])
                 
             if account[4] == 'silver':
                 counterNew += 20
-                counterNew += int(account[5])
+                counterNew += 10/int(account[5])
                 
             if account[4] == 'gold':
                 counterNew += 30
-                counterNew += int(account[5])
+                counterNew += 10/int(account[5])
                 
             if account[4] == 'platinum':
                 counterNew += 40
-                counterNew += int(account[5])
+                counterNew += 10/int(account[5])
                 
             if account[4] == 'diamond':
                 counterNew += 60
-                counterNew += int(account[5])
+                counterNew += 10/int(account[5])
                 
             if account[4] == 'master':
                 counterNew += 80
-                counterNew += int(account[5])
+                counterNew += 10/int(account[5])
                 
             if account[4] == 'grandmaster':
                 counterNew += 100
-                counterNew += int(account[5])
+                counterNew += 10/int(account[5])
                 
             if account[4] == 'challenger':
                 counterNew += 120
-                counterNew += int(account[5])
+                counterNew += 10/int(account[5])
                 
             
             if (counterNew > counterOld):
                 counterOld = counterNew
+                counterNew = 0
+            else:
                 counterNew = 0
                 
         self.internalRating = 1500 + counterOld*5 
