@@ -2,7 +2,7 @@ import random
 
 class Player:
 
-    def __init__(self, playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, cursor, con, client, discordUser):
+    def __init__(self, playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, cursor, con, discordUser):
         self.playerID = playerID
         self.discordID = discordID
         self.winCount = winCount
@@ -20,7 +20,6 @@ class Player:
         
         self.cursor = cursor
         self.con = con
-        self.client = client
         
         # Set username of Player
         self.set_username()
@@ -146,8 +145,8 @@ class Player:
 			'platinum': 1600,
 			'diamond': 2000,
 			'master': 2400,
-			'grandmaster': 2800,
-			'challenger': 3200
+			'grandmaster': 2400,
+			'challenger': 2400
 		}
         
         # Div Mappings
@@ -165,8 +164,13 @@ class Player:
         
         for account in self.playerAccounts:
             counter_new = 0
-            counter_new = mappingTiers[account[4]] + mappingDivs[account[5]]
+            counter_new = mappingTiers[account[4]]
             
+            if counter_new >= 2400:
+                counter_new += int(account[5])
+            else:
+                counter_new += mappingDivs[account[5]]
+                
             if counter_new > counter_old:
                 counter_old = counter_new
                 acc = account[1]
@@ -211,7 +215,12 @@ class Player:
         
         for account in self.playerAccounts:
             counter_new = 0
-            counter_new = mappingTiers[account[4]] + mappingDivs[account[5]]
+            counter_new = mappingTiers[account[4]]
+            
+            if counter_new >= 2400:
+                counter_new += int(account[5])
+            else:
+                counter_new += mappingDivs[account[5]]
             
             if counter_new > counter_old:
                 counter_old = counter_new

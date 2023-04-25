@@ -48,16 +48,13 @@ class serverInstance:
 		listOfPlayers = res.fetchall()
 		# Create a Player obj for each Player in Queue 
 		playerObjList = []
-		discordUser = None
 		for player_details in listOfPlayers:
-			# Check if user is in discord, if not, set to None
+			discordUser = None
 			try:
 				discordUser = await self.client.fetch_user(player_details[1])
 			except:
 				discordUser = None
-
-			
-			player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], self.cursor, self.con, self.client, discordUser)
+			player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], self.cursor, self.con, discordUser)
 			playerObjList.append(player)
    
 		players_in_queue = len(playerObjList)
@@ -211,14 +208,25 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			rank = rank[0].decode_contents().strip()
 			rank = rank.replace("<!-- -->", "")
 			rank = rank.split()
+			lp = doc.find_all(class_="lp")
+			lp = lp[0].decode_contents().strip()
+			lp = lp.replace("<!-- -->", "")
+			lp = lp.split()
+			lp = lp[0]
+			lp = lp.replace(",", "")
+
+			print(int(lp))
+		
 			rank_str = ""
 			for char in rank:
 				rank_str += char[0]
 		
 			# Add rank division for Masters, GM, and Challenger players
 			if len(rank) == 1:
-				rank.append('1')
+				rank.append(lp)
+				rank_str += f" {lp}LP"
 			
+			print(rank)
 			
 			# Check if player suggested rank is formatted right
 				
@@ -281,13 +289,23 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			rank = rank[0].decode_contents().strip()
 			rank = rank.replace("<!-- -->", "")
 			rank = rank.split()
+   
+			lp = doc.find_all(class_="lp")
+			lp = lp[0].decode_contents().strip()
+			lp = lp.replace("<!-- -->", "")
+			lp = lp.split()
+			lp = lp[0]
+			lp = lp.replace(",", "")
+
+   
 			rank_str = ""
 			for char in rank:
 				rank_str += char[0]
 		
 			# Add rank division for Masters, GM, and Challenger players
 			if len(rank) == 1:
-				rank.append('1')
+				rank.append(lp)
+				
 				
 			summoner_name = doc.find_all(class_="summoner-name")
 			summoner_name = summoner_name[0].decode_contents().strip()
@@ -303,7 +321,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				self.addExtraAccount(discordID, summoner_name, op_url, rank)
 				success = True
 			else:
-				rank_str = "Signup first before adding an account!"
+				rank_str = "Signup first before adding an account1!"
 				summoner_name = "Invalid Account"
 				success = False
 			

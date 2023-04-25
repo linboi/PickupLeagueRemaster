@@ -28,6 +28,7 @@ class commands:
    
 	async def addAccount(message, inst, args):
 		pRank, pName, signUpSuccess = await inst.addAccount(args[0], message)
+  
 		if signUpSuccess:
 			await message.channel.send("🗃️ Account Added: " + pName)
 		else:
