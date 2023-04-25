@@ -134,56 +134,43 @@ class Player:
     
     # Returns the Players highest account name
     def getHighestAccountName(self):
-        counterNew = 0
-        counterOld = 0
+        # Init QP
+        self.QP = 5
+        
+        # Tier Mappings
+        mappingTiers = {
+			'iron': 0,
+			'bronze': 400,
+			'silver': 800,
+			'gold': 1200,
+			'platinum': 1600,
+			'diamond': 2000,
+			'master': 2400,
+			'grandmaster': 2800,
+			'challenger': 3200
+		}
+        
+        # Div Mappings
+        mappingDivs = {
+			'1': 300,
+			'2': 200,
+			'3': 100,
+			'4': 0
+		}
+        
+        # Init vars
         acc = None
+        counter_old = 0
+        counter_new = 0
         
         for account in self.playerAccounts:
+            counter_new = 0
+            counter_new = mappingTiers[account[4]] + mappingDivs[account[5]]
             
-            if account[4] == 'iron':
-                counterNew += 0
-                counterNew += 10/int(account[5])
-                
-            if account[4] == 'bronze':
-                counterNew += 10
-                counterNew += 10/int(account[5])
-                
-            if account[4] == 'silver':
-                counterNew += 20
-                counterNew += 10/int(account[5])
-                
-            if account[4] == 'gold':
-                counterNew += 30
-                counterNew += 10/int(account[5])
-                
-            if account[4] == 'platinum':
-                counterNew += 40
-                counterNew += 10/int(account[5])
-                
-            if account[4] == 'diamond':
-                counterNew += 60
-                counterNew += 10/int(account[5])
-                
-            if account[4] == 'master':
-                counterNew += 80
-                counterNew += 10/int(account[5])
-                
-            if account[4] == 'grandmaster':
-                counterNew += 100
-                counterNew += 10/int(account[5])
-                
-            if account[4] == 'challenger':
-                counterNew += 120
-                counterNew += 10/int(account[5])
-                
-            
-            if (counterNew > counterOld):
-                counterOld = counterNew
-                counterNew = 0
+            if counter_new > counter_old:
+                counter_old = counter_new
                 acc = account[1]
-            else:
-                counterNew = 0
-    
+        
         return acc
     
     def fetchPlayerAccounts(self):
@@ -193,55 +180,44 @@ class Player:
         
     # Sets the rating of a new player based upon their highest account
     def setInitMMR(self):
+        
+        # Init QP
         self.QP = 5
-        counterNew = 0
-        counterOld = 0
+        
+        # Tier Mappings
+        mappingTiers = {
+			'iron': 0,
+			'bronze': 400,
+			'silver': 800,
+			'gold': 1200,
+			'platinum': 1600,
+			'diamond': 2000,
+			'master': 2400,
+			'grandmaster': 2800,
+			'challenger': 3200
+		}
+        
+        # Div Mappings
+        mappingDivs = {
+			'1': 300,
+			'2': 200,
+			'3': 100,
+			'4': 0
+		}
+        
+        # Init counters
+        counter_old = 0
+        counter_new = 0
+        
         for account in self.playerAccounts:
+            counter_new = 0
+            counter_new = mappingTiers[account[4]] + mappingDivs[account[5]]
             
-            if account[4] == 'iron':
-                counterNew += 0
-                counterNew += 10/int(account[5])
-                
-            if account[4] == 'bronze':
-                counterNew += 10
-                counterNew += 10/int(account[5])
-                
-            if account[4] == 'silver':
-                counterNew += 20
-                counterNew += 10/int(account[5])
-                
-            if account[4] == 'gold':
-                counterNew += 30
-                counterNew += 10/int(account[5])
-                
-            if account[4] == 'platinum':
-                counterNew += 40
-                counterNew += 10/int(account[5])
-                
-            if account[4] == 'diamond':
-                counterNew += 60
-                counterNew += 10/int(account[5])
-                
-            if account[4] == 'master':
-                counterNew += 80
-                counterNew += 10/int(account[5])
-                
-            if account[4] == 'grandmaster':
-                counterNew += 100
-                counterNew += 10/int(account[5])
-                
-            if account[4] == 'challenger':
-                counterNew += 120
-                counterNew += 10/int(account[5])
-                
-            
-            if (counterNew > counterOld):
-                counterOld = counterNew
-                counterNew = 0
-            else:
-                counterNew = 0
-                
-        self.internalRating = 1500 + counterOld*5 
+            if counter_new > counter_old:
+                counter_old = counter_new
+        
+        self.internalRating = 1200 + counter_new
+        # Set External Internal Rating
         
         
         
