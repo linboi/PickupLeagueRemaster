@@ -32,6 +32,7 @@ class Player:
         # Set QP of player
         self.setQP()
         
+        
         # Assign Accounts to Player
         self.fetchPlayerAccounts()
         
@@ -135,7 +136,7 @@ class Player:
         
     # Updates player in DB
     def update(self):
-        self.cursor.execute(f"UPDATE Player SET winCount = {self.winCount}, lossCount = {self.lossCount}, internalRating = {self.internalRating}, QP = {self.QP} WHERE playerID = {self.playerID}, isAdmin = {self.isAdmin}, missedGames = {self.missedGameCount}, signupCount = {self.signUpCount}, leaderboardPoints = {self.LP}")
+        self.cursor.execute(f"UPDATE Player SET winCount = {self.winCount}, lossCount = {self.lossCount}, internalRating = {self.internalRating}, QP = {self.QP}, isAdmin = {self.isAdmin}, missedGames = {self.missedGameCount}, signupCount = {self.signUpCount}, leaderboardPoints = {self.LP} WHERE playerID = {self.playerID}")
         self.con.commit()
         
     # Adds QP +/-
@@ -144,7 +145,7 @@ class Player:
         self.update()
         
     def setQP(self):
-        qp = self.addSignUpCount - self.addGameMissed
+        qp = self.signUpCount - self.missedGameCount
         self.Q = qp
         
     # Sets Role MMR based on Role Preferences
