@@ -23,9 +23,10 @@ client = discord.Client(intents=intents)
 inst = serverInstance()
 
 # DEFINE Channel Names
-main_channel = os.getenv('MAIN_CHANNEL')
-role_channel = os.getenv('ROLE_CHANNEL')
-announcement_channel = os.getenv('ANNOUNCEMENT_CHANNEL')
+main_channel_id = os.getenv('MAIN_CHANNEL')
+role_channel_id = os.getenv('ROLE_CHANNEL')
+announcement_channel_id = os.getenv('ANNOUNCEMENT_CHANNEL')
+
 
 # DEFINE Messages
 primary_role_msg = os.getenv('PRIMARY_ROLE_MSG')
@@ -34,6 +35,12 @@ secondary_role_msg = os.getenv('SECONDARY_ROLE_MSG')
 # Connection to Client is established
 @client.event
 async def on_ready():
+    
+    # Get Channel() from ID
+	main_channel = client.get_channel(int(main_channel_id))
+	role_channel = client.get_channel(int(role_channel_id))
+	announcement_channel = client.get_channel(int(announcement_channel_id))
+
 	inst.ready(client, role_channel, main_channel, announcement_channel, primary_role_msg, secondary_role_msg,cursor, con)
 
 	with open('./settings.json') as f:

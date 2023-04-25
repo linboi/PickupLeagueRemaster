@@ -232,11 +232,11 @@ class Match:
     def displayMatchDetails(self):
         string = f"   \n✨ MatchID ({self.matchID})\t \t⏲️ Match Time ({self.startTime})\t \t 🏅 MMR Difference ({round(self.calculateMMRDifference(self.blueTeam, self.redTeam))})"
         string += f"\n```{'[Blue Team]': ^15}{'':^5}{'[Red Team]':^15}\n\n"
-        string += f"{self.blueTeam.get_top().get_dID():^15}{'(top)':^5}{self.redTeam.get_top().get_dID():^15}\n"
-        string += f"{self.blueTeam.get_jg().get_dID():^15}{'(jng)':^5}{self.redTeam.get_jg().get_dID():^15}\n"
-        string += f"{self.blueTeam.get_mid().get_dID():^15}{'(mid)':^5}{self.redTeam.get_mid().get_dID():^15}\n"
-        string += f"{self.blueTeam.get_adc().get_dID():^15}{'(adc)':^5}{self.redTeam.get_adc().get_dID():^15}\n"
-        string += f"{self.blueTeam.get_sup().get_dID():^15}{'(sup)':^5}{self.redTeam.get_sup().get_dID():^15}\n```"
+        string += f"{self.blueTeam.get_top().get_username():^15}{'(top)':^5}{self.redTeam.get_top().get_username():^15}\n"
+        string += f"{self.blueTeam.get_jg().get_username():^15}{'(jng)':^5}{self.redTeam.get_jg().get_username():^15}\n"
+        string += f"{self.blueTeam.get_mid().get_username():^15}{'(mid)':^5}{self.redTeam.get_mid().get_username():^15}\n"
+        string += f"{self.blueTeam.get_adc().get_username():^15}{'(adc)':^5}{self.redTeam.get_adc().get_username():^15}\n"
+        string += f"{self.blueTeam.get_sup().get_username():^15}{'(sup)':^5}{self.redTeam.get_sup().get_username():^15}\n```"
         opgg_red , opgg_blue = self.getOPGGLink()
         string += f"\n🥶 [Blue Team OPGG]({opgg_red})\t|\t😡 [Red Team OPGG]({opgg_blue})"
         

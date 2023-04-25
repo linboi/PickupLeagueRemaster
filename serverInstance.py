@@ -48,8 +48,16 @@ class serverInstance:
 		listOfPlayers = res.fetchall()
 		# Create a Player obj for each Player in Queue 
 		playerObjList = []
+		discordUser = None
 		for player_details in listOfPlayers:
-			player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], self.cursor, self.con)
+			# Check if user is in discord, if not, set to None
+			try:
+				discordUser = await self.client.fetch_user(player_details[1])
+			except:
+				discordUser = None
+
+			
+			player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], self.cursor, self.con, self.client, discordUser)
 			playerObjList.append(player)
    
 		players_in_queue = len(playerObjList)
