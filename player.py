@@ -29,6 +29,9 @@ class Player:
         # Set username of Player
         self.set_username()
         
+        # Set QP of player
+        self.setQP()
+        
         # Assign Accounts to Player
         self.fetchPlayerAccounts()
         
@@ -140,6 +143,10 @@ class Player:
         self.QP += count
         self.update()
         
+    def setQP(self):
+        qp = self.addSignUpCount - self.addGameMissed
+        self.Q = qp
+        
     # Sets Role MMR based on Role Preferences
     def setRoleMMR(self, autofill):
         if autofill == 0:
@@ -209,7 +216,7 @@ class Player:
     def setInitMMR(self):
         
         # Init QP
-        self.QP = 5
+        self.QP = 0
         
         # Tier Mappings
         mappingTiers = {

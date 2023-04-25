@@ -60,6 +60,7 @@ class Match:
         
     # Order players based on QP
     def shuffle_orderPQ(self, playerList, reqPLayers):
+        
         # Shuffle the player list
         random.shuffle(playerList)
         # Use the sorted function to order the list in terms of PQ value
@@ -67,7 +68,7 @@ class Match:
         # All players left out recieve a +1 PQ Value
         for player in ordered_pq_list[reqPLayers:]:
             print(f"Player Left Out: {player.get_pID()}[{player.get_QP()}]\n")
-            player.addQP(1)
+            player.addGameMissed()
             player.update()
         # Return Final List
         return ordered_pq_list[:reqPLayers]

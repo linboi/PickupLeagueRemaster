@@ -56,6 +56,10 @@ class serverInstance:
 				discordUser = None
 			player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
                    player_details[9], player_details[10], player_details[11], self.cursor, self.con, discordUser)
+			# Add signup
+			player.addSignUpCount()
+			player.update()
+			# Add player to list
 			playerObjList.append(player)
    
 		players_in_queue = len(playerObjList)
@@ -544,7 +548,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		res = self.cursor.execute(f"SELECT leaderboardPoints, QP, discordID FROM Player WHERE discordID = {discordID}")
 		result = res.fetchone()
 		new_mmr = result[0] - 50
-		new_qp = result[1] - 2
+		new_qp = 0
 		user = await self.client.fetch_user(discordID)
 		self.cursor.execute(f"UPDATE Player SET leaderboardPoints = {new_mmr}, QP = {new_qp} WHERE discordID = {discordID}")
 		self.con.commit()
