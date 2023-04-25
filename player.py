@@ -2,7 +2,8 @@ import random
 
 class Player:
 
-    def __init__(self, playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, cursor, con, discordUser):
+    def __init__(self, playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGameCount, signUpCount, LP, cursor, con, discordUser):
+        
         self.playerID = playerID
         self.discordID = discordID
         self.winCount = winCount
@@ -16,7 +17,11 @@ class Player:
         self.QP = QP
         self.username = None
         self.discordUser = discordUser
-        
+        self.LP = LP
+        self.isAdmin = isAdmin
+        self.signUpCount = signUpCount
+        self.missedGameCount = missedGameCount
+
         
         self.cursor = cursor
         self.con = con
@@ -24,14 +29,16 @@ class Player:
         # Set username of Player
         self.set_username()
         
+        # Set QP of player
+        self.setQP()
+        
+        
         # Assign Accounts to Player
         self.fetchPlayerAccounts()
         
         # Sets inital MMR & QP (2) of player
         if self.winCount == 0 and self.lossCount == 0:
-            print("Setting InitMMR")
             self.setInitMMR()
-            self.QP = 2
             self.update()
             
             
@@ -78,6 +85,18 @@ class Player:
     def get_QP(self):
         return self.QP
     
+    def get_missedGameCount(self):
+        return self.missedGameCount
+    
+    def get_signUpCount(self):
+        return self.signUpCount
+    
+    def get_LP(self):
+        return self.LP
+    
+    def getAdmin(self):
+        return self.isAdmin
+    
     def set_username(self):
         try:
             self.username = self.discordUser.name
@@ -96,6 +115,12 @@ class Player:
             self.setRoleMMR(1)
         else:
             self.setRoleMMR(2)
+            
+    def addGameMissed(self):
+        self.missedGameCount += 1
+           
+    def addSignUpCount(self):
+        self.signUpCount += 1
            
     def addWin(self):
         self.winCount += 1
@@ -105,15 +130,23 @@ class Player:
         self.lossCount += 1
         # Calculate MMR Loss -> Set MMR (Enemys AVG MMR)
         
+    def updateLP(self, lp_change):
+        self.LP += lp_change
+        self.update()
+        
     # Updates player in DB
     def update(self):
-        self.cursor.execute(f"UPDATE Player SET winCount = {self.winCount}, lossCount = {self.lossCount}, internalRating = {self.internalRating}, QP = {self.QP} WHERE playerID = {self.playerID}")
+        self.cursor.execute(f"UPDATE Player SET winCount = {self.winCount}, lossCount = {self.lossCount}, internalRating = {self.internalRating}, QP = {self.QP}, isAdmin = {self.isAdmin}, missedGames = {self.missedGameCount}, signupCount = {self.signUpCount}, leaderboardPoints = {self.LP} WHERE playerID = {self.playerID}")
         self.con.commit()
         
     # Adds QP +/-
     def addQP(self, count):
         self.QP += count
         self.update()
+        
+    def setQP(self):
+        qp = self.signUpCount - self.missedGameCount
+        self.Q = qp
         
     # Sets Role MMR based on Role Preferences
     def setRoleMMR(self, autofill):
@@ -133,8 +166,6 @@ class Player:
     
     # Returns the Players highest account name
     def getHighestAccountName(self):
-        # Init QP
-        self.QP = 5
         
         # Tier Mappings
         mappingTiers = {
@@ -186,7 +217,7 @@ class Player:
     def setInitMMR(self):
         
         # Init QP
-        self.QP = 5
+        self.QP = 0
         
         # Tier Mappings
         mappingTiers = {
@@ -226,7 +257,6 @@ class Player:
                 counter_old = counter_new
         
         self.internalRating = 1200 + counter_new
-        # Set External Internal Rating
         
         
         

@@ -54,7 +54,12 @@ class serverInstance:
 				discordUser = await self.client.fetch_user(player_details[1])
 			except:
 				discordUser = None
-			player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], self.cursor, self.con, discordUser)
+			player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
+                   player_details[9], player_details[10], player_details[11], self.cursor, self.con, discordUser)
+			# Add signup
+			player.addSignUpCount()
+			player.update()
+			# Add player to list
 			playerObjList.append(player)
    
 		players_in_queue = len(playerObjList)
@@ -349,7 +354,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 	# Adds player to Player & Account DB
 	def addPlayer(self, discordID, summoner_name, op_url, rank):
 		
-		self.cursor.execute(f"INSERT INTO Player (discordID, winCount, lossCount, internalRating) VALUES ({discordID}, 0, 0, 1500)")
+		self.cursor.execute(f"INSERT INTO Player (discordID, winCount, lossCount, internalRating, isAdmin, missedGames, signupCount, leaderboardPoints) VALUES ({discordID}, 0, 0, 1500, 0, 0, 0, 1200)")
 		self.con.commit()
 		
 		# Add player account to Account table
@@ -481,20 +486,21 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 	# Method to get players rank and show it in discord channel
 	async def displayRank(self, message_obj):
 			discordID = message_obj.author.id
-			res = self.cursor.execute(f"SELECT internalRating FROM Player WHERE discordID = {discordID}")
+			res = self.cursor.execute(f"SELECT leaderboardPoints, winCount, lossCount FROM Player WHERE discordID = {discordID}")
 			mmr = res.fetchone()
-			res = self.cursor.execute(f"SELECT discordID FROM Player ORDER BY internalRating DESC")
+			res = self.cursor.execute(f"SELECT discordID FROM Player ORDER BY leaderboardPoints DESC")
 			output = res.fetchall()
 			test = []
 			for rank in output:
 				test.append(rank[0])
-			await message_obj.channel.send(f"*Current Rank* **#{test.index(discordID) + 1}**\t\t**MMR** ({mmr[0]})")
+			await message_obj.channel.send(f"*Current Rank* **#{test.index(discordID) + 1}**\t\t{round(mmr[0])}**LP**\t\t({round(mmr[1])}**W**/{round(mmr[2])}**L**)")
    
     # Method to display Leaderboard
 	async def displayLeaderboard(self, message_obj):
 		leaderboard_channel = message_obj.channel
-		res = self.cursor.execute(f"SELECT discordID, winCount, lossCount, internalRating FROM Player ORDER BY internalRating DESC")
+		res = self.cursor.execute(f"SELECT discordID, winCount, lossCount, leaderboardPoints FROM Player ORDER BY leaderboardPoints DESC")
 		output = res.fetchall()
+		print(output)
 		all_players = ""
 		positionCount = 1
 		for player in output:
@@ -539,12 +545,12 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		
 		discordID = discordID.replace("<@", "")
 		discordID = discordID.replace(">", "")
-		res = self.cursor.execute(f"SELECT internalRating, QP, discordID FROM Player WHERE discordID = {discordID}")
+		res = self.cursor.execute(f"SELECT leaderboardPoints, QP, discordID FROM Player WHERE discordID = {discordID}")
 		result = res.fetchone()
 		new_mmr = result[0] - 50
-		new_qp = result[1] - 2
+		new_qp = 0
 		user = await self.client.fetch_user(discordID)
-		self.cursor.execute(f"UPDATE Player SET internalRating = {new_mmr}, QP = {new_qp} WHERE discordID = {discordID}")
+		self.cursor.execute(f"UPDATE Player SET leaderboardPoints = {new_mmr}, QP = {new_qp} WHERE discordID = {discordID}")
 		self.con.commit()
 		await message_obj.channel.send(f"🔨 {user.mention} has been given a pentaly of -50LP and -2QP")
 		
