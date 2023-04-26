@@ -256,8 +256,11 @@ class Match:
     # Swap two players in a Match
     async def swapPlayers(self, discordID, otherID, message_obj):
         listOfPlayers = [self.redTeam.getListPlayers() + self.blueTeam.getListPlayers()]
+        print(listOfPlayers)
         discordID = int(discordID)
         otherID = int(otherID)
+        print(discordID)
+        print(otherID)
         blueFound = False
         redFound = False
         # [player(), "red or blue", "jng"]
@@ -281,7 +284,7 @@ class Match:
                         other_team.append(player)
                         other_team.append('red')
                         other_team.append(player.get_role())
-                        redFound = True
+                        blueFound = True
                         
                 # Blue Team
                 for player in self.blueTeam.getListPlayers():
@@ -289,14 +292,14 @@ class Match:
                         team.append(player)
                         team.append('blue')
                         team.append(player.get_role())
-                        blueFound = True
+                        redFound = True
                     elif player.get_dID() == otherID:
                         other_team.append(player)
                         other_team.append('blue')
                         other_team.append(player.get_role())
                         blueFound = True
     
-        # If both players found -> swap roles & teams of players
+        # If both players found -> replace player
         if blueFound and redFound:
             # Swap roles
             team[0].set_role(other_team[2])
@@ -352,6 +355,8 @@ class Match:
             
             new_details = self.displayMatchDetails() 
             await message_obj.channel.send(f"{new_details}")
+        else:
+            pass
                 
     # Insert initial Match & Set MatchID
     def insert(self):
