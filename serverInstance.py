@@ -273,6 +273,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 								overwrite_voice.read_messages = True
 								overwrite_voice.stream = True
 								# 1-4 voice channels
+								# Add each one from list
 								await message_obj.channel.send(f"🥳 Success {member.mention} head over to {self.roleChannel.mention} to assign your **Primary** and **Secondary** role!")
 				except discord.Forbidden:
 					print("Forbidden")
