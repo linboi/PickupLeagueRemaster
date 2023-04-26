@@ -577,6 +577,34 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 						pass
 		except asyncio.TimeoutError:
 			await message_obj.channel.send(f"Swap timed out {message_obj.author.mention}")
+   
+   
+	async def replacePlayer(self, msg_obj, discordIDOrigin, discordIDReplacement):
+     
+		# Check called by (isAdmin)
+		user_id = msg_obj.author.id
+		admin_check = self.checkAdmin(user_id)
+		if admin_check:
+			# Parse discord ID's from mentions in message
+			discordIDOrigin = discordIDOrigin.replace("<@", "")
+			discordIDOrigin = discordIDOrigin.replace(">", "")
+			discordIDReplacement = discordIDReplacement.replace("<@", "")
+			discordIDReplacement = discordIDReplacement.replace("<@", "")
+			for match in self.currentMatches:
+				try:
+					await match.swapPlayer(discordIDOrigin, discordIDReplacement, msg_obj)
+				except:
+					await msg_obj.channel.send(f"Replacement Error")
+			
+		
+	# Check if discordID is Admin
+	async def checkAdmin(self, discordID):
+		res = self.cursor.execute(f"SELECT isAdmin FROM Player WHERE discordID = {discordID}")
+		result = res.fetchone()
+		if(result[0] == 1):
+			return True
+		else:
+			return False
 			
 
 

@@ -281,7 +281,7 @@ class Match:
                         other_team.append(player)
                         other_team.append('red')
                         other_team.append(player.get_role())
-                        redFound = True
+                        blueFound = True
                         
                 # Blue Team
                 for player in self.blueTeam.getListPlayers():
@@ -289,14 +289,14 @@ class Match:
                         team.append(player)
                         team.append('blue')
                         team.append(player.get_role())
-                        blueFound = True
+                        redFound = True
                     elif player.get_dID() == otherID:
                         other_team.append(player)
                         other_team.append('blue')
                         other_team.append(player.get_role())
                         blueFound = True
     
-        # If both players found -> swap roles & teams of players
+        # If both players found -> replace player
         if blueFound and redFound:
             # Swap roles
             team[0].set_role(other_team[2])
