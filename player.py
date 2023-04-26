@@ -36,7 +36,7 @@ class Player:
         # Assign Accounts to Player
         self.fetchPlayerAccounts()
         
-        # Sets inital MMR & QP (2) of player
+        # Sets inital MMR of player
         if self.winCount == 0 and self.lossCount == 0:
             self.setInitMMR()
             self.update()
@@ -141,7 +141,7 @@ class Player:
         
     def setQP(self):
         qp = self.signUpCount - self.missedGameCount
-        self.Q = qp
+        self.QP = qp
         self.update()
         
     # Sets Role MMR based on Role Preferences
