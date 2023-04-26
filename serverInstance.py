@@ -547,14 +547,14 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		
 		discordID = discordID.replace("<@", "")
 		discordID = discordID.replace(">", "")
-		res = self.cursor.execute(f"SELECT leaderboardPoints, QP, discordID FROM Player WHERE discordID = {discordID}")
+		res = self.cursor.execute(f"SELECT leaderboardPoints, signupCount, discordID FROM Player WHERE discordID = {discordID}")
 		result = res.fetchone()
 		new_mmr = result[0] - 50
-		new_qp = 0
+		add_signupCount = result[1] + 3
 		user = await self.client.fetch_user(discordID)
-		self.cursor.execute(f"UPDATE Player SET leaderboardPoints = {new_mmr}, QP = {new_qp} WHERE discordID = {discordID}")
+		self.cursor.execute(f"UPDATE Player SET leaderboardPoints = {new_mmr}, signupCount = {add_signupCount} WHERE discordID = {discordID}")
 		self.con.commit()
-		await message_obj.channel.send(f"🔨 {user.mention} has been given a pentaly of -50LP and -2QP")
+		await message_obj.channel.send(f"🔨 {user.mention} has been given a pentaly of -50**LP** and added to **Low Priority Queue**")
 		
 	# Method to swap two players on the same team
 	async def swapPlayers(self, message_obj, discordIDOtherPlayer):
