@@ -251,7 +251,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 					for guild in self.client.guilds:
 						for member in guild.members:
 							if (member.id == message_obj.author.id):
-								# Acces to role channel
+								# Access to role channel
 								overwrite_role = discord.PermissionOverwrite()
 								overwrite_role.send_messages = False
 								overwrite_role.read_messages = True
