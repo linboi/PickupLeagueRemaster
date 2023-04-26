@@ -86,12 +86,12 @@ class Match:
         
         # Init an empty dictionary of roles
         assigned_roles = {
-			'top':[],
-			'jng':[],
-			'mid':[],
-			'adc':[],
-			'sup':[]
-		}
+            'top':[],
+            'jng':[],
+            'mid':[],
+            'adc':[],
+            'sup':[]
+        }
         
         # Loop & Set assigned role. NEED TO ADD SET_TEMPMMR() FOR FILL PLAYERS
         for player in players:
@@ -147,7 +147,7 @@ class Match:
             available_roles = [role for role in assigned_roles.keys() if len(assigned_roles[role]) < 2]
             if available_roles:
                 role = random.choice(available_roles)
-				# Set MMR reduction
+                # Set MMR reduction
 
                 assigned_roles[role].append(player)
                 # Set assigned role for game
