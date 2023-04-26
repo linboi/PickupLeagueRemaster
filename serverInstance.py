@@ -469,37 +469,37 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		if reaction.channel_id == self.roleChannel.id and str(reaction.message_id) == primary_role_message:
 			# Jungle Selected
 			if str(reaction.emoji) == "✨"  : 
-				await self.updatePlayerRole(reaction.user, 1, "JNG")   
+				await self.updatePlayerRole(reaction.user_id, 1, "JNG")   
 			# Mid Selected
 			elif str(reaction.emoji) == "😎"  : 
-				await self.updatePlayerRole(reaction.user, 1, "MID")   
+				await self.updatePlayerRole(reaction.user_id, 1, "MID")   
 			# Top Selected
 			elif str(reaction.emoji) == "🥶"  : 
-				await self.updatePlayerRole(reaction.user, 1, "TOP")   
+				await self.updatePlayerRole(reaction.user_id, 1, "TOP")   
 			# AD Selected
 			elif str(reaction.emoji) == "😭"  :
-				await self.updatePlayerRole(reaction.user, 1, "ADC")   
+				await self.updatePlayerRole(reaction.user_id, 1, "ADC")   
 			# Support Selected
 			elif str(reaction.emoji) == "🤡"  :
-				await self.updatePlayerRole(reaction.user, 1, "SUP")   
+				await self.updatePlayerRole(reaction.user_id, 1, "SUP")   
 
 		# Select SECONDARY ROLE
 		if reaction.channel_id == self.roleChannel.id and str(reaction.message_id) == secondary_role_message:
 			# Jungle Selected
 			if str(reaction.emoji) == "✨"  :
-				await self.updatePlayerRole(reaction.user, 2, "JNG")  
+				await self.updatePlayerRole(reaction.user_id, 2, "JNG")  
 			# Mid Selected
 			elif str(reaction.emoji) == "😎"  :
-				await self.updatePlayerRole(reaction.user, 2, "MID")  
+				await self.updatePlayerRole(reaction.user_id, 2, "MID")  
 			# Top Selected
 			elif str(reaction.emoji) == "🥶"  :
-				await self.updatePlayerRole(reaction.user, 2, "TOP")  
+				await self.updatePlayerRole(reaction.user_id, 2, "TOP")  
 			# AD Selected
 			elif str(reaction.emoji) == "😭"  :
-				await self.updatePlayerRole(reaction.user, 2, "ADC")  
+				await self.updatePlayerRole(reaction.user_id, 2, "ADC")  
 			# Support Selected
 			elif str(reaction.emoji) == "🤡"  : 
-				await self.updatePlayerRole(reaction.user, 2, "SUP")  
+				await self.updatePlayerRole(reaction.user_id, 2, "SUP")  
 	 
 	# Check if position is aleady set in other role
 	def checkDupPos(self, discordID, newRoleType, position):
