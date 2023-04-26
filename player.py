@@ -78,10 +78,6 @@ class Player:
     def get_username(self):
         return self.username
     
-    def reset_QP(self):
-        self.QP = 0
-        self.update()
-    
     def get_QP(self):
         return self.QP
     
@@ -118,9 +114,13 @@ class Player:
             
     def addGameMissed(self):
         self.missedGameCount += 1
+        self.setQP()
+        self.update()
            
     def addSignUpCount(self):
         self.signUpCount += 1
+        self.setQP()
+        self.update()
            
     def addWin(self):
         self.winCount += 1
@@ -139,14 +139,10 @@ class Player:
         self.cursor.execute(f"UPDATE Player SET winCount = {self.winCount}, lossCount = {self.lossCount}, internalRating = {self.internalRating}, QP = {self.QP}, isAdmin = {self.isAdmin}, missedGames = {self.missedGameCount}, signupCount = {self.signUpCount}, leaderboardPoints = {self.LP} WHERE playerID = {self.playerID}")
         self.con.commit()
         
-    # Adds QP +/-
-    def addQP(self, count):
-        self.QP += count
-        self.update()
-        
     def setQP(self):
         qp = self.signUpCount - self.missedGameCount
         self.Q = qp
+        self.update()
         
     # Sets Role MMR based on Role Preferences
     def setRoleMMR(self, autofill):
@@ -215,9 +211,6 @@ class Player:
         
     # Sets the rating of a new player based upon their highest account
     def setInitMMR(self):
-        
-        # Init QP
-        self.QP = 0
         
         # Tier Mappings
         mappingTiers = {
