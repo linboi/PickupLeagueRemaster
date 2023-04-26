@@ -55,6 +55,14 @@ class commands:
 	# Ask for Swap
 	async def swap(message, inst, args):
 		await inst.swapPlayers(message, args[0])
+  
+	# Check if admin
+	async def isAdmin(message, inst, args):
+		await inst.checkAdmin(message.author.id)
+  
+	# Replaces One player for another
+	async def replace(message, inst, args):
+		await inst.replacePlayer(message, args[0], args[1])
 
 	userCommands = {
 		'hello' : hello,
@@ -68,7 +76,9 @@ class commands:
 		'leaderboard': leaderboard,
 		'end-match': endmatch,
 		'punish': punish,
-		'swap': swap
+		'swap': swap,
+		'admin': isAdmin,
+		'replace': replace
 		}
 
 	async def parseReaction(reaction, inst):

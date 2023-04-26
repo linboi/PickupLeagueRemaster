@@ -583,18 +583,21 @@ After a win, post a screenshot of the victory and type !win (only one player on 
      
 		# Check called by (isAdmin)
 		user_id = msg_obj.author.id
-		admin_check = self.checkAdmin(user_id)
+		admin_check = await self.checkAdmin(user_id)
 		if admin_check:
 			# Parse discord ID's from mentions in message
 			discordIDOrigin = discordIDOrigin.replace("<@", "")
 			discordIDOrigin = discordIDOrigin.replace(">", "")
 			discordIDReplacement = discordIDReplacement.replace("<@", "")
-			discordIDReplacement = discordIDReplacement.replace("<@", "")
+			discordIDReplacement = discordIDReplacement.replace(">", "")
+			# Check for players in every match -> if found, replace player
 			for match in self.currentMatches:
 				try:
 					await match.swapPlayer(discordIDOrigin, discordIDReplacement, msg_obj)
 				except:
 					await msg_obj.channel.send(f"Replacement Error")
+		else:
+			pass
 			
 		
 	# Check if discordID is Admin
