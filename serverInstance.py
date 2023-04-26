@@ -255,14 +255,24 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 								overwrite_role = discord.PermissionOverwrite()
 								overwrite_role.send_messages = False
 								overwrite_role.read_messages = True
+								overwrite_role.read_message_history = True
 								await self.roleChannel.set_permissions(member, overwrite=overwrite_role)
 								# Access to other channels
 								overwrite_general = discord.PermissionOverwrite()
 								overwrite_general.send_messages = True
 								overwrite_general.read_messages = True
-								await self.announcementChannel.set_permissions(member, overwrite=overwrite_general)
+								overwrite_general.read_message_history = True
+								await self.announcementChannel.set_permissions(member, overwrite=overwrite_role)
 								await self.generalChannel.set_permissions(member, overwrite=overwrite_general)
-								# Acces to voice channels
+								# Access to voice channels
+								overwrite_voice = discord.PermissionOverwrite()
+								overwrite_voice.connect = True
+								overwrite_voice.send_messages = True
+								overwrite_voice.read_message_history = True
+								overwrite_voice.speak = True
+								overwrite_voice.read_messages = True
+								overwrite_voice.stream = True
+								# 1-4 voice channels
 								await message_obj.channel.send(f"🥳 Success {member.mention} head over to {self.roleChannel.mention} to assign your **Primary** and **Secondary** role!")
 				except discord.Forbidden:
 					print("Forbidden")
