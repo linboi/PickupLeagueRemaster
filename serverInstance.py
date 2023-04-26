@@ -385,13 +385,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		self.con.commit()
 	
 	# Update roles of player
-	async def updatePlayerRole(self, reaction, roleType, position):
-		
-		# Set discordID of reaction
-		discordID = reaction.user_id
+	async def updatePlayerRole(self, discordID, roleType, position):
 		
 		# Fetch Player's Username
-		user_name = await self.client.fetch_user(reaction.user_id)
+		user_name = await self.client.fetch_user(discordID)
 		# Check if player exists in DB
 		doesPlayerExist = await self.checkPlayerExsits(discordID)
 		if(doesPlayerExist):
@@ -421,6 +418,29 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				else:
 					await self.testChannel.send(f"✨ {user_name}'s PRIMARY role is already set to {position}")
 
+	async def roles(self, message):
+		roleMsg = await message.author.send("Choose your primary role:\n🥶 - TOP\n✨ - JG\n😎  - MID\n😭 - AD\n🤡  - SUP\n\nyou can change your role in the future, use !roles again.")
+		roleMapping = {
+				'🥶' : 'TOP',
+				'✨' : 'JNG',
+				'😎' : 'MID',
+				'😭' : 'ADC',
+				'🤡' : 'SUP'
+			}
+		for react in roleMapping:
+			await roleMsg.add_reaction(react)
+
+		def check(reaction, user):
+			return (reaction.message.id == roleMsg.id and user == message.author and reaction.emoji in roleMapping)
+
+		primaryRole, user = await self.client.wait_for('reaction_add', check=check)
+		await message.author.send("Now choose secondary role")
+		secondaryRole, _ = await self.client.wait_for('reaction_add', check=check)
+		print("got here")
+		await self.updatePlayerRole(user.id, 1, roleMapping[primaryRole.emoji])
+		await self.updatePlayerRole(user.id, 2, roleMapping[secondaryRole.emoji])
+
+
 	# Function called when player reacts to a role selection
 	async def changePlayerRole(self, reaction):
 		# Message ID's for #select-role channel
@@ -431,37 +451,37 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		if reaction.channel_id == self.roleChannel.id and str(reaction.message_id) == primary_role_message:
 			# Jungle Selected
 			if str(reaction.emoji) == "✨"  : 
-				await self.updatePlayerRole(reaction, 1, "JNG")   
+				await self.updatePlayerRole(reaction.user, 1, "JNG")   
 			# Mid Selected
 			elif str(reaction.emoji) == "😎"  : 
-				await self.updatePlayerRole(reaction, 1, "MID")   
+				await self.updatePlayerRole(reaction.user, 1, "MID")   
 			# Top Selected
 			elif str(reaction.emoji) == "🥶"  : 
-				await self.updatePlayerRole(reaction, 1, "TOP")   
+				await self.updatePlayerRole(reaction.user, 1, "TOP")   
 			# AD Selected
 			elif str(reaction.emoji) == "😭"  :
-				await self.updatePlayerRole(reaction, 1, "ADC")   
+				await self.updatePlayerRole(reaction.user, 1, "ADC")   
 			# Support Selected
 			elif str(reaction.emoji) == "🤡"  :
-				await self.updatePlayerRole(reaction, 1, "SUP")   
+				await self.updatePlayerRole(reaction.user, 1, "SUP")   
 
 		# Select SECONDARY ROLE
 		if reaction.channel_id == self.roleChannel.id and str(reaction.message_id) == secondary_role_message:
 			# Jungle Selected
 			if str(reaction.emoji) == "✨"  :
-				await self.updatePlayerRole(reaction, 2, "JNG")  
+				await self.updatePlayerRole(reaction.user, 2, "JNG")  
 			# Mid Selected
 			elif str(reaction.emoji) == "😎"  :
-				await self.updatePlayerRole(reaction, 2, "MID")  
+				await self.updatePlayerRole(reaction.user, 2, "MID")  
 			# Top Selected
 			elif str(reaction.emoji) == "🥶"  :
-				await self.updatePlayerRole(reaction, 2, "TOP")  
+				await self.updatePlayerRole(reaction.user, 2, "TOP")  
 			# AD Selected
 			elif str(reaction.emoji) == "😭"  :
-				await self.updatePlayerRole(reaction, 2, "ADC")  
+				await self.updatePlayerRole(reaction.user, 2, "ADC")  
 			# Support Selected
 			elif str(reaction.emoji) == "🤡"  : 
-				await self.updatePlayerRole(reaction, 2, "SUP")  
+				await self.updatePlayerRole(reaction.user, 2, "SUP")  
 	 
 	# Check if position is aleady set in other role
 	def checkDupPos(self, discordID, newRoleType, position):

@@ -18,7 +18,8 @@ class commands:
 
 	async def signup(message, inst, args):
 		pRank, pName, signUpSuccess = await inst.signUpPlayer(args[0], message)
-  
+		print(pRank)
+		print(pName)
 		# Give access to '#select-roles' channel
 		if(signUpSuccess == False):
 			await message.channel.send("Failed 😔 please try again!")
@@ -64,6 +65,9 @@ class commands:
 	async def replace(message, inst, args):
 		await inst.replacePlayer(message, args[0], args[1])
 
+	async def roles(message, inst, args):
+		await inst.roles(message)
+
 	userCommands = {
 		'hello' : hello,
 		'queue' : queue,
@@ -78,7 +82,8 @@ class commands:
 		'punish': punish,
 		'swap': swap,
 		'admin': isAdmin,
-		'replace': replace
+		'replace': replace,
+		'roles': roles
 		}
 
 	async def parseReaction(reaction, inst):
