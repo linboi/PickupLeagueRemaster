@@ -231,8 +231,6 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				rank.append(lp)
 				rank_str += f" {lp}LP"
 			
-			print(rank)
-			
 			# Check if player suggested rank is formatted right
 				
 			summoner_name = doc.find_all(class_="summoner-name")
@@ -251,19 +249,24 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				# Add player
 				self.addPlayer(discordID, summoner_name, op_url, rank)
 				# Give access to #select-role text channel (change permissions)
-				for guild in self.client.guilds:
-					for member in guild.members:
-						if (member.id == message_obj.author.id):
-							overwrite = discord.PermissionOverwrite()
-							overwrite.send_messages = False
-							overwrite.read_messages = True
-							await self.roleChannel.set_permissions(member, overwrite=overwrite)
-							await message_obj.channel.send(f"Success, head over to {self.roleChannel.mention} to assign your Primary and Secondary role!")
+				try:
+					for guild in self.client.guilds:
+						for member in guild.members:
+							if (member.id == message_obj.author.id):
+								overwrite = discord.PermissionOverwrite()
+								overwrite.send_messages = False
+								overwrite.read_messages = True
+								#await self.roleChannel.set_permissions(member, overwrite=overwrite)
+								await message_obj.channel.send(f"🥳 Success {member.mention} head over to {self.roleChannel.mention} to assign your **Primary** and **Secondary** role!")
+				except discord.Forbidden:
+					print("Forbidden")
+				except:
+					print("other")
 			success = True
 			
 		
 		except:
-			rank_str = "Invalid Account"
+			rank_str = "Invalid Account + Channel Issue"
 			summoner_name = "Invalid Account"
 			success = False
 			
@@ -493,14 +496,13 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			test = []
 			for rank in output:
 				test.append(rank[0])
-			await message_obj.channel.send(f"*Current Rank* **#{test.index(discordID) + 1}**\t\t{round(mmr[0])}**LP**\t\t({round(mmr[1])}**W**/{round(mmr[2])}**L**)")
+			await message_obj.channel.send(f"*Current Rank* **#{test.index(discordID) + 1}**\t{message_obj.author.mention}\t{round(mmr[0])}**LP**\t({round(mmr[1])}**W**/{round(mmr[2])}**L**)")
    
     # Method to display Leaderboard
 	async def displayLeaderboard(self, message_obj):
 		leaderboard_channel = message_obj.channel
 		res = self.cursor.execute(f"SELECT discordID, winCount, lossCount, leaderboardPoints FROM Player ORDER BY leaderboardPoints DESC")
 		output = res.fetchall()
-		print(output)
 		all_players = ""
 		positionCount = 1
 		for player in output:
