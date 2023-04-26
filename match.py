@@ -376,7 +376,31 @@ class Match:
             listOfUsers.append(user.get_dID())
         return listOfUsers
             
+    def resolve(self, winner):
+        blueMMR = self.blueTeam.get_avgMMR()
+        redMMR = self.redTeam.get_avgMMR()
+        if winner == 'BLUE':
+            winningTeam = self.blueTeam
+            losingTeam = self.redTeam
+        elif winner == 'RED':
+            winningTeam = self.redTeam
+            losingTeam = self.blueTeam
+        
+        MMRdiff = blueMMR - redMMR
+        expectedScore = 1/(1 + 10**(MMRdiff/400))
 
+        kValue = 100
+        ratingChange = kValue * (1-expectedScore)
+        
+        for player in winningTeam:
+            player.addWin()
+            player.set_rating(player.get_rating()+ratingChange)
+            player.update()
+
+        for player in losingTeam:
+            player.addLoss()
+            player.set_rating(player.get_rating()-ratingChange)
+            player.update()
         
     
         
