@@ -528,33 +528,38 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 	# Method to End a Current Match if not started or void
 	async def endMatch(self, message_obj, matchID):
      
-		# Check if matchID is in current matches
-		for match in self.currentMatches:
-			match_id = match.get_matchID()
-			try:
-				if match_id == int(matchID):
-					# Delete Match
-					match.delete()
-					# Pop match off list
-					self.currentMatches.remove(match)
-					await message_obj.channel.send(f"🗑️ Match ({match_id}) Removed")
-			except:
-				pass
+		# Check if admin
+		admin_check = await self.checkAdmin(message_obj.author.id)
+		if admin_check:
+			# Check if matchID is in current matches
+			for match in self.currentMatches:
+				match_id = match.get_matchID()
+				try:
+					if match_id == int(matchID):
+						# Delete Match
+						match.delete()
+						# Pop match off list
+						self.currentMatches.remove(match)
+						await message_obj.channel.send(f"🗑️ Match ({match_id}) Removed")
+				except:
+					pass
 
 	# Method to punish a player -> reducing LP and QP
 	async def punishPlayer(self, message_obj, discordID):
 		
-		
-		discordID = discordID.replace("<@", "")
-		discordID = discordID.replace(">", "")
-		res = self.cursor.execute(f"SELECT leaderboardPoints, signupCount, discordID FROM Player WHERE discordID = {discordID}")
-		result = res.fetchone()
-		new_mmr = result[0] - 50
-		add_signupCount = result[1] + 3
-		user = await self.client.fetch_user(discordID)
-		self.cursor.execute(f"UPDATE Player SET leaderboardPoints = {new_mmr}, signupCount = {add_signupCount} WHERE discordID = {discordID}")
-		self.con.commit()
-		await message_obj.channel.send(f"🔨 {user.mention} has been given a pentaly of -50**LP** and added to **Low Priority Queue**")
+		# Check if admin
+		admin_check = await self.checkAdmin(message_obj.author.id)
+		if admin_check:
+			discordID = discordID.replace("<@", "")
+			discordID = discordID.replace(">", "")
+			res = self.cursor.execute(f"SELECT leaderboardPoints, signupCount, discordID FROM Player WHERE discordID = {discordID}")
+			result = res.fetchone()
+			new_mmr = result[0] - 50
+			add_signupCount = result[1] + 3
+			user = await self.client.fetch_user(discordID)
+			self.cursor.execute(f"UPDATE Player SET leaderboardPoints = {new_mmr}, signupCount = {add_signupCount} WHERE discordID = {discordID}")
+			self.con.commit()
+			await message_obj.channel.send(f"🔨 {user.mention} has been given a pentaly of -50**LP** and added to **Low Priority Queue**")
 		
 	# Method to swap two players on the same team
 	async def swapPlayers(self, message_obj, discordIDOtherPlayer):
