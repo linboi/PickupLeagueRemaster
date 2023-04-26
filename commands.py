@@ -18,29 +18,25 @@ class commands:
 
 	async def signup(message, inst, args):
 		pRank, pName, signUpSuccess = await inst.signUpPlayer(args[0], message)
-  
+		print(pRank)
+		print(pName)
 		# Give access to '#select-roles' channel
-		if(signUpSuccess):
-			await message.channel.send(pName + " (" + pRank + ")")
-		else:
-			await message.channel.send(pName + " (" + pRank + ")")
+		if(signUpSuccess == False):
 			await message.channel.send("Failed 😔 please try again!")
    
 	async def addAccount(message, inst, args):
 		pRank, pName, signUpSuccess = await inst.addAccount(args[0], message)
+  
 		if signUpSuccess:
 			await message.channel.send("🗃️ Account Added: " + pName)
 		else:
 			await message.channel.send(pName + " (" + pRank + ")")
    
 	async def player(message, inst, args):
-		test = await inst.createPlayerObject(24)
-		test.addWin()
-		test.update()
+		await inst.matchmake()
 		
 	async def unscheduledGame(message, inst, args):
 		await inst.unscheduledGames(args, message.channel)
-		await inst.matchmake()
   
 	async def rank(message, inst, args):
 		await inst.displayRank(message)
@@ -60,6 +56,17 @@ class commands:
 	# Ask for Swap
 	async def swap(message, inst, args):
 		await inst.swapPlayers(message, args[0])
+  
+	# Check if admin
+	async def isAdmin(message, inst, args):
+		await inst.checkAdmin(message.author.id)
+  
+	# Replaces One player for another
+	async def replace(message, inst, args):
+		await inst.replacePlayer(message, args[0], args[1])
+
+	async def roles(message, inst, args):
+		await inst.roles(message)
 
 	async def win(message, inst, args):
 		inst.win(message)
@@ -78,7 +85,10 @@ class commands:
 		'end-match': endmatch,
 		'punish': punish,
 		'swap': swap,
-		'win' : win
+		'win' : win,
+		'admin': isAdmin,
+		'replace': replace,
+		'roles': roles
 		}
 
 	async def parseReaction(reaction, inst):

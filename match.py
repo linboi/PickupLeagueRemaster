@@ -60,15 +60,20 @@ class Match:
         
     # Order players based on QP
     def shuffle_orderPQ(self, playerList, reqPLayers):
+        
+        # Add signup, set QP in DB
+        for player in playerList:
+            # Incremenets signupCount & Updates QP Value
+            player.addSignUpCount()
+ 
         # Shuffle the player list
         random.shuffle(playerList)
-        # Use the sorted function to order the list in terms of PQ value
-        ordered_pq_list = sorted(playerList, key=lambda p: p.get_QP(), reverse=True)
+        # Use the sorted function to order the list in terms of QP value ASC
+        ordered_pq_list = sorted(playerList, key=lambda p: p.get_QP())
         # All players left out recieve a +1 PQ Value
         for player in ordered_pq_list[reqPLayers:]:
             print(f"Player Left Out: {player.get_pID()}[{player.get_QP()}]\n")
-            player.addQP(1)
-            player.update()
+            player.addGameMissed()
         # Return Final List
         return ordered_pq_list[:reqPLayers]
     
@@ -232,11 +237,11 @@ class Match:
     def displayMatchDetails(self):
         string = f"   \n✨ MatchID ({self.matchID})\t \t⏲️ Match Time ({self.startTime})\t \t 🏅 MMR Difference ({round(self.calculateMMRDifference(self.blueTeam, self.redTeam))})"
         string += f"\n```{'[Blue Team]': ^15}{'':^5}{'[Red Team]':^15}\n\n"
-        string += f"{self.blueTeam.get_top().get_dID():^15}{'(top)':^5}{self.redTeam.get_top().get_dID():^15}\n"
-        string += f"{self.blueTeam.get_jg().get_dID():^15}{'(jng)':^5}{self.redTeam.get_jg().get_dID():^15}\n"
-        string += f"{self.blueTeam.get_mid().get_dID():^15}{'(mid)':^5}{self.redTeam.get_mid().get_dID():^15}\n"
-        string += f"{self.blueTeam.get_adc().get_dID():^15}{'(adc)':^5}{self.redTeam.get_adc().get_dID():^15}\n"
-        string += f"{self.blueTeam.get_sup().get_dID():^15}{'(sup)':^5}{self.redTeam.get_sup().get_dID():^15}\n```"
+        string += f"{self.blueTeam.get_top().get_username():^15}{'(top)':^5}{self.redTeam.get_top().get_username():^15}\n"
+        string += f"{self.blueTeam.get_jg().get_username():^15}{'(jng)':^5}{self.redTeam.get_jg().get_username():^15}\n"
+        string += f"{self.blueTeam.get_mid().get_username():^15}{'(mid)':^5}{self.redTeam.get_mid().get_username():^15}\n"
+        string += f"{self.blueTeam.get_adc().get_username():^15}{'(adc)':^5}{self.redTeam.get_adc().get_username():^15}\n"
+        string += f"{self.blueTeam.get_sup().get_username():^15}{'(sup)':^5}{self.redTeam.get_sup().get_username():^15}\n```"
         opgg_red , opgg_blue = self.getOPGGLink()
         string += f"\n🥶 [Blue Team OPGG]({opgg_red})\t|\t😡 [Red Team OPGG]({opgg_blue})"
         
@@ -251,8 +256,11 @@ class Match:
     # Swap two players in a Match
     async def swapPlayers(self, discordID, otherID, message_obj):
         listOfPlayers = [self.redTeam.getListPlayers() + self.blueTeam.getListPlayers()]
+        print(listOfPlayers)
         discordID = int(discordID)
         otherID = int(otherID)
+        print(discordID)
+        print(otherID)
         blueFound = False
         redFound = False
         # [player(), "red or blue", "jng"]
@@ -276,7 +284,7 @@ class Match:
                         other_team.append(player)
                         other_team.append('red')
                         other_team.append(player.get_role())
-                        redFound = True
+                        blueFound = True
                         
                 # Blue Team
                 for player in self.blueTeam.getListPlayers():
@@ -284,14 +292,14 @@ class Match:
                         team.append(player)
                         team.append('blue')
                         team.append(player.get_role())
-                        blueFound = True
+                        redFound = True
                     elif player.get_dID() == otherID:
                         other_team.append(player)
                         other_team.append('blue')
                         other_team.append(player.get_role())
                         blueFound = True
     
-        # If both players found -> swap roles & teams of players
+        # If both players found -> replace player
         if blueFound and redFound:
             # Swap roles
             team[0].set_role(other_team[2])
@@ -347,6 +355,8 @@ class Match:
             
             new_details = self.displayMatchDetails() 
             await message_obj.channel.send(f"{new_details}")
+        else:
+            pass
                 
     # Insert initial Match & Set MatchID
     def insert(self):

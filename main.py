@@ -22,25 +22,28 @@ intents.members= True
 client = discord.Client(intents=intents)
 inst = serverInstance()
 
+# DEFINE Channel Names
+main_channel_id = os.getenv('MAIN_CHANNEL')
+role_channel_id = os.getenv('ROLE_CHANNEL')
+announcement_channel_id = os.getenv('ANNOUNCEMENT_CHANNEL')
+watched_channels = os.getenv('WATCHED_CHANNELS').split(" ")
+
+
+
+# DEFINE Messages
+primary_role_msg = os.getenv('PRIMARY_ROLE_MSG')
+secondary_role_msg = os.getenv('SECONDARY_ROLE_MSG')
+
 # Connection to Client is established
 @client.event
 async def on_ready():
-	print(f'We have logged in as {client.user}')
-	
-	# Create Global Variables for #select-role, and #testing channels
-	for guild in client.guilds:
-		for channel in guild.text_channels:
-			if str(channel).strip() == "select-role":
-				# #select-role text channel
-				global select_role_channel
-				select_role_channel = channel
-				
-			if str(channel).strip() == "testing":
-				# #testing channel
-				global main_channel
-				main_channel = channel
-	
-	inst.ready(client, 1096449962524561488, select_role_channel, main_channel, cursor, con)
+    
+    # Get Channel() from ID
+	main_channel = client.get_channel(int(main_channel_id))
+	role_channel = client.get_channel(int(role_channel_id))
+	announcement_channel = client.get_channel(int(announcement_channel_id))
+
+	inst.ready(client, role_channel, main_channel, announcement_channel, primary_role_msg, secondary_role_msg,cursor, con)
 
 	with open('./settings.json') as f:
 		settings = json.load(f)
@@ -50,7 +53,8 @@ async def on_ready():
 # Event handeler for Messages
 @client.event
 async def on_message(message):
-	await commands.parse(message, inst)
+	if str(message.channel.id) in os.getenv('WATCHED_CHANNELS'):
+		await commands.parse(message, inst)
 		
 # Event handeler for Reactions
 @client.event

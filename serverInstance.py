@@ -14,13 +14,15 @@ class serverInstance:
 	def __init__(self):
 		self.queue = []
 
-	def ready(self, client, announcementChannel, roleChannel, testChannel, cursor, con):
+	def ready(self, client, roleChannel, testChannel, announcementChannel, primaryRoleMsg, secondaryRoleMsg, cursor, con):
 		self.client = client
 		self.announcementChannel = announcementChannel
 		self.roleChannel = roleChannel
 		self.cursor = cursor
 		self.con = con
 		self.testChannel = testChannel
+		self.primaryRoleMSG = primaryRoleMsg
+		self.secondaryRoleMSG = secondaryRoleMsg
 		self.currentMatches = []
 	
 	async def addToQueue(self, player, channel):
@@ -47,7 +49,14 @@ class serverInstance:
 		# Create a Player obj for each Player in Queue 
 		playerObjList = []
 		for player_details in listOfPlayers:
-			player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], self.cursor, self.con)
+			discordUser = None
+			try:
+				discordUser = await self.client.fetch_user(player_details[1])
+			except:
+				discordUser = None
+			player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
+                   player_details[9], player_details[10], player_details[11], self.cursor, self.con, discordUser)
+			# Add player to list
 			playerObjList.append(player)
    
 		players_in_queue = len(playerObjList)
@@ -219,14 +228,23 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			rank = rank[0].decode_contents().strip()
 			rank = rank.replace("<!-- -->", "")
 			rank = rank.split()
+			lp = doc.find_all(class_="lp")
+			lp = lp[0].decode_contents().strip()
+			lp = lp.replace("<!-- -->", "")
+			lp = lp.split()
+			lp = lp[0]
+			lp = lp.replace(",", "")
+
+			print(int(lp))
+		
 			rank_str = ""
 			for char in rank:
 				rank_str += char[0]
 		
 			# Add rank division for Masters, GM, and Challenger players
 			if len(rank) == 1:
-				rank.append('1')
-			
+				rank.append(lp)
+				rank_str += f" {lp}LP"
 			
 			# Check if player suggested rank is formatted right
 				
@@ -246,19 +264,24 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				# Add player
 				self.addPlayer(discordID, summoner_name, op_url, rank)
 				# Give access to #select-role text channel (change permissions)
-				for guild in self.client.guilds:
-					for member in guild.members:
-						if (member.id == message_obj.author.id):
-							overwrite = discord.PermissionOverwrite()
-							overwrite.send_messages = False
-							overwrite.read_messages = True
-							await self.roleChannel.set_permissions(member, overwrite=overwrite)
-							await message_obj.channel.send(f"Success, head over to {self.roleChannel.mention} to assign your Primary and Secondary role!")
+				try:
+					for guild in self.client.guilds:
+						for member in guild.members:
+							if (member.id == message_obj.author.id):
+								overwrite = discord.PermissionOverwrite()
+								overwrite.send_messages = False
+								overwrite.read_messages = True
+								await self.roleChannel.set_permissions(member, overwrite=overwrite)
+								await message_obj.channel.send(f"🥳 Success {member.mention} head over to {self.roleChannel.mention} to assign your **Primary** and **Secondary** role!")
+				except discord.Forbidden:
+					print("Forbidden")
+				except:
+					print("other")
 			success = True
 			
 		
 		except:
-			rank_str = "Invalid Account"
+			rank_str = "Invalid Account + Channel Issue"
 			summoner_name = "Invalid Account"
 			success = False
 			
@@ -289,13 +312,23 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			rank = rank[0].decode_contents().strip()
 			rank = rank.replace("<!-- -->", "")
 			rank = rank.split()
+   
+			lp = doc.find_all(class_="lp")
+			lp = lp[0].decode_contents().strip()
+			lp = lp.replace("<!-- -->", "")
+			lp = lp.split()
+			lp = lp[0]
+			lp = lp.replace(",", "")
+
+   
 			rank_str = ""
 			for char in rank:
 				rank_str += char[0]
 		
 			# Add rank division for Masters, GM, and Challenger players
 			if len(rank) == 1:
-				rank.append('1')
+				rank.append(lp)
+				
 				
 			summoner_name = doc.find_all(class_="summoner-name")
 			summoner_name = summoner_name[0].decode_contents().strip()
@@ -311,7 +344,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				self.addExtraAccount(discordID, summoner_name, op_url, rank)
 				success = True
 			else:
-				rank_str = "Signup first before adding an account!"
+				rank_str = "Signup first before adding an account1!"
 				summoner_name = "Invalid Account"
 				success = False
 			
@@ -339,7 +372,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 	# Adds player to Player & Account DB
 	def addPlayer(self, discordID, summoner_name, op_url, rank):
 		
-		self.cursor.execute(f"INSERT INTO Player (discordID, winCount, lossCount, internalRating) VALUES ({discordID}, 0, 0, 1500)")
+		self.cursor.execute(f"INSERT INTO Player (discordID, winCount, lossCount, internalRating, isAdmin, missedGames, signupCount, leaderboardPoints) VALUES ({discordID}, 0, 0, 1500, 0, 0, 0, 1200)")
 		self.con.commit()
 		
 		# Add player account to Account table
@@ -370,13 +403,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		self.con.commit()
 	
 	# Update roles of player
-	async def updatePlayerRole(self, reaction, roleType, position):
-		
-		# Set discordID of reaction
-		discordID = reaction.user_id
+	async def updatePlayerRole(self, discordID, roleType, position):
 		
 		# Fetch Player's Username
-		user_name = await self.client.fetch_user(reaction.user_id)
+		user_name = await self.client.fetch_user(discordID)
 		# Check if player exists in DB
 		doesPlayerExist = await self.checkPlayerExsits(discordID)
 		if(doesPlayerExist):
@@ -406,47 +436,70 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				else:
 					await self.testChannel.send(f"✨ {user_name}'s PRIMARY role is already set to {position}")
 
+	async def roles(self, message):
+		roleMsg = await message.author.send("Choose your primary role:\n🥶 - TOP\n✨ - JG\n😎  - MID\n😭 - AD\n🤡  - SUP\n\nyou can change your role in the future, use !roles again.")
+		roleMapping = {
+				'🥶' : 'TOP',
+				'✨' : 'JNG',
+				'😎' : 'MID',
+				'😭' : 'ADC',
+				'🤡' : 'SUP'
+			}
+		for react in roleMapping:
+			await roleMsg.add_reaction(react)
+
+		def check(reaction, user):
+			return (reaction.message.id == roleMsg.id and user == message.author and reaction.emoji in roleMapping)
+
+		primaryRole, user = await self.client.wait_for('reaction_add', check=check)
+		await message.author.send("Now choose secondary role")
+		secondaryRole, _ = await self.client.wait_for('reaction_add', check=check)
+		print("got here")
+		await self.updatePlayerRole(user.id, 1, roleMapping[primaryRole.emoji])
+		await self.updatePlayerRole(user.id, 2, roleMapping[secondaryRole.emoji])
+
+
 	# Function called when player reacts to a role selection
 	async def changePlayerRole(self, reaction):
 		# Message ID's for #select-role channel
-		primary_role_message = '1098222182997442611'
-		secondary_role_message = '1098680816961335408'
+		primary_role_message = self.primaryRoleMSG
+		secondary_role_message = self.secondaryRoleMSG
 		
 		# Select PRIMARY ROLE 
 		if reaction.channel_id == self.roleChannel.id and str(reaction.message_id) == primary_role_message:
 			# Jungle Selected
 			if str(reaction.emoji) == "✨"  : 
-				await self.updatePlayerRole(reaction, 1, "JNG")   
+				await self.updatePlayerRole(reaction.user, 1, "JNG")   
 			# Mid Selected
 			elif str(reaction.emoji) == "😎"  : 
-				await self.updatePlayerRole(reaction, 1, "MID")   
+				await self.updatePlayerRole(reaction.user, 1, "MID")   
 			# Top Selected
 			elif str(reaction.emoji) == "🥶"  : 
-				await self.updatePlayerRole(reaction, 1, "TOP")   
+				await self.updatePlayerRole(reaction.user, 1, "TOP")   
 			# AD Selected
 			elif str(reaction.emoji) == "😭"  :
-				await self.updatePlayerRole(reaction, 1, "ADC")   
+				await self.updatePlayerRole(reaction.user, 1, "ADC")   
 			# Support Selected
 			elif str(reaction.emoji) == "🤡"  :
-				await self.updatePlayerRole(reaction, 1, "SUP")   
+				await self.updatePlayerRole(reaction.user, 1, "SUP")   
 
 		# Select SECONDARY ROLE
 		if reaction.channel_id == self.roleChannel.id and str(reaction.message_id) == secondary_role_message:
 			# Jungle Selected
 			if str(reaction.emoji) == "✨"  :
-				await self.updatePlayerRole(reaction, 2, "JNG")  
+				await self.updatePlayerRole(reaction.user, 2, "JNG")  
 			# Mid Selected
 			elif str(reaction.emoji) == "😎"  :
-				await self.updatePlayerRole(reaction, 2, "MID")  
+				await self.updatePlayerRole(reaction.user, 2, "MID")  
 			# Top Selected
 			elif str(reaction.emoji) == "🥶"  :
-				await self.updatePlayerRole(reaction, 2, "TOP")  
+				await self.updatePlayerRole(reaction.user, 2, "TOP")  
 			# AD Selected
 			elif str(reaction.emoji) == "😭"  :
-				await self.updatePlayerRole(reaction, 2, "ADC")  
+				await self.updatePlayerRole(reaction.user, 2, "ADC")  
 			# Support Selected
 			elif str(reaction.emoji) == "🤡"  : 
-				await self.updatePlayerRole(reaction, 2, "SUP")  
+				await self.updatePlayerRole(reaction.user, 2, "SUP")  
 	 
 	# Check if position is aleady set in other role
 	def checkDupPos(self, discordID, newRoleType, position):
@@ -471,19 +524,19 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 	# Method to get players rank and show it in discord channel
 	async def displayRank(self, message_obj):
 			discordID = message_obj.author.id
-			res = self.cursor.execute(f"SELECT internalRating FROM Player WHERE discordID = {discordID}")
+			res = self.cursor.execute(f"SELECT leaderboardPoints, winCount, lossCount FROM Player WHERE discordID = {discordID}")
 			mmr = res.fetchone()
-			res = self.cursor.execute(f"SELECT discordID FROM Player ORDER BY internalRating DESC")
+			res = self.cursor.execute(f"SELECT discordID FROM Player ORDER BY leaderboardPoints DESC")
 			output = res.fetchall()
 			test = []
 			for rank in output:
 				test.append(rank[0])
-			await message_obj.channel.send(f"*Current Rank* **#{test.index(discordID) + 1}**\t\t**MMR** ({mmr[0]})")
+			await message_obj.channel.send(f"*Current Rank* **#{test.index(discordID) + 1}**\t{message_obj.author.mention}\t{round(mmr[0])}**LP**\t({round(mmr[1])}**W**/{round(mmr[2])}**L**)")
    
 	# Method to display Leaderboard
 	async def displayLeaderboard(self, message_obj):
 		leaderboard_channel = message_obj.channel
-		res = self.cursor.execute(f"SELECT discordID, winCount, lossCount, internalRating FROM Player ORDER BY internalRating DESC")
+		res = self.cursor.execute(f"SELECT discordID, winCount, lossCount, leaderboardPoints FROM Player ORDER BY leaderboardPoints DESC")
 		output = res.fetchall()
 		all_players = ""
 		positionCount = 1
@@ -522,21 +575,39 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 					await message_obj.channel.send(f"🗑️ Match ({match_id}) Removed")
 			except:
 				pass
+     
+		# Check if admin
+		admin_check = await self.checkAdmin(message_obj.author.id)
+		if admin_check:
+			# Check if matchID is in current matches
+			for match in self.currentMatches:
+				match_id = match.get_matchID()
+				try:
+					if match_id == int(matchID):
+						# Delete Match
+						match.delete()
+						# Pop match off list
+						self.currentMatches.remove(match)
+						await message_obj.channel.send(f"🗑️ Match ({match_id}) Removed")
+				except:
+					pass
 
 	# Method to punish a player -> reducing LP and QP
 	async def punishPlayer(self, message_obj, discordID):
 		
-		
-		discordID = discordID.replace("<@", "")
-		discordID = discordID.replace(">", "")
-		res = self.cursor.execute(f"SELECT internalRating, QP, discordID FROM Player WHERE discordID = {discordID}")
-		result = res.fetchone()
-		new_mmr = result[0] - 50
-		new_qp = result[1] - 2
-		user = await self.client.fetch_user(discordID)
-		self.cursor.execute(f"UPDATE Player SET internalRating = {new_mmr}, QP = {new_qp} WHERE discordID = {discordID}")
-		self.con.commit()
-		await message_obj.channel.send(f"🔨 {user.mention} has been given a pentaly of -50LP and -2QP")
+		# Check if admin
+		admin_check = await self.checkAdmin(message_obj.author.id)
+		if admin_check:
+			discordID = discordID.replace("<@", "")
+			discordID = discordID.replace(">", "")
+			res = self.cursor.execute(f"SELECT leaderboardPoints, signupCount, discordID FROM Player WHERE discordID = {discordID}")
+			result = res.fetchone()
+			new_mmr = result[0] - 50
+			add_signupCount = result[1] + 3
+			user = await self.client.fetch_user(discordID)
+			self.cursor.execute(f"UPDATE Player SET leaderboardPoints = {new_mmr}, signupCount = {add_signupCount} WHERE discordID = {discordID}")
+			self.con.commit()
+			await message_obj.channel.send(f"🔨 {user.mention} has been given a pentaly of -50**LP** and added to **Low Priority Queue**")
 		
 	# Method to swap two players on the same team
 	async def swapPlayers(self, message_obj, discordIDOtherPlayer):
@@ -559,6 +630,37 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 						pass
 		except asyncio.TimeoutError:
 			await message_obj.channel.send(f"Swap timed out {message_obj.author.mention}")
+   
+   
+	async def replacePlayer(self, msg_obj, discordIDOrigin, discordIDReplacement):
+     
+		# Check called by (isAdmin)
+		user_id = msg_obj.author.id
+		admin_check = await self.checkAdmin(user_id)
+		if admin_check:
+			# Parse discord ID's from mentions in message
+			discordIDOrigin = discordIDOrigin.replace("<@", "")
+			discordIDOrigin = discordIDOrigin.replace(">", "")
+			discordIDReplacement = discordIDReplacement.replace("<@", "")
+			discordIDReplacement = discordIDReplacement.replace(">", "")
+			# Check for players in every match -> if found, replace player
+			for match in self.currentMatches:
+				try:
+					await match.swapPlayer(discordIDOrigin, discordIDReplacement, msg_obj)
+				except:
+					await msg_obj.channel.send(f"Replacement Error")
+		else:
+			pass
+			
+		
+	# Check if discordID is Admin
+	async def checkAdmin(self, discordID):
+		res = self.cursor.execute(f"SELECT isAdmin FROM Player WHERE discordID = {discordID}")
+		result = res.fetchone()
+		if(result[0] == 1):
+			return True
+		else:
+			return False
 			
 
 
