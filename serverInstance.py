@@ -14,7 +14,7 @@ class serverInstance:
 	def __init__(self):
 		self.queue = []
 
-	def ready(self, client, roleChannel, testChannel, announcementChannel, generalChannel, primaryRoleMsg, secondaryRoleMsg, cursor, con):
+	def ready(self, client, roleChannel, testChannel, announcementChannel, generalChannel, voiceChannels, primaryRoleMsg, secondaryRoleMsg, cursor, con):
 		self.client = client
 		self.announcementChannel = announcementChannel
 		self.roleChannel = roleChannel
@@ -22,6 +22,7 @@ class serverInstance:
 		self.con = con
 		self.testChannel = testChannel
 		self.generalChannel = generalChannel
+		self.voiceChannels = voiceChannels
 		self.primaryRoleMSG = primaryRoleMsg
 		self.secondaryRoleMSG = secondaryRoleMsg
 		self.currentMatches = []
@@ -272,8 +273,11 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 								overwrite_voice.speak = True
 								overwrite_voice.read_messages = True
 								overwrite_voice.stream = True
-								# 1-4 voice channels
+								# 1-n voice channels
 								# Add each one from list
+								for channel in self.voiceChannels:
+									voip = int(channel)
+									await voip.set_permissions(member, overwrite=overwrite_voice)
 								await message_obj.channel.send(f"🥳 Success {member.mention} head over to {self.roleChannel.mention} to assign your **Primary** and **Secondary** role!")
 				except discord.Forbidden:
 					print("Forbidden")
