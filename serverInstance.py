@@ -561,21 +561,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		await leaderboard_channel.send(f"**__Updated Leaderboard__***\t\tLast Updated: {now}*```{all_players}```")
   
 	# Method to End a Current Match if not started or void
-	async def endMatch(self, message_obj, matchID):
-	 
-		# Check if matchID is in current matches
-		for match in self.currentMatches:
-			match_id = match.get_matchID()
-			try:
-				if match_id == int(matchID):
-					# Delete Match
-					match.delete()
-					# Pop match off list
-					self.currentMatches.remove(match)
-					await message_obj.channel.send(f"🗑️ Match ({match_id}) Removed")
-			except:
-				pass
-     
+	async def endMatch(self, message_obj, matchID): 
 		# Check if admin
 		admin_check = await self.checkAdmin(message_obj.author.id)
 		if admin_check:
