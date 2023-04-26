@@ -68,6 +68,10 @@ class commands:
 	async def roles(message, inst, args):
 		await inst.roles(message)
 
+	async def win(message, inst, args):
+		inst.win(message)
+		pass
+
 	userCommands = {
 		'hello' : hello,
 		'queue' : queue,
@@ -81,6 +85,7 @@ class commands:
 		'end-match': endmatch,
 		'punish': punish,
 		'swap': swap,
+		'win' : win,
 		'admin': isAdmin,
 		'replace': replace,
 		'roles': roles

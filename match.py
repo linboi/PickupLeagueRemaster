@@ -91,12 +91,12 @@ class Match:
         
         # Init an empty dictionary of roles
         assigned_roles = {
-			'top':[],
-			'jng':[],
-			'mid':[],
-			'adc':[],
-			'sup':[]
-		}
+            'top':[],
+            'jng':[],
+            'mid':[],
+            'adc':[],
+            'sup':[]
+        }
         
         # Loop & Set assigned role. NEED TO ADD SET_TEMPMMR() FOR FILL PLAYERS
         for player in players:
@@ -152,7 +152,7 @@ class Match:
             available_roles = [role for role in assigned_roles.keys() if len(assigned_roles[role]) < 2]
             if available_roles:
                 role = random.choice(available_roles)
-				# Set MMR reduction
+                # Set MMR reduction
 
                 assigned_roles[role].append(player)
                 # Set assigned role for game
@@ -386,7 +386,31 @@ class Match:
             listOfUsers.append(user.get_dID())
         return listOfUsers
             
+    def resolve(self, winner):
+        blueMMR = self.blueTeam.get_avgMMR()
+        redMMR = self.redTeam.get_avgMMR()
+        if winner == 'BLUE':
+            winningTeam = self.blueTeam
+            losingTeam = self.redTeam
+        elif winner == 'RED':
+            winningTeam = self.redTeam
+            losingTeam = self.blueTeam
+        
+        MMRdiff = blueMMR - redMMR
+        expectedScore = 1/(1 + 10**(MMRdiff/400))
 
+        kValue = 100
+        ratingChange = kValue * (1-expectedScore)
+        
+        for player in winningTeam:
+            player.addWin()
+            player.set_rating(player.get_rating()+ratingChange)
+            player.update()
+
+        for player in losingTeam:
+            player.addLoss()
+            player.set_rating(player.get_rating()-ratingChange)
+            player.update()
         
     
         

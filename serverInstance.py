@@ -42,9 +42,9 @@ class serverInstance:
 			self.queue = []
 	
 	# Mehtod which creates Matches based on available Players
-	async def matchmake(self):
-     	# List of all players in Queue
-		res = self.cursor.execute(f"SELECT * FROM Player")
+	async def matchmake(self, playerIDList):
+	 	# List of all players in Queue
+		res = self.cursor.execute("SELECT * FROM Player WHERE playerID ({seq})".format(seq=','.join(['?']*len(playerIDList))))
 		listOfPlayers = res.fetchall()
 		# Create a Player obj for each Player in Queue 
 		playerObjList = []
@@ -82,7 +82,6 @@ class serverInstance:
    
 		# Init Match(s)
 		# For each match, set roles and find fairest comobination of players
-		self.currentMatches.clear()
   
 		while len(self.currentMatches) < match_count:
 			# Get top 10 players
@@ -184,6 +183,25 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				async for user in reaction.users():
 					msg+= "\n" + user.display_name
 		await channel.send(msg)
+
+	async def win(self, message):
+		activePlayerMatches = []
+		activePlayer = message.author.id
+		for match in self.currentMatches:
+			for player in match.blueTeam.getListPlayers():
+				if player.get_dID == activePlayer:
+					activePlayerMatches.append((match, 'BLUE'))
+			for player in match.redTeam.getListPlayers():
+				if player.get_dID == activePlayer:
+					activePlayerMatches.append((match, 'RED'))
+
+		if len(activePlayerMatches) == 0:
+			message.channel.send("Player not found in any active matches")
+		if len(activePlayerMatches) == 1:
+			activePlayerMatches[0][0].resolve(activePlayerMatches[0][1])
+			self.currentMatches.remove(activePlayerMatches[0][0])
+		if len(activePlayerMatches) > 1:
+			message.channel.send("Player found in more than one match, uh oh")
 
 	# Scrape rank details from op.gg page
 	async def signUpPlayer(self, msg_content, message_obj):
@@ -451,37 +469,37 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		if reaction.channel_id == self.roleChannel.id and str(reaction.message_id) == primary_role_message:
 			# Jungle Selected
 			if str(reaction.emoji) == "✨"  : 
-				await self.updatePlayerRole(reaction.user, 1, "JNG")   
+				await self.updatePlayerRole(reaction.user_id, 1, "JNG")   
 			# Mid Selected
 			elif str(reaction.emoji) == "😎"  : 
-				await self.updatePlayerRole(reaction.user, 1, "MID")   
+				await self.updatePlayerRole(reaction.user_id, 1, "MID")   
 			# Top Selected
 			elif str(reaction.emoji) == "🥶"  : 
-				await self.updatePlayerRole(reaction.user, 1, "TOP")   
+				await self.updatePlayerRole(reaction.user_id, 1, "TOP")   
 			# AD Selected
 			elif str(reaction.emoji) == "😭"  :
-				await self.updatePlayerRole(reaction.user, 1, "ADC")   
+				await self.updatePlayerRole(reaction.user_id, 1, "ADC")   
 			# Support Selected
 			elif str(reaction.emoji) == "🤡"  :
-				await self.updatePlayerRole(reaction.user, 1, "SUP")   
+				await self.updatePlayerRole(reaction.user_id, 1, "SUP")   
 
 		# Select SECONDARY ROLE
 		if reaction.channel_id == self.roleChannel.id and str(reaction.message_id) == secondary_role_message:
 			# Jungle Selected
 			if str(reaction.emoji) == "✨"  :
-				await self.updatePlayerRole(reaction.user, 2, "JNG")  
+				await self.updatePlayerRole(reaction.user_id, 2, "JNG")  
 			# Mid Selected
 			elif str(reaction.emoji) == "😎"  :
-				await self.updatePlayerRole(reaction.user, 2, "MID")  
+				await self.updatePlayerRole(reaction.user_id, 2, "MID")  
 			# Top Selected
 			elif str(reaction.emoji) == "🥶"  :
-				await self.updatePlayerRole(reaction.user, 2, "TOP")  
+				await self.updatePlayerRole(reaction.user_id, 2, "TOP")  
 			# AD Selected
 			elif str(reaction.emoji) == "😭"  :
-				await self.updatePlayerRole(reaction.user, 2, "ADC")  
+				await self.updatePlayerRole(reaction.user_id, 2, "ADC")  
 			# Support Selected
 			elif str(reaction.emoji) == "🤡"  : 
-				await self.updatePlayerRole(reaction.user, 2, "SUP")  
+				await self.updatePlayerRole(reaction.user_id, 2, "SUP")  
 	 
 	# Check if position is aleady set in other role
 	def checkDupPos(self, discordID, newRoleType, position):
@@ -515,7 +533,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				test.append(rank[0])
 			await message_obj.channel.send(f"*Current Rank* **#{test.index(discordID) + 1}**\t{message_obj.author.mention}\t{round(mmr[0])}**LP**\t({round(mmr[1])}**W**/{round(mmr[2])}**L**)")
    
-    # Method to display Leaderboard
+	# Method to display Leaderboard
 	async def displayLeaderboard(self, message_obj):
 		leaderboard_channel = message_obj.channel
 		res = self.cursor.execute(f"SELECT discordID, winCount, lossCount, leaderboardPoints FROM Player ORDER BY leaderboardPoints DESC")
@@ -543,8 +561,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		await leaderboard_channel.send(f"**__Updated Leaderboard__***\t\tLast Updated: {now}*```{all_players}```")
   
 	# Method to End a Current Match if not started or void
-	async def endMatch(self, message_obj, matchID):
-     
+	async def endMatch(self, message_obj, matchID): 
 		# Check if admin
 		admin_check = await self.checkAdmin(message_obj.author.id)
 		if admin_check:
@@ -633,10 +650,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			
 
 
-       
+	   
 		
 
 
-       
+	   
 
   
