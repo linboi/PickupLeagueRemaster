@@ -43,7 +43,7 @@ class commands:
 
 	# Make Admin Command
 	async def leaderboard(message, inst, args):
-		await inst.displayLeaderboard(message)
+		await inst.displayLeaderboard(message.channel)
   
 	# Make Admin Command
 	async def endmatch(message, inst, args):
@@ -69,8 +69,13 @@ class commands:
 		await inst.roles(message)
 
 	async def win(message, inst, args):
-		inst.win(message)
-		pass
+		await inst.win(message)
+		
+	async def help(message, inst, args):
+		txt = "```List of commands:\n"
+		for command in commands.userCommands:
+			txt += f"!{command}\n" #and a description
+		await message.channel.send(txt + "```")
 
 	userCommands = {
 		'hello' : hello,
@@ -88,7 +93,8 @@ class commands:
 		'win' : win,
 		'admin': isAdmin,
 		'replace': replace,
-		'roles': roles
+		'roles': roles,
+		'help' :help
 		}
 
 	async def parseReaction(reaction, inst):
@@ -106,5 +112,5 @@ class commands:
 		try:
 			await commands.userCommands[command](message, inst, args)
 		except KeyError:
-			await message.channel.send(f"Command '{command}' not recognised")
+			await message.channel.send(f"Command '{command}' not recognised\nUse !help to see a list of commands")
 

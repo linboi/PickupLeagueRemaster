@@ -534,31 +534,58 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			await message_obj.channel.send(f"*Current Rank* **#{test.index(discordID) + 1}**\t{message_obj.author.mention}\t{round(mmr[0])}**LP**\t({round(mmr[1])}**W**/{round(mmr[2])}**L**)")
    
 	# Method to display Leaderboard
-	async def displayLeaderboard(self, message_obj):
-		leaderboard_channel = message_obj.channel
-		res = self.cursor.execute(f"SELECT discordID, winCount, lossCount, leaderboardPoints FROM Player ORDER BY leaderboardPoints DESC")
+	async def displayLeaderboard(self, channelToSendIn, pageNum=0, message=None):
+		res = self.cursor.execute(f"SELECT discordID, winCount, lossCount, leaderboardPoints, ROW_NUMBER() OVER (ORDER BY leaderboardPoints DESC), primaryRole, secondaryRole FROM Player ORDER BY leaderboardPoints DESC")
 		output = res.fetchall()
 		all_players = ""
-		positionCount = 1
-		for player in output:
+		pageNum = min(pageNum, len(output)//20)
+		pageNum = max(pageNum, 0)
+		toPosition = min((pageNum+1)*20, len(output))
+		fromPosition = pageNum*20
+
+		for player in output[fromPosition:toPosition:]:
 			try:
-				discord_name = await self.client.fetch_user(player[0])
+				discord_name = (await self.client.fetch_user(player[0])).display_name
 			except:
 				discord_name = player[0]
-			pos = f"#{positionCount}"
+			pos = f"#{player[4]}"
 			pos = pos.ljust(5)
 			id = f"{discord_name}"
-			id = id.ljust(17)
+			id = id.ljust(20)
 			win = f"\t({player[1]}W"
 			win = win.rjust(6)
 			loss = f"{player[2]}L)"
-			internalRating = f"{player[3]}LP"
-			internalRating = internalRating.ljust(8)
-			all_players += f"{pos}" + f"{id}" + f"{internalRating}" + f"{win}/" + f"{loss}\n"
-			positionCount += 1
+			leaderboardPoints = f"{player[3]}LP"
+			leaderboardPoints = leaderboardPoints.ljust(8)
+			pRole = player[5]
+			sRole = player[6]
+
+			all_players += f"{pos}" + f"{id}" + f"{leaderboardPoints}" + f"{win}/" + f"{loss} ({pRole}/{sRole})\n"
+
    
 		now = date.today()
-		await leaderboard_channel.send(f"**__Updated Leaderboard__***\t\tLast Updated: {now}*```{all_players}```")
+		if message == None:
+			message = await channelToSendIn.send(f"**__Updated Leaderboard__***\t\tLast Updated: {now}*```{all_players}```")
+			await message.add_reaction('⬅')
+			await message.add_reaction('➡')
+		else:
+			await message.edit(content=f"**__Updated Leaderboard__***\t\tLast Updated: {now}*```{all_players}```")
+
+		def check(reaction, user):
+			return reaction.message.id == message.id and reaction.emoji in ['⬅', '➡']
+
+		try:
+			emoji, user = await self.client.wait_for('reaction_add', check=check, timeout=300)
+			await emoji.remove(user)
+		except asyncio.TimeoutError:
+			return
+		
+		if emoji.emoji == '⬅':
+			await self.displayLeaderboard(channelToSendIn, pageNum=pageNum-1, message=message)
+		elif emoji.emoji == '➡':
+			await self.displayLeaderboard(channelToSendIn, pageNum=pageNum+1, message=message)
+
+
   
 	# Method to End a Current Match if not started or void
 	async def endMatch(self, message_obj, matchID): 
