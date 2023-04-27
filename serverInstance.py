@@ -14,13 +14,15 @@ class serverInstance:
 	def __init__(self):
 		self.queue = []
 
-	def ready(self, client, roleChannel, testChannel, announcementChannel, primaryRoleMsg, secondaryRoleMsg, cursor, con):
+	def ready(self, client, roleChannel, testChannel, announcementChannel, generalChannel, voiceChannels, primaryRoleMsg, secondaryRoleMsg, cursor, con):
 		self.client = client
 		self.announcementChannel = announcementChannel
 		self.roleChannel = roleChannel
 		self.cursor = cursor
 		self.con = con
 		self.testChannel = testChannel
+		self.generalChannel = generalChannel
+		self.voiceChannels = voiceChannels
 		self.primaryRoleMSG = primaryRoleMsg
 		self.secondaryRoleMSG = secondaryRoleMsg
 		self.currentMatches = []
@@ -268,10 +270,32 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 					for guild in self.client.guilds:
 						for member in guild.members:
 							if (member.id == message_obj.author.id):
-								overwrite = discord.PermissionOverwrite()
-								overwrite.send_messages = False
-								overwrite.read_messages = True
-								await self.roleChannel.set_permissions(member, overwrite=overwrite)
+								# Access to role channel
+								overwrite_role = discord.PermissionOverwrite()
+								overwrite_role.send_messages = False
+								overwrite_role.read_messages = True
+								overwrite_role.read_message_history = True
+								await self.roleChannel.set_permissions(member, overwrite=overwrite_role)
+								# Access to other channels
+								overwrite_general = discord.PermissionOverwrite()
+								overwrite_general.send_messages = True
+								overwrite_general.read_messages = True
+								overwrite_general.read_message_history = True
+								await self.announcementChannel.set_permissions(member, overwrite=overwrite_role)
+								await self.generalChannel.set_permissions(member, overwrite=overwrite_general)
+								# Access to voice channels
+								overwrite_voice = discord.PermissionOverwrite()
+								overwrite_voice.connect = True
+								overwrite_voice.send_messages = True
+								overwrite_voice.read_message_history = True
+								overwrite_voice.speak = True
+								overwrite_voice.read_messages = True
+								overwrite_voice.stream = True
+								# 1-n voice channels
+								# Add each one from list
+								for channel in self.voiceChannels:
+									voip = int(channel)
+									await voip.set_permissions(member, overwrite=overwrite_voice)
 								await message_obj.channel.send(f"🥳 Success {member.mention} head over to {self.roleChannel.mention} to assign your **Primary** and **Secondary** role!")
 				except discord.Forbidden:
 					print("Forbidden")
