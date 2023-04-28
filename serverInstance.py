@@ -461,13 +461,14 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 					await self.testChannel.send(f"✨ {user_name}'s PRIMARY role is already set to {position}")
 
 	async def roles(self, message):
-		roleMsg = await message.author.send("Choose your primary role:\n🥶 - TOP\n✨ - JG\n😎  - MID\n😭 - AD\n🤡  - SUP\n\nyou can change your role in the future, use !roles again.")
+		roleMsg = await message.author.send("Choose your primary role:\n🥶 - TOP\n✨ - JG\n😎  - MID\n😭 - AD\n🤡  - SUP\n🤔  - FILL\n\nyou can change your role in the future, use !roles again.")
 		roleMapping = {
 				'🥶' : 'TOP',
 				'✨' : 'JNG',
 				'😎' : 'MID',
 				'😭' : 'ADC',
-				'🤡' : 'SUP'
+				'🤡' : 'SUP',
+				'🤔': 'FILL'
 			}
 		for react in roleMapping:
 			await roleMsg.add_reaction(react)
@@ -505,7 +506,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				await self.updatePlayerRole(reaction.user_id, 1, "ADC")   
 			# Support Selected
 			elif str(reaction.emoji) == "🤡"  :
-				await self.updatePlayerRole(reaction.user_id, 1, "SUP")   
+				await self.updatePlayerRole(reaction.user_id, 1, "SUP")
+			# Fill Selected
+			elif str(reaction.emoji) == "🤔"  :
+				await self.updatePlayerRole(reaction.user_id, 1, "FILL")
 
 		# Select SECONDARY ROLE
 		if reaction.channel_id == self.roleChannel.id and str(reaction.message_id) == secondary_role_message:
@@ -524,6 +528,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			# Support Selected
 			elif str(reaction.emoji) == "🤡"  : 
 				await self.updatePlayerRole(reaction.user_id, 2, "SUP")  
+			# Fill Selected
+			elif str(reaction.emoji) == "🤔"  :
+				await self.updatePlayerRole(reaction.user_id, 2, "FILL")
 	 
 	# Check if position is aleady set in other role
 	def checkDupPos(self, discordID, newRoleType, position):
