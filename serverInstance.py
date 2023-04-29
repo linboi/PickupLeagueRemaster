@@ -47,8 +47,16 @@ class serverInstance:
 	# Mehtod which creates Matches based on available Players
 	async def matchmake(self, playerIDList):
 	 	# List of all players in Queue
-		res = self.cursor.execute("SELECT * FROM Player WHERE playerID ({seq})".format(seq=','.join(['?']*len(playerIDList))))
+		listypoo = []
+		for player in playerIDList:
+			listypoo.append(player)
+		res = self.cursor.execute("SELECT * FROM Player")# WHERE discordID in ({seq})".format(seq=','.join(['?']*len(playerIDList))))
 		listOfPlayers = res.fetchall()
+		shorterlist = []
+		for player in listOfPlayers:
+			if player[1] in playerIDList:
+				shorterlist.append(player)
+		listOfPlayers = shorterlist
 		# Create a Player obj for each Player in Queue 
 		playerObjList = []
 		for player_details in listOfPlayers:
@@ -104,7 +112,9 @@ class serverInstance:
 			# Add Match to Match Table & Give it an ID
 			initMatch.insert()
 			# Add match to list of current games
+			print("please run " + str(initMatch))
 			self.currentMatches.append(initMatch)
+			print("please run " + str(self.currentMatches))
 			
 
 		
@@ -173,29 +183,33 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 	async def unscheduledGames(self, minutesUntil, channel):
 		timeObjs = []
 		for minutes in minutesUntil:
-			timeObjs.append(datetime.datetime.now() + datetime.timedelta(minutes=int(minutes)))
+			timeObjs.append(datetime.datetime.now() + datetime.timedelta(seconds=int(minutes)))
 		await self.triggerGamesAtGivenTimes(timeObjs, channel)
 	
 	async def createGames(self, numSeconds, emoji, channel, messageID):
 		await asyncio.sleep(numSeconds)
 		message = await channel.fetch_message(messageID)
 		msg = f"Users who reacted for game {emoji}:"
+		playerIDs = []
 		reactionList = message.reactions
 		for reaction in reactionList:
 			if reaction.emoji == emoji:
 				async for user in reaction.users():
 					msg+= "\n" + user.display_name
+					playerIDs.append(user.id)
+		
 		await channel.send(msg)
+		await self.matchmake(playerIDs)
 
 	async def win(self, message):
 		activePlayerMatches = []
 		activePlayer = message.author.id
 		for match in self.currentMatches:
 			for player in match.blueTeam.getListPlayers():
-				if player.get_dID == activePlayer:
+				if player.get_dID() == activePlayer:
 					activePlayerMatches.append((match, 'BLUE'))
 			for player in match.redTeam.getListPlayers():
-				if player.get_dID == activePlayer:
+				if player.get_dID() == activePlayer:
 					activePlayerMatches.append((match, 'RED'))
 
 		if len(activePlayerMatches) == 0:
