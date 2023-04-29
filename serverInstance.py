@@ -24,6 +24,7 @@ class serverInstance:
 		self.primaryRoleMSG = primaryRoleMsg
 		self.secondaryRoleMSG = secondaryRoleMsg
 		self.currentMatches = []
+		self.playerIDNameMapping = {}
 	
 	async def addToQueue(self, player, channel):
 		if player not in self.queue:
@@ -196,12 +197,12 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 					activePlayerMatches.append((match, 'RED'))
 
 		if len(activePlayerMatches) == 0:
-			message.channel.send("Player not found in any active matches")
+			await message.channel.send("Player not found in any active matches")
 		if len(activePlayerMatches) == 1:
-			activePlayerMatches[0][0].resolve(activePlayerMatches[0][1])
+			await activePlayerMatches[0][0].resolve(activePlayerMatches[0][1])
 			self.currentMatches.remove(activePlayerMatches[0][0])
 		if len(activePlayerMatches) > 1:
-			message.channel.send("Player found in more than one match, uh oh")
+			await message.channel.send("Player found in more than one match, uh oh")
 
 	# Scrape rank details from op.gg page
 	async def signUpPlayer(self, msg_content, message_obj):
@@ -544,10 +545,15 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		fromPosition = pageNum*20
 
 		for player in output[fromPosition:toPosition:]:
-			try:
-				discord_name = (await self.client.fetch_user(player[0])).display_name
-			except:
-				discord_name = player[0]
+			if player[0] not in self.playerIDNameMapping:
+				try:
+					discord_name = (await self.client.fetch_user(player[0])).display_name
+				except:
+					discord_name = player[0]
+				self.playerIDNameMapping[player[0]] = discord_name
+				print(discord_name)
+			else:
+				discord_name = self.playerIDNameMapping[player[0]]
 			pos = f"#{player[4]}"
 			pos = pos.ljust(5)
 			id = f"{discord_name}"
@@ -578,6 +584,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			emoji, user = await self.client.wait_for('reaction_add', check=check, timeout=300)
 			await emoji.remove(user)
 		except asyncio.TimeoutError:
+			await message.clear_reactions()
 			return
 		
 		if emoji.emoji == '⬅':
