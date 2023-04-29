@@ -134,6 +134,10 @@ class Player:
         self.LP += lp_change
         self.update()
         
+    def updateRating(self, rating_change):
+        self.internalRating += rating_change
+        self.update()
+        
     # Updates player in DB
     def update(self):
         self.cursor.execute(f"UPDATE Player SET winCount = {self.winCount}, lossCount = {self.lossCount}, internalRating = {self.internalRating}, QP = {self.QP}, isAdmin = {self.isAdmin}, missedGames = {self.missedGameCount}, signupCount = {self.signUpCount}, leaderboardPoints = {self.LP} WHERE playerID = {self.playerID}")

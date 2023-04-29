@@ -199,7 +199,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		if len(activePlayerMatches) == 0:
 			await message.channel.send("Player not found in any active matches")
 		if len(activePlayerMatches) == 1:
-			await activePlayerMatches[0][0].resolve(activePlayerMatches[0][1])
+			activePlayerMatches[0][0].resolve(activePlayerMatches[0][1])
 			self.currentMatches.remove(activePlayerMatches[0][0])
 		if len(activePlayerMatches) > 1:
 			await message.channel.send("Player found in more than one match, uh oh")
