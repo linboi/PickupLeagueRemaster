@@ -109,6 +109,10 @@ class Player:
             self.setRoleMMR(0)
         elif role == self.secondaryRole.lower():
             self.setRoleMMR(1)
+        elif self.primaryRole == 'FILL':
+            self.setRoleMMR(0)
+        elif self.secondaryRole == 'FILL':
+            self.setRoleMMR(1)
         else:
             self.setRoleMMR(2)
             

@@ -112,5 +112,5 @@ class commands:
 		try:
 			await commands.userCommands[command](message, inst, args)
 		except KeyError:
-			await message.channel.send(f"Command '{command}' not recognised\nUse !help to see a list of commands")
+			await message.channel.send(f"Command not recognised.\nUse !help to see a list of commands")
 

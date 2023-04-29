@@ -103,7 +103,6 @@ class Match:
             if len(assigned_roles['top']) < 2 and player.get_pRole() == 'TOP':
                 assigned_roles['top'].append(player)
                 player.set_role('top')
-                
             elif len(assigned_roles['jng']) < 2 and player.get_pRole() == 'JNG':
                 assigned_roles['jng'].append(player)
                 player.set_role('jng')
@@ -119,7 +118,10 @@ class Match:
             elif len(assigned_roles['sup']) < 2 and player.get_pRole() == 'SUP':
                 assigned_roles['sup'].append(player)
                 player.set_role('sup')
-               
+                
+            elif player.get_pRole() == 'FILL':
+                fill_players.append(player)
+                
             elif len(assigned_roles['top']) < 2 and player.get_sRole() == 'TOP':
                 assigned_roles['top'].append(player)
                 player.set_role('top')
@@ -139,7 +141,10 @@ class Match:
             elif len(assigned_roles['sup']) < 2 and player.get_sRole() == 'SUP':
                 assigned_roles['sup'].append(player)
                 player.set_role('sup')
-            
+                
+            elif player.get_sRole() == 'FILL':
+                fill_players.append(player)
+				
             else:
                 # If player pRole & sRole is taken, add to FILL
                 fill_players.append(player)
