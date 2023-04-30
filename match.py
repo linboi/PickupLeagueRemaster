@@ -395,9 +395,11 @@ class Match:
         if winner == 'BLUE':
             winningTeam = self.blueTeam
             losingTeam = self.redTeam
+            winner = 1
         elif winner == 'RED':
             winningTeam = self.redTeam
             losingTeam = self.blueTeam
+            winner = -1
         
         MMRdiff = losingTeam.get_avgMMR() - winningTeam.get_avgMMR()
         expectedScore = 1/(1 + 10**(MMRdiff/400))
@@ -416,8 +418,23 @@ class Match:
             player.updateRating(-ratingChange)
             player.updateLP(-ratingChange)
             player.update()
+        self.update(ratingChange, winner)
         
-    
+    def update(self, ratingchange, winner):
+        playerlist = self.blueTeam.getListPlayers() + self.redTeam.getListPlayers()
+        csvnames = ""
+        for p in playerlist:
+            csvnames += str(p.get_pID()) + ", "
+        csvnames += "'TODAY', "
+        csvnames += "{ratingchange*winner}, "*5
+        csvnames += "{ratingchange*-1*winner}, "*4 + "{ratingchange*-1*winner}"
+        self.cursor.execute(f"INSERT INTO Match (bluePOne, bluePTwo, bluePThree, bluePFour, bluePFive, \
+	redPOne, redPTwo, redPThree, redPFour, redPFive\
+	matchTime, \
+	bluePOneRatingChange, bluePTwoRatingChange, bluePThreeRatingChange, bluePFourRatingChange, bluePFiveRatingChange, \
+	redPOneRatingChange, redPTwoRatingChange, redPThreeRatingChange, redPFourRatingChange, redPFiveRatingChange) \
+                            VALUES \
+                            ({csvnames})")
         
         
     

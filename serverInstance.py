@@ -183,7 +183,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 	async def unscheduledGames(self, minutesUntil, channel):
 		timeObjs = []
 		for minutes in minutesUntil:
-			timeObjs.append(datetime.datetime.now() + datetime.timedelta(seconds=int(minutes)))
+			timeObjs.append(datetime.datetime.now() + datetime.timedelta(minutes=int(minutes)))
 		await self.triggerGamesAtGivenTimes(timeObjs, channel)
 	
 	async def createGames(self, numSeconds, emoji, channel, messageID):
@@ -411,7 +411,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 	# Adds player to Player & Account DB
 	def addPlayer(self, discordID, summoner_name, op_url, rank):
 		
-		self.cursor.execute(f"INSERT INTO Player (discordID, winCount, lossCount, internalRating, isAdmin, missedGames, signupCount, leaderboardPoints) VALUES ({discordID}, 0, 0, 1500, 0, 0, 0, 1200)")
+		self.cursor.execute(f"INSERT INTO Player (discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, isAdmin, missedGames, signupCount, leaderboardPoints) VALUES ({discordID}, 0, 0, 1500, 'FILL', 'FILL', 0, 0, 0, 1200)")
 		self.con.commit()
 		
 		# Add player account to Account table
@@ -606,7 +606,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			win = f"\t({player[1]}W"
 			win = win.rjust(6)
 			loss = f"{player[2]}L)"
-			leaderboardPoints = f"{player[3]}LP"
+			leaderboardPoints = f"{int(player[3])}LP"
 			leaderboardPoints = leaderboardPoints.ljust(8)
 			pRole = player[5]
 			sRole = player[6]

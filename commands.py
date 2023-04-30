@@ -11,10 +11,10 @@ class commands:
 		await message.channel.send("hiya")
 
 	async def queue(message, inst, args):
-		await inst.addToQueue(message.author, message.channel)
+		await inst.addToQueue(message.author.id, message.channel)
 
 	async def dequeue(message, inst, args):
-		await inst.removeFromQueue(message.author, message.channel)
+		await inst.removeFromQueue(message.author.id, message.channel)
 
 	async def signup(message, inst, args):
 		pRank, pName, signUpSuccess = await inst.signUpPlayer(args[0], message)
