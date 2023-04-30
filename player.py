@@ -157,9 +157,9 @@ class Player:
         if autofill == 0:
             self.roleMMR = self.internalRating
         elif autofill == 1:
-            self.roleMMR = self.internalRating - 15
+            self.roleMMR = self.internalRating - 200
         else:
-            self.roleMMR = self.internalRating - 30
+            self.roleMMR = self.internalRating - 300
     
     # Get a list of Names from a players Accounts
     def getAccountNames(self):
@@ -257,7 +257,7 @@ class Player:
             if counter_new > counter_old:
                 counter_old = counter_new
         
-        self.internalRating = 1200 + counter_new
+        self.internalRating = counter_new
         
         
         
