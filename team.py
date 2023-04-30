@@ -73,7 +73,7 @@ class Team:
 			ign = player.getHighestAccountName()
 			if ign == None:
 				ign = "placeholder"
-			ign = ign.replace(" ", "%2C")
+			ign = ign.replace(" ", "+")
 			player_string += f"{ign}%2C+"
 				
 		return player_string
