@@ -36,6 +36,10 @@ class commands:
 		await inst.matchmake()
 		
 	async def unscheduledGame(message, inst, args):
+		user_id = message.author.id
+		admin_check = await inst.checkAdmin(user_id)
+		if not admin_check:
+			return
 		await inst.unscheduledGames(args, message.channel)
   
 	async def rank(message, inst, args):
