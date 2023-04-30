@@ -392,32 +392,49 @@ class Match:
         return listOfUsers
             
     def resolve(self, winner):
-        blueMMR = self.blueTeam.get_avgMMR()
-        redMMR = self.redTeam.get_avgMMR()
         if winner == 'BLUE':
             winningTeam = self.blueTeam
             losingTeam = self.redTeam
+            winner = 1
         elif winner == 'RED':
             winningTeam = self.redTeam
             losingTeam = self.blueTeam
+            winner = -1
         
-        MMRdiff = blueMMR - redMMR
+        MMRdiff = losingTeam.get_avgMMR() - winningTeam.get_avgMMR()
         expectedScore = 1/(1 + 10**(MMRdiff/400))
 
         kValue = 100
         ratingChange = kValue * (1-expectedScore)
         
-        for player in winningTeam:
+        for player in winningTeam.getListPlayers():
             player.addWin()
-            player.set_rating(player.get_rating()+ratingChange)
+            player.updateRating(ratingChange)
+            player.updateLP(ratingChange)
             player.update()
 
-        for player in losingTeam:
+        for player in losingTeam.getListPlayers():
             player.addLoss()
-            player.set_rating(player.get_rating()-ratingChange)
+            player.updateRating(-ratingChange)
+            player.updateLP(-ratingChange)
             player.update()
+        self.update(ratingChange, winner)
         
-    
+    def update(self, ratingchange, winner):
+        playerlist = self.blueTeam.getListPlayers() + self.redTeam.getListPlayers()
+        csvnames = ""
+        for p in playerlist:
+            csvnames += str(p.get_pID()) + ", "
+        csvnames += "'TODAY', "
+        csvnames += "{ratingchange*winner}, "*5
+        csvnames += "{ratingchange*-1*winner}, "*4 + "{ratingchange*-1*winner}"
+        self.cursor.execute(f"INSERT INTO Match (bluePOne, bluePTwo, bluePThree, bluePFour, bluePFive, \
+	redPOne, redPTwo, redPThree, redPFour, redPFive\
+	matchTime, \
+	bluePOneRatingChange, bluePTwoRatingChange, bluePThreeRatingChange, bluePFourRatingChange, bluePFiveRatingChange, \
+	redPOneRatingChange, redPTwoRatingChange, redPThreeRatingChange, redPFourRatingChange, redPFiveRatingChange) \
+                            VALUES \
+                            ({csvnames})")
         
         
     
