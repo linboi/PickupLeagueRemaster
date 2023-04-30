@@ -402,7 +402,7 @@ class Match:
             winner = -1
         
         MMRdiff = losingTeam.get_avgMMR() - winningTeam.get_avgMMR()
-        expectedScore = 1/(1 + 10**(MMRdiff/400))
+        expectedScore = 1/(1 + 10**(MMRdiff/500))
 
         kValue = 100
         ratingChange = kValue * (1-expectedScore)
