@@ -231,7 +231,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		
 		# Try scrape OP.GG URL
 		try:
-			op_url = msg_content
+			op_url = msg_content.strip()
 			res_url = requests.get(op_url, headers=headers)
 			doc = BeautifulSoup(res_url.text, "html.parser")
 		except:
@@ -337,7 +337,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		
 		# Try scrape OP.GG URL
 		try:
-			op_url = msg_content
+			op_url = msg_content.strip()
 			res_url = requests.get(op_url, headers=headers)
 			doc = BeautifulSoup(res_url.text, "html.parser")
 		except:
