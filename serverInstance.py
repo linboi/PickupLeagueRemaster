@@ -218,10 +218,6 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		if len(activePlayerMatches) == 1:
 			activePlayerMatches[0][0].resolve(activePlayerMatches[0][1])
 			self.currentMatches.remove(activePlayerMatches[0][0])
-			hello = ""
-			for match in self.currentMatches:
-				hello += str(match.get_matchID()) + "\n"
-			await message.channel.send(hello)
 			await message.channel.send("🎊 WPGG")
 		if len(activePlayerMatches) > 1:
 			await message.channel.send("Player found in more than one match, uh oh")
