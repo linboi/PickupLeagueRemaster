@@ -35,7 +35,7 @@ class serverInstance:
 			self.queue.append(player)
 		await channel.send(f"{len(self.queue)} players in queue.\nEstimated wait time: Literally forever")
 		if len(self.queue) % 10 == 0:
-			matches = await self.matchmakeV2(self.queue)
+			matches = self.matchmakeV2(self.queue)
 			self.currentMatches.extend(matches)
 			await self.announcementChannel.send(str(matches))
 			self.queue = []
@@ -197,7 +197,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				async for user in reaction.users():
 					playerIDs.append(user.id)
 		
-		matches = await self.matchmakeV2(playerIDs)
+		matches = self.matchmakeV2(playerIDs)
 		self.currentMatches.extend(matches)
 		await self.announcementChannel.send(str(matches))
 
