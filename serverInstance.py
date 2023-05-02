@@ -748,7 +748,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			if player[1] in playerIDList:
 				shorterlist.append(player)
 		listOfPlayers = shorterlist
-	   
+		print("shkeeeeebs" + str(len(shorterlist)))
 		playerObjList = []
 		for player_details in listOfPlayers:
 			#discordUser = None
@@ -788,9 +788,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		playersInRoles = {'TOP':[], 'JNG':[], 'MID':[], 'ADC':[], 'SUP':[]}
 		usedPlayers = []
 		for player in playerObjList:
-			if len(playersInRoles[player.get_pRole()]) < team_count:
-				playersInRoles[player.get_pRole()].append(player)
-				usedPlayers.append(player)
+			if player.get_pRole() in playersInRoles:
+				if len(playersInRoles[player.get_pRole()]) < team_count:
+					playersInRoles[player.get_pRole()].append(player)
+					usedPlayers.append(player)
 		playerObjList = [player for player in playerObjList if player not in usedPlayers]	# this is just remaining players now
 		
 		# Now put in the FILL primaries
@@ -798,7 +799,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		fillPlayers = []
 		for player in playerObjList:
 			if player.get_pRole() == "FILL":
-				fillPlayers.append()
+				fillPlayers.append(player)
 		playerObjList = [player for player in playerObjList if player not in fillPlayers]	# this is just remaining non fill primary players now
 		
 		# place them into teams
@@ -829,9 +830,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		# first we do people's secondary roles
 		usedPlayers = []
 		for player in playerObjList:
-			if len(playersInRoles[player.get_sRole()]) < team_count:
-				playersInRoles[player.get_sRole()].append(player)
-				usedPlayers.append(player)
+			if player.get_sRole() in playersInRoles:
+				if len(playersInRoles[player.get_sRole()]) < team_count:
+					playersInRoles[player.get_sRole()].append(player)
+					usedPlayers.append(player)
 		playerObjList = [player for player in playerObjList if player not in usedPlayers]	# this is just remaining players now
 
 		# next we just put everyone else into any role, these are fill players or players who are being autofilled
@@ -849,35 +851,68 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		# what we're going to do here is try every combination of swapping players WITHIN THEIR ASSIGNED ROLES to find the closest set of matches
 		bestMaxMMRdiff = 999999999		# Starting MMR diff unreasonably high so that it gets replaced
 
-		for top in playersInRoles["TOP"]:
-			for jng in playersInRoles["JNG"]:
-				for mid in playersInRoles["MID"]:
-					for adc in playersInRoles["ADC"]:
-						teamList = []
-						for sup in playersInRoles["SUP"]:
-							team = ((top, "TOP"), (jng, "JNG"), (mid, "MID"), (adc, "ADC"), (sup, "SUP"))
-							avgMMR = self.getTotalMMR(team)/5
-							teamList.append((team, avgMMR))
-						
-						idx = 0
-						maxDiffBetweenTeams = 0
-						while idx+1 < len(teamList):
-							if abs(teamList[idx][1] - teamList[idx+1][1]) > maxDiffBetweenTeams:
-								maxDiffBetweenTeams = abs(teamList[idx][1] - teamList[idx+1][1])
-							idx += 2
+		#for top in playersInRoles["TOP"]:
+		#	for jng in playersInRoles["JNG"]:
+		#		for mid in playersInRoles["MID"]:
+		#			for adc in playersInRoles["ADC"]:
+		#				teamList = []
+		#				for sup in playersInRoles["SUP"]:
+		#					team = ((top, "TOP"), (jng, "JNG"), (mid, "MID"), (adc, "ADC"), (sup, "SUP"))
+		#					avgMMR = self.getTotalMMR(team)/5
+		#					teamList.append((team, avgMMR))
+		#				
+		#				idx = 0
+		#				maxDiffBetweenTeams = 0
+		#				while idx+1 < len(teamList):
+		#					if abs(teamList[idx][1] - teamList[idx+1][1]) > maxDiffBetweenTeams:
+		#						maxDiffBetweenTeams = abs(teamList[idx][1] - teamList[idx+1][1])
+		#					idx += 2
+#
+		#				print("beep boop" + str(maxDiffBetweenTeams))225650967058710529
+		#				if maxDiffBetweenTeams < bestMaxMMRdiff:
+		#					print("here" + str(maxDiffBetweenTeams))
+		#					bestMaxMMRdiff = maxDiffBetweenTeams
+		#					bestMatches = []
+		#					idx = 0
+		#					while idx+1 < len(teamList):
+		#						print("here?")
+		#						blueTeam = Team(teamList[idx][0][0][0], teamList[idx][0][1][0], teamList[idx][0][2][0], teamList[idx][0][3][0], teamList[idx][0][4][0])
+		#						redTeam = Team(teamList[idx+1][0][0][0], teamList[idx+1][0][1][0], teamList[idx+1][0][2][0], teamList[idx+1][0][3][0], teamList[idx+1][0][4][0])
+		#						bestMatches.append(Match(self.cursor, self.con, matchID=0, blueTeam=blueTeam, redTeam=redTeam, startTime=datetime.datetime.now()))			
+		#						idx += 2
+		#return bestMatches
+		print(playersInRoles)
+		for x in range(team_count**5):
+			teamList = []
+			for y in range(team_count):
+				top = playersInRoles["TOP"][(((x//team_count**4)%team_count)+y)%team_count]
+				jng = playersInRoles["JNG"][(((x//team_count**3)%team_count)+y)%team_count]
+				mid = playersInRoles["MID"][(((x//team_count**2)%team_count)+y)%team_count]
+				adc = playersInRoles["ADC"][(((x//team_count**1)%team_count)+y)%team_count]
+				sup = playersInRoles["SUP"][(((x//team_count**0)%team_count)+y)%team_count]
 
-						print("beep boop" + str(maxDiffBetweenTeams))
-						if maxDiffBetweenTeams < bestMaxMMRdiff:
-							print("here" + str(maxDiffBetweenTeams))
-							bestMaxMMRdiff = maxDiffBetweenTeams
-							bestMatches = []
-							idx = 0
-							while idx+1 < len(teamList):
-								print("here?")
-								blueTeam = Team(teamList[idx][0][0][0], teamList[idx][0][1][0], teamList[idx][0][2][0], teamList[idx][0][3][0], teamList[idx][0][4][0])
-								redTeam = Team(teamList[idx+1][0][0][0], teamList[idx+1][0][1][0], teamList[idx+1][0][2][0], teamList[idx+1][0][3][0], teamList[idx+1][0][4][0])
-								bestMatches.append(Match(self.cursor, self.con, matchID=0, blueTeam=blueTeam, redTeam=redTeam, startTime=datetime.datetime.now()))			
-								idx += 2
+				team = ((top, "TOP"), (jng, "JNG"), (mid, "MID"), (adc, "ADC"), (sup, "SUP"))
+				avgMMR = self.getTotalMMR(team)/5
+				teamList.append((team, avgMMR))
+			
+			idx = 0
+			maxDiffBetweenTeams = 0
+			while idx+1 < len(teamList):
+				if abs(teamList[idx][1] - teamList[idx+1][1]) > maxDiffBetweenTeams:
+					maxDiffBetweenTeams = abs(teamList[idx][1] - teamList[idx+1][1])
+				idx += 2
+
+			#print("beep boop" + str(maxDiffBetweenTeams))
+			if maxDiffBetweenTeams < bestMaxMMRdiff:
+				bestMaxMMRdiff = maxDiffBetweenTeams
+				bestMatches = []
+				idx = 0
+				while idx+1 < len(teamList):
+					blueTeam = Team(teamList[idx][0][0][0], teamList[idx][0][1][0], teamList[idx][0][2][0], teamList[idx][0][3][0], teamList[idx][0][4][0])
+					redTeam = Team(teamList[idx+1][0][0][0], teamList[idx+1][0][1][0], teamList[idx+1][0][2][0], teamList[idx+1][0][3][0], teamList[idx+1][0][4][0])
+					bestMatches.append(Match(self.cursor, self.con, matchID=0, blueTeam=blueTeam, redTeam=redTeam, startTime=datetime.datetime.now()))			
+					idx += 2
+		print(f"After comparing {team_count**5} possibities across {(team_count**5)*4} teams, lowest max mmr diff found was {bestMaxMMRdiff}")
 		return bestMatches
 		# \step 6
 

@@ -49,7 +49,7 @@ class Player:
             txt += "\tUsername: {self.discordUser.display_name}\n"
         txt += f"\tplayerID : {self.playerID}\n\tdiscordID : {self.discordID}\n\twinCount : {self.winCount}\n\tlossCount : {self.lossCount}\n\tinternalRating\
         : {self.internalRating}\n\tprimaryRole : {self.primaryRole}\n\tsecondaryRole : {self.secondaryRole}\n\tsignUpCount : {self.signUpCount}\n\tmissedGameCount : {self.missedGameCount}\n"
-        txt += "}"
+        txt += "}\n"
         return txt
             
     def get_pID(self):
