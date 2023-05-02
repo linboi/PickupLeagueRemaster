@@ -3,6 +3,7 @@ from team import Team
 import random
 import itertools
 import copy
+import datetime
 
 class Match:
     def __init__(self, cursor, con, matchID=None, blueTeam=None, redTeam=None, startTime='TODAY'):
@@ -376,6 +377,7 @@ class Match:
             matchid = latest_matchID[0] + 1
             
         self.set_matchID(matchid)
+        self.startTime = str(datetime.datetime.now().hour) + ":00"
         self.cursor.execute(f"INSERT INTO Match (matchID , matchTime) VALUES ({matchid}, 'TODAY')")
         self.con.commit()
         
@@ -427,16 +429,17 @@ class Match:
         csvnames = ""
         for p in playerlist:
             csvnames += str(p.get_pID()) + ", "
-        csvnames += "'TODAY', "
-        csvnames += "{ratingchange*winner}, "*5
-        csvnames += "{ratingchange*-1*winner}, "*4 + "{ratingchange*-1*winner}"
+        csvnames += f"'{datetime.datetime.now()}', "
+        csvnames += f"{ratingchange*winner}, "*5
+        csvnames += f"{ratingchange*-1*winner}, "*4 + f"{ratingchange*-1*winner}"
         self.cursor.execute(f"INSERT INTO Match (bluePOne, bluePTwo, bluePThree, bluePFour, bluePFive, \
-	redPOne, redPTwo, redPThree, redPFour, redPFive\
+	redPOne, redPTwo, redPThree, redPFour, redPFive,\
 	matchTime, \
 	bluePOneRatingChange, bluePTwoRatingChange, bluePThreeRatingChange, bluePFourRatingChange, bluePFiveRatingChange, \
 	redPOneRatingChange, redPTwoRatingChange, redPThreeRatingChange, redPFourRatingChange, redPFiveRatingChange) \
                             VALUES \
                             ({csvnames})")
+        self.con.commit()
         
         
     
