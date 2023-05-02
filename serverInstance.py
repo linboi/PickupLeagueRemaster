@@ -120,24 +120,6 @@ class serverInstance:
 		
 		await self.displayMatch()
   
-	async def testmm(self):
-		
-		idList = []
-		res = self.cursor.execute("SELECT * FROM Player LIMIT 25")
-		result = res.fetchall()
-		for player in result:
-			idList.append(player[1])
-		
-		gameList = [1]
-  
-		
-		gameList.append(await self.createGameTest(idList))
-
-		await asyncio.gather(*gameList)
-
-		
-	async def createGameTest(self, idlist):
-		await self.matchmake(idlist)
 		
 	# Display current matches on discord channel
 	async def displayMatch(self):
