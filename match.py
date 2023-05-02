@@ -2,9 +2,10 @@ from player import Player
 from team import Team
 import random
 import itertools
+import copy
 
 class Match:
-    def __init__(self, matchID, blueTeam, redTeam, startTime, cursor, con):
+    def __init__(self, cursor, con, matchID=None, blueTeam=None, redTeam=None, startTime='TODAY'):
         
         self.matchID = matchID
         self.blueTeam = blueTeam
@@ -13,15 +14,15 @@ class Match:
         self.cursor = cursor
         self.con = con
         
-    def __init__(self, cursor, con):
-        
-        self.matchID = None
-        self.blueTeam = None
-        self.redTeam = None
-        self.startTime = 'TODAY'
-        
-        self.cursor = cursor
-        self.con = con
+    def __repr__(self):
+        string = f"   \n✨ MatchID ({self.matchID})\t \t⏲️ Match Time ({self.startTime})\t \t 🏅 MMR Difference ({round(self.calculateMMRDifference(self.blueTeam, self.redTeam))})"
+        string += f"\n```{'[Blue Team]': ^15}{'':^5}{'[Red Team]':^15}\n\n"
+        string += f"{self.blueTeam.get_top().get_username():^15}{'(top)':^5}{self.redTeam.get_top().get_username():^15}\n"
+        string += f"{self.blueTeam.get_jg().get_username():^15}{'(jng)':^5}{self.redTeam.get_jg().get_username():^15}\n"
+        string += f"{self.blueTeam.get_mid().get_username():^15}{'(mid)':^5}{self.redTeam.get_mid().get_username():^15}\n"
+        string += f"{self.blueTeam.get_adc().get_username():^15}{'(adc)':^5}{self.redTeam.get_adc().get_username():^15}\n"
+        string += f"{self.blueTeam.get_sup().get_username():^15}{'(sup)':^5}{self.redTeam.get_sup().get_username():^15}\n```"
+        return string
         
     def set_red(self, team):
         self.redTeam = team
@@ -223,8 +224,9 @@ class Match:
                     
                     # If new config better, swap.
                     if new_difference < best_difference:
-                        self.blueTeam = teamR
-                        self.redTeam = teamB
+                        self.blueTeam = copy.copy(teamR)
+                        self.redTeam = copy.copy(teamB)
+                        best_difference = new_difference
                 
     # MMR Difference Between Both Teams
     def calculateMMRDifference(self, teamR, teamB):

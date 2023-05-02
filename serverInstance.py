@@ -8,7 +8,9 @@ import asyncio
 from bs4 import BeautifulSoup
 from player import Player
 from match import Match
+from team import Team
 import random
+
 
 class serverInstance:
 	def __init__(self):
@@ -122,24 +124,26 @@ class serverInstance:
 		
 	# Display current matches on discord channel
 	async def displayMatch(self):
-		await self.testChannel.send(f"**__Current Matches__**:\n")
+		#await self.testChannel.send(f"**__Current Matches__**:\n")
 		for match in self.currentMatches:
 			# Display Details of Match
-			msg = await self.testChannel.send(f"{match.displayMatchDetails()}\n")
-			await msg.edit(suppress=True)
-			await self.testChannel.send(f"---------------------------------------------")
+			print(f"{match.displayMatchDetails()}\n")
+			#msg = await self.testChannel.send(f"{match.displayMatchDetails()}\n")
+			#await msg.edit(suppress=True)
+			#await self.testChannel.send(f"---------------------------------------------")
    
 			# Send DM to all players
-			user_list = match.listOfUsers()
-			for user in user_list:
-				# Check if user is in member list
-				try:
-					memberFound = self.client.guilds[0].get_member(user)
-					if memberFound:
-						print(memberFound)
-						await memberFound.send(f"✨ You have been picked for a game, head over to {self.testChannel.mention} to see the teams!")
-				except:
-					pass
+			#user_list = match.listOfUsers()
+			#for user in user_list:
+			#	# Check if user is in member list
+			#	try:
+			#		memberFound = self.client.guilds[0].get_member(user)
+			#		if memberFound:
+			#			#print(memberFound)
+			#			#await memberFound.send(f"✨ You have been picked for a game, head over to {self.testChannel.mention} to see the teams!")
+			#			pass
+			#	except:
+			#		pass
 	
 	async def createGamesOnSchedule(self, schedule, channel):
 		await timing.sleep_until(schedule)
@@ -727,12 +731,154 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		else:
 			return False
 			
+	def getTotalMMR(self, team):
+		total = 0
+		for player, role in team:
+			total += player.getMMRinRole(role)
 
+		return total
 
+	# discordUser is None, isn't used either. Should maybe fix this idk 
+	def matchmakeV2(self, playerIDList):
+		# List of all players in Queue
+		res = self.cursor.execute("SELECT * FROM Player")# WHERE discordID in ({seq})".format(seq=','.join(['?']*len(playerIDList))))
+		listOfPlayers = res.fetchall()
+		shorterlist = []
+		for player in listOfPlayers:
+			if player[1] in playerIDList:
+				shorterlist.append(player)
+		listOfPlayers = shorterlist
 	   
+		playerObjList = []
+		for player_details in listOfPlayers:
+			#discordUser = None
+			#try:
+			#	discordUser = await self.client.fetch_user(player_details[1])
+			#except:
+			#	discordUser = None
+			player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
+                   player_details[9], player_details[10], player_details[11], self.cursor, self.con, None)
+			# Add player to list
+			playerObjList.append(player)
+   
+		players_in_queue = len(playerObjList)
 		
+		# Number of macthes to create
+		match_count = players_in_queue // 10
+
+		team_count = match_count * 2
+		
+		# Number of players required
+		required_players = match_count * 10
+
+		# up to here was your code @cail
+
+		# step 1
+		def getRatioOfMissedGames(player):
+			if player.get_missedGameCount() == 0:
+				return player.get_signUpCount()
+			return player.get_signUpCount()/player.get_missedGameCount()
+		
+		# /step 1
+		playerObjList.sort(key=getRatioOfMissedGames, reverse=True)
+		for player in playerObjList:
+			player.addSignUpCount()
+
+		# step 2
+		playersInRoles = {'TOP':[], 'JNG':[], 'MID':[], 'ADC':[], 'SUP':[]}
+		usedPlayers = []
+		for player in playerObjList:
+			if len(playersInRoles[player.get_pRole()]) < team_count:
+				playersInRoles[player.get_pRole()].append(player)
+				usedPlayers.append(player)
+		playerObjList = [player for player in playerObjList if player not in usedPlayers]	# this is just remaining players now
+		
+		# Now put in the FILL primaries
+		# Find them
+		fillPlayers = []
+		for player in playerObjList:
+			if player.get_pRole() == "FILL":
+				fillPlayers.append()
+		playerObjList = [player for player in playerObjList if player not in fillPlayers]	# this is just remaining non fill primary players now
+		
+		# place them into teams
+		fillIndex = 0
+		for key in playersInRoles:
+			while len(playersInRoles[key]) < team_count and fillIndex < len(fillPlayers):
+				playersInRoles[key].append(fillPlayers[fillIndex])
+				fillIndex += 1
+		
+		# At this point either the list of fill players should be empty or the teams should be full
+
+		# /step 2
+
+		# step 3
+		remainingPlayersNeeded = 0
+		for key in playersInRoles:
+			remainingPlayersNeeded += team_count - len(playersInRoles[key]) 
+		# /step 3
+
+		# step 4 bonus step goes here, I'm not doing it tonight. Instead we'll just grab the exact num of players we need
+		playerObjList.sort(key=getRatioOfMissedGames, reverse=True)
+		for player in playerObjList[remainingPlayersNeeded:]:
+			player.addGameMissed()
+		playerObjList = playerObjList[:remainingPlayersNeeded]
+		# /step 4
+
+		# step 5: fill remaining players into roles. we should use people's secondary roles if possible here, and use fill players last
+		# first we do people's secondary roles
+		usedPlayers = []
+		for player in playerObjList:
+			if len(playersInRoles[player.get_sRole()]) < team_count:
+				playersInRoles[player.get_sRole()].append(player)
+				usedPlayers.append(player)
+		playerObjList = [player for player in playerObjList if player not in usedPlayers]	# this is just remaining players now
+
+		# next we just put everyone else into any role, these are fill players or players who are being autofilled
+		remainingPlayerIndex = 0
+		for key in playersInRoles:
+			while len(playersInRoles[key]) < team_count and remainingPlayerIndex < len(playerObjList):
+				playersInRoles[key].append(playerObjList[remainingPlayerIndex])
+				remainingPlayerIndex += 1
+
+		#print(playersInRoles)
+		# /step 5
+		#At this point we should have a dictionary with keys of the 5 roles, where the values are lists of players of length (team_count)
+
+		# step 6
+		# what we're going to do here is try every combination of swapping players WITHIN THEIR ASSIGNED ROLES to find the closest set of matches
+		bestMaxMMRdiff = 999999999		# Starting MMR diff unreasonably high so that it gets replaced
+
+		for top in playersInRoles["TOP"]:
+			for jng in playersInRoles["JNG"]:
+				for mid in playersInRoles["MID"]:
+					for adc in playersInRoles["ADC"]:
+						teamList = []
+						for sup in playersInRoles["SUP"]:
+							team = ((top, "TOP"), (jng, "JNG"), (mid, "MID"), (adc, "ADC"), (sup, "SUP"))
+							avgMMR = self.getTotalMMR(team)/5
+							teamList.append((team, avgMMR))
+						
+						idx = 0
+						maxDiffBetweenTeams = 0
+						while idx+1 < len(teamList):
+							if abs(teamList[idx][1] - teamList[idx+1][1]) > maxDiffBetweenTeams:
+								maxDiffBetweenTeams = abs(teamList[idx][1] - teamList[idx+1][1])
+							idx += 2
+
+						print("beep boop" + str(maxDiffBetweenTeams))
+						if maxDiffBetweenTeams < bestMaxMMRdiff:
+							print("here" + str(maxDiffBetweenTeams))
+							bestMaxMMRdiff = maxDiffBetweenTeams
+							bestMatches = []
+							idx = 0
+							while idx+1 < len(teamList):
+								print("here?")
+								blueTeam = Team(teamList[idx][0][0][0], teamList[idx][0][1][0], teamList[idx][0][2][0], teamList[idx][0][3][0], teamList[idx][0][4][0])
+								redTeam = Team(teamList[idx+1][0][0][0], teamList[idx+1][0][1][0], teamList[idx+1][0][2][0], teamList[idx+1][0][3][0], teamList[idx+1][0][4][0])
+								bestMatches.append(Match(self.cursor, self.con, matchID=0, blueTeam=blueTeam, redTeam=redTeam, startTime=datetime.datetime.now()))			
+								idx += 2
+		return bestMatches
+		# \step 6
 
 
-	   
-
-  

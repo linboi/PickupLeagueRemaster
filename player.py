@@ -26,21 +26,31 @@ class Player:
         self.cursor = cursor
         self.con = con
         
-        # Set username of Player
-        self.set_username()
-        
         # Set QP of player
         self.setQP()
         
         
         # Assign Accounts to Player
         self.fetchPlayerAccounts()
+
+        # Set username of Player
+        self.set_username()
         
         # Sets inital MMR of player
         if self.winCount == 0 and self.lossCount == 0:
             self.setInitMMR()
             self.update()
             
+    def __repr__(self):
+        txt = "Player:{\n"
+        if self.discordUser == None:
+            txt += "\tdiscordUser Not Set\n"
+        else:
+            txt += "\tUsername: {self.discordUser.display_name}\n"
+        txt += f"\tplayerID : {self.playerID}\n\tdiscordID : {self.discordID}\n\twinCount : {self.winCount}\n\tlossCount : {self.lossCount}\n\tinternalRating\
+        : {self.internalRating}\n\tprimaryRole : {self.primaryRole}\n\tsecondaryRole : {self.secondaryRole}\n\tsignUpCount : {self.signUpCount}\n\tmissedGameCount : {self.missedGameCount}\n"
+        txt += "}"
+        return txt
             
     def get_pID(self):
         return self.playerID
@@ -76,6 +86,8 @@ class Player:
         return self.discordID
     
     def get_username(self):
+        if self.username == None:
+            return self.getHighestAccountName()
         return self.username
     
     def get_QP(self):
@@ -94,11 +106,13 @@ class Player:
         return self.isAdmin
     
     def set_username(self):
-        try:
+        if self.discordUser != None:
             self.username = self.discordUser.name
-            print(self.username)
-        except:
-            self.username = "404"
+        else:
+            try:
+                self.username = self.getHighestAccountName()
+            except:
+                self.username = self.discordID
         
     
     def set_role(self, role):
@@ -160,7 +174,17 @@ class Player:
             self.roleMMR = self.internalRating - 200
         else:
             self.roleMMR = self.internalRating - 300
-    
+
+    def getMMRinRole(self, role=None):
+        if role == None:
+            role = self.get_role
+        if self.get_pRole() == role:
+            return self.internalRating
+        elif self.get_sRole() == role:
+            return self.internalRating - 200
+        else:
+            return self.internalRating - 300
+
     # Get a list of Names from a players Accounts
     def getAccountNames(self):
         listOfNames = []
