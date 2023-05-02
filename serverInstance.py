@@ -35,16 +35,15 @@ class serverInstance:
 			self.queue.append(player)
 		await channel.send(f"{len(self.queue)} players in queue.\nEstimated wait time: Literally forever")
 		if len(self.queue) % 10 == 0:
-			self.matchmake(self.queue)
+			matches = await self.matchmakeV2(self.queue)
+			self.currentMatches.extend(matches)
+			await self.announcementChannel.send(str(matches))
 			self.queue = []
 
 	async def removeFromQueue(self, player, channel):
 		if player in self.queue:
 			self.queue.remove(player)
 		await channel.send(f"{len(self.queue)} players in queue.\nEstimated wait time: Literally forever")
-		if len(self.queue) % 10 == 0:
-			self.matchmake(self.queue)
-			self.queue = []
 	
 	# Mehtod which creates Matches based on available Players
 	async def matchmake(self, playerIDList):
@@ -199,11 +198,11 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		for reaction in reactionList:
 			if reaction.emoji == emoji:
 				async for user in reaction.users():
-					msg+= "\n" + user.display_name
 					playerIDs.append(user.id)
 		
-		await channel.send(msg)
-		await self.matchmake(playerIDs)
+		matches = await self.matchmakeV2(playerIDs)
+		self.currentMatches.extend(matches)
+		await self.announcementChannel.send(str(matches))
 
 	async def win(self, message):
 		activePlayerMatches = []
