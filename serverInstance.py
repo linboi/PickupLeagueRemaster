@@ -119,6 +119,25 @@ class serverInstance:
 
 		
 		await self.displayMatch()
+  
+	async def testmm(self):
+		
+		idList = []
+		res = self.cursor.execute("SELECT * FROM Player LIMIT 25")
+		result = res.fetchall()
+		for player in result:
+			idList.append(player[1])
+		
+		gameList = [1]
+  
+		
+		gameList.append(await self.createGameTest(idList))
+
+		await asyncio.gather(*gameList)
+
+		
+	async def createGameTest(self, idlist):
+		await self.matchmake(idlist)
 		
 	# Display current matches on discord channel
 	async def displayMatch(self):
@@ -128,7 +147,7 @@ class serverInstance:
 			msg = await self.testChannel.send(f"{match.displayMatchDetails()}\n")
 			await msg.edit(suppress=True)
 			await self.testChannel.send(f"---------------------------------------------")
-   
+	
 			# Send DM to all players
 			user_list = match.listOfUsers()
 			for user in user_list:
@@ -136,8 +155,9 @@ class serverInstance:
 				try:
 					memberFound = self.client.guilds[0].get_member(user)
 					if memberFound:
-						print(memberFound)
-						await memberFound.send(f"✨ You have been picked for a game, head over to {self.testChannel.mention} to see the teams!")
+						#print(memberFound)
+						pass
+						#await memberFound.send(f"✨ You have been picked for a game, head over to {self.testChannel.mention} to see the teams!")
 				except:
 					pass
 	
@@ -199,7 +219,12 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 					playerIDs.append(user.id)
 		
 		await channel.send(msg)
-		await self.matchmake(playerIDs)
+		idList = []
+		res = self.cursor.execute("SELECT * FROM Player LIMIT 36")
+		result = res.fetchall()
+		for player in result:
+			idList.append(player[1])
+		await self.matchmake(idList)
 
 	async def win(self, message):
 		activePlayerMatches = []
@@ -217,6 +242,11 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		if len(activePlayerMatches) == 1:
 			activePlayerMatches[0][0].resolve(activePlayerMatches[0][1])
 			self.currentMatches.remove(activePlayerMatches[0][0])
+			hello = ""
+			for match in self.currentMatches:
+				hello += str(match.get_matchID()) + "\n"
+			await message.channel.send(hello)
+			await message.channel.send("🎊 WPGG")
 		if len(activePlayerMatches) > 1:
 			await message.channel.send("Player found in more than one match, uh oh")
 
