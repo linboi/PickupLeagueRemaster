@@ -128,7 +128,7 @@ class serverInstance:
 			msg = await self.testChannel.send(f"{match.displayMatchDetails()}\n")
 			await msg.edit(suppress=True)
 			await self.testChannel.send(f"---------------------------------------------")
-   
+	
 			# Send DM to all players
 			user_list = match.listOfUsers()
 			for user in user_list:
@@ -136,7 +136,6 @@ class serverInstance:
 				try:
 					memberFound = self.client.guilds[0].get_member(user)
 					if memberFound:
-						print(memberFound)
 						await memberFound.send(f"✨ You have been picked for a game, head over to {self.testChannel.mention} to see the teams!")
 				except:
 					pass
@@ -217,6 +216,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		if len(activePlayerMatches) == 1:
 			activePlayerMatches[0][0].resolve(activePlayerMatches[0][1])
 			self.currentMatches.remove(activePlayerMatches[0][0])
+			await message.channel.send("🎊 WPGG")
 		if len(activePlayerMatches) > 1:
 			await message.channel.send("Player found in more than one match, uh oh")
 
