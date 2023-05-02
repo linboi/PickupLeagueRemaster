@@ -775,9 +775,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
 		# step 1
 		def getRatioOfMissedGames(player):
-			if player.get_missedGameCount() == 0:
-				return player.get_signUpCount()
-			return player.get_signUpCount()/player.get_missedGameCount()
+			if player.get_signUpCount() == 0:
+				return 1
+			return player.get_missedGameCount()/player.get_signUpCount()
 		
 		# /step 1
 		playerObjList.sort(key=getRatioOfMissedGames, reverse=True)
