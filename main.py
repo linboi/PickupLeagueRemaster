@@ -50,7 +50,7 @@ async def on_ready():
 
 	with open('./settings.json') as f:
 		settings = json.load(f)
-
+	
 	await inst.createGamesOnSchedule(settings['GameDays'], main_channel)
 				 
 # Event handeler for Messages

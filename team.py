@@ -9,6 +9,22 @@ class Team:
 		self.adc = None
 		self.support = None
 		self.avgMMR = 0
+
+	def __init__(self, top, jungle, mid, adc, support):
+		
+		top.set_role("TOP")
+		self.top = top
+		jungle.set_role("JNG")
+		self.jungle = jungle
+		mid.set_role("MID")
+		self.mid = mid
+		adc.set_role("ADC")
+		self.adc = adc
+		support.set_role("SUP")
+		self.support = support
+		#for player in self.getListPlayers():
+		#	player.set_role
+		#self.calculateAvgMMR()
 		
 	# Setters
 	def set_avgMMR(self, MMR):

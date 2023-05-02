@@ -2,11 +2,12 @@
 	"GameDays":
 	[
 		{
-		"Day": 1,
-		"AnnouncementTime":"13:38",
+		"Day": 2,
+		"AnnouncementTime":"18:30",
 		"Times":
 			[
-				"13:39"
+				"19:30",
+				"20:30"
 			]
 		}
 	]
