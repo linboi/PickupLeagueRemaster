@@ -119,7 +119,6 @@ class serverInstance:
 
 		
 		await self.displayMatch()
-  
 		
 	# Display current matches on discord channel
 	async def displayMatch(self):
@@ -139,7 +138,7 @@ class serverInstance:
 					if memberFound:
 						#print(memberFound)
 						pass
-						#await memberFound.send(f"✨ You have been picked for a game, head over to {self.testChannel.mention} to see the teams!")
+						await memberFound.send(f"✨ You have been picked for a game, head over to {self.testChannel.mention} to see the teams!")
 				except:
 					pass
 	
@@ -201,12 +200,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 					playerIDs.append(user.id)
 		
 		await channel.send(msg)
-		idList = []
-		res = self.cursor.execute("SELECT * FROM Player LIMIT 36")
-		result = res.fetchall()
-		for player in result:
-			idList.append(player[1])
-		await self.matchmake(idList)
+		await self.matchmake(playerIDs)
 
 	async def win(self, message):
 		activePlayerMatches = []
