@@ -136,8 +136,6 @@ class serverInstance:
 				try:
 					memberFound = self.client.guilds[0].get_member(user)
 					if memberFound:
-						#print(memberFound)
-						pass
 						await memberFound.send(f"✨ You have been picked for a game, head over to {self.testChannel.mention} to see the teams!")
 				except:
 					pass
