@@ -80,9 +80,6 @@ class commands:
 		for command in commands.userCommands:
 			txt += f"!{command}\n" #and a description
 		await message.channel.send(txt + "```")
-  
-	async def mmtest(message, inst, args):
-		await inst.testmm()
 
 	userCommands = {
 		'hello' : hello,
@@ -101,8 +98,7 @@ class commands:
 		'admin': isAdmin,
 		'replace': replace,
 		'roles': roles,
-		'help' :help,
-		'mm': mmtest
+		'help' :help
 		}
 
 	async def parseReaction(reaction, inst):
