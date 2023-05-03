@@ -3,11 +3,11 @@
 	[
 		{
 		"Day": 2,
-		"AnnouncementTime":"18:30",
+		"AnnouncementTime":"18:00",
 		"Times":
 			[
-				"19:30",
-				"20:30"
+				"19:00",
+				"20:00"
 			]
 		}
 	]
