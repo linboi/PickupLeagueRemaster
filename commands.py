@@ -11,6 +11,10 @@ class commands:
 		await message.channel.send("hiya")
 
 	async def queue(message, inst, args):
+		user_id = message.author.id
+		admin_check = await inst.checkAdmin(user_id)
+		if not admin_check:
+			return
 		await inst.addToQueue(message.author.id, message.channel)
 
 	async def dequeue(message, inst, args):
@@ -33,6 +37,10 @@ class commands:
 			await message.channel.send(pName + " (" + pRank + ")")
    
 	async def player(message, inst, args):
+		user_id = message.author.id
+		admin_check = await inst.checkAdmin(user_id)
+		if not admin_check:
+				return
 		await inst.matchmake()
 		
 	async def unscheduledGame(message, inst, args):
