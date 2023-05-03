@@ -35,7 +35,7 @@ class serverInstance:
 			self.queue.append(player)
 		await channel.send(f"{len(self.queue)} players in queue.\nEstimated wait time: Literally forever")
 		if len(self.queue) % 10 == 0:
-			matches = self.matchmakeV2(self.queue)
+			matches = await self.matchmakeV2(self.queue)
 			self.currentMatches.extend(matches)
 			await self.announcementChannel.send(str(matches))
 			self.queue = []
@@ -197,7 +197,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				async for user in reaction.users():
 					playerIDs.append(user.id)
 		
-		matches = self.matchmakeV2(playerIDs)
+		matches = await self.matchmakeV2(playerIDs)
 		self.currentMatches.extend(matches)
 		await self.announcementChannel.send(str(matches))
 
@@ -736,7 +736,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		return total
 
 	# discordUser is None, isn't used either. Should maybe fix this idk 
-	def matchmakeV2(self, playerIDList):
+	async def matchmakeV2(self, playerIDList):
 		# List of all players in Queue
 		res = self.cursor.execute("SELECT * FROM Player")# WHERE discordID in ({seq})".format(seq=','.join(['?']*len(playerIDList))))
 		listOfPlayers = res.fetchall()
@@ -745,16 +745,16 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			if player[1] in playerIDList:
 				shorterlist.append(player)
 		listOfPlayers = shorterlist
-		print("shkeeeeebs" + str(len(shorterlist)))
+		print("Shoter List Compiled:" + str(len(shorterlist)))
 		playerObjList = []
 		for player_details in listOfPlayers:
-			#discordUser = None
-			#try:
-			#	discordUser = await self.client.fetch_user(player_details[1])
-			#except:
-			#	discordUser = None
+			discordUser = None
+			try:
+				discordUser = await self.client.fetch_user(player_details[1])
+			except:
+				discordUser = None
 			player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
-                   player_details[9], player_details[10], player_details[11], self.cursor, self.con, None)
+                   player_details[9], player_details[10], player_details[11], self.cursor, self.con, discordUser)
 			# Add player to list
 			playerObjList.append(player)
    
