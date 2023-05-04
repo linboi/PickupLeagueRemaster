@@ -201,7 +201,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		self.currentMatches.extend(matches)
 		match_string = str(matches).replace("[", "")
 		match_string = match_string.replace("]", "")
-		await channel.send(match_string)
+		msg = await channel.send(match_string)
+		await msg.edit(suppress=True)
 
 	async def win(self, message):
 		activePlayerMatches = []
