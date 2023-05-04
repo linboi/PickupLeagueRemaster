@@ -82,18 +82,7 @@ class commands:
 
 	async def win(message, inst, args):
 		await inst.win(message)
-  
-	async def mmtest(message, inst, args):
-		current_matches = []
-		player_list = [197057417358475264, 199549110187982848, 197058147167371265, 127796716408799232, 180398163620790279, 225650967058710529, 618520923204485121, 160471312517562368, 188370105413926912, 694560846814117999]
-		matches = await inst.matchmakeV2(player_list)
-		current_matches.extend(matches)
-		match_string = str(matches).replace("[", "")
-		match_string = match_string.replace("]", "")
-		msg = await message.channel.send(match_string)
-		await msg.edit(suppress=True)
-
-		
+  		
 	async def help(message, inst, args):
 		txt = "```List of commands:\n"
 		for command in commands.userCommands:
@@ -117,8 +106,7 @@ class commands:
 		'admin': isAdmin,
 		'replace': replace,
 		'roles': roles,
-		'help' :help,
-		'mmtest': mmtest
+		'help' :help
 		}
 
 	async def parseReaction(reaction, inst):
