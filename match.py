@@ -16,7 +16,7 @@ class Match:
         self.con = con
         
     def __repr__(self):
-        string = f"   \n✨ MatchID ({self.matchID})\t \t⏲️ Match Time ({self.startTime})\t \t 🏅 MMR Difference ({round(self.calculateMMRDifference(self.blueTeam, self.redTeam))})"
+        string = f"   \n✨ **MatchID** (*{self.matchID}*)\t \t⏲️ **Match Time** (*{self.startTime}*)\t \t 🏅 **MMR Difference** (*{round(self.calculateMMRDifference(self.blueTeam, self.redTeam))}*)"
         string += f"\n```{'[Blue Team]': ^15}{'':^5}{'[Red Team]':^15}\n\n"
         string += f"{self.blueTeam.get_top().get_username():^15}{'(top)':^5}{self.redTeam.get_top().get_username():^15}\n"
         string += f"{self.blueTeam.get_jg().get_username():^15}{'(jng)':^5}{self.redTeam.get_jg().get_username():^15}\n"
