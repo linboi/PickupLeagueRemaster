@@ -82,7 +82,7 @@ class commands:
 
 	async def win(message, inst, args):
 		await inst.win(message)
-		
+  		
 	async def help(message, inst, args):
 		txt = "```List of commands:\n"
 		for command in commands.userCommands:

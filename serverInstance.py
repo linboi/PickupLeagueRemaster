@@ -199,7 +199,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		
 		matches = await self.matchmakeV2(playerIDs)
 		self.currentMatches.extend(matches)
-		await self.announcementChannel.send(str(matches))
+		match_string = str(matches).replace("[", "")
+		match_string = match_string.replace("]", "")
+		msg = await channel.send(match_string)
+		await msg.edit(suppress=True)
 
 	async def win(self, message):
 		activePlayerMatches = []
@@ -217,7 +220,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		if len(activePlayerMatches) == 1:
 			activePlayerMatches[0][0].resolve(activePlayerMatches[0][1])
 			self.currentMatches.remove(activePlayerMatches[0][0])
-			await message.channel.send("🎊 WPGG")
+			await message.channel.send("🎊 WPGG, remember to upload a post-game screenshot!")
 		if len(activePlayerMatches) > 1:
 			await message.channel.send("Player found in more than one match, uh oh")
 
@@ -907,9 +910,22 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				while idx+1 < len(teamList):
 					blueTeam = Team(teamList[idx][0][0][0], teamList[idx][0][1][0], teamList[idx][0][2][0], teamList[idx][0][3][0], teamList[idx][0][4][0])
 					redTeam = Team(teamList[idx+1][0][0][0], teamList[idx+1][0][1][0], teamList[idx+1][0][2][0], teamList[idx+1][0][3][0], teamList[idx+1][0][4][0])
-					bestMatches.append(Match(self.cursor, self.con, matchID=0, blueTeam=blueTeam, redTeam=redTeam, startTime=datetime.datetime.now()))			
+					bestMatches.append(Match(self.cursor, self.con, matchID=0, blueTeam=blueTeam, redTeam=redTeam, startTime=str(datetime.datetime.now().date()) + ", " + str(datetime.datetime.now().hour) + ":00"))	
 					idx += 2
 		print(f"After comparing {team_count**5} possibities across {(team_count**5)*4} teams, lowest max mmr diff found was {bestMaxMMRdiff}")
+		for match in bestMatches:
+				# Check if user is in member list
+				pIDs = match.listOfUsers()
+				for player in pIDs:
+					try:
+						memberFound = self.client.guilds[0].get_member(player)
+						if memberFound:
+							# Send the player a DM if found!
+							await memberFound.send(f"✨ You have been picked for a game, head over to {self.announcementChannel.mention} to see the teams!")
+						else:
+							print("Player not found as a member")
+					except:
+						pass
 		return bestMatches
 		# \step 6
 
