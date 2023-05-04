@@ -46,7 +46,7 @@ class Player:
         if self.discordUser == None:
             txt += "\tdiscordUser Not Set\n"
         else:
-            txt += "\tUsername: {self.discordUser.display_name}\n"
+            txt += f"\tUsername: {self.username}\n"
         txt += f"\tplayerID : {self.playerID}\n\tdiscordID : {self.discordID}\n\twinCount : {self.winCount}\n\tlossCount : {self.lossCount}\n\tinternalRating\
         : {self.internalRating}\n\tprimaryRole : {self.primaryRole}\n\tsecondaryRole : {self.secondaryRole}\n\tsignUpCount : {self.signUpCount}\n\tmissedGameCount : {self.missedGameCount}\n"
         txt += "}\n"
