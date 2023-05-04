@@ -916,7 +916,6 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				# Check if user is in member list
 				pIDs = match.listOfUsers()
 				for player in pIDs:
-					print(pIDs)
 					try:
 						memberFound = self.client.guilds[0].get_member(player)
 						if memberFound:
