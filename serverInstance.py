@@ -180,11 +180,11 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
 		await asyncio.gather(*gamesList)
 
-	async def unscheduledGames(self, minutesUntil, channel):
+	async def unscheduledGames(self, minutesUntil):
 		timeObjs = []
 		for minutes in minutesUntil:
 			timeObjs.append(datetime.datetime.now() + datetime.timedelta(minutes=int(minutes)))
-		await self.triggerGamesAtGivenTimes(timeObjs, channel)
+		await self.triggerGamesAtGivenTimes(timeObjs, self.announcementChannel)
 	
 	async def createGames(self, numSeconds, emoji, channel, messageID):
 		await asyncio.sleep(numSeconds)
@@ -772,6 +772,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		required_players = match_count * 10
 
 		# up to here was your code @cail
+		# Static players in queue list duplicate
+		init_player_list = playerObjList
 
 		# step 1
 		def getRatioOfMissedGames(player):
@@ -822,7 +824,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		# step 4 bonus step goes here, I'm not doing it tonight. Instead we'll just grab the exact num of players we need
 		playerObjList.sort(key=getRatioOfMissedGames, reverse=True)
 		for player in playerObjList[remainingPlayersNeeded:]:
-			player.addGameMissed()
+			#player.addGameMissed()
+			print("MG +1")
 		playerObjList = playerObjList[:remainingPlayersNeeded]
 		# /step 4
 
@@ -910,7 +913,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				while idx+1 < len(teamList):
 					blueTeam = Team(teamList[idx][0][0][0], teamList[idx][0][1][0], teamList[idx][0][2][0], teamList[idx][0][3][0], teamList[idx][0][4][0])
 					redTeam = Team(teamList[idx+1][0][0][0], teamList[idx+1][0][1][0], teamList[idx+1][0][2][0], teamList[idx+1][0][3][0], teamList[idx+1][0][4][0])
-					bestMatches.append(Match(self.cursor, self.con, matchID=0, blueTeam=blueTeam, redTeam=redTeam, startTime=str(datetime.datetime.now().date()) + ", " + str(datetime.datetime.now().hour) + ":00"))	
+					bestMatches.append(Match(self.cursor, self.con, matchID=len(bestMatches) + 1, blueTeam=blueTeam, redTeam=redTeam, startTime=str(datetime.datetime.now().date()) + ", " + str(datetime.datetime.now().hour) + ":00"))	
 					idx += 2
 		print(f"After comparing {team_count**5} possibities across {(team_count**5)*4} teams, lowest max mmr diff found was {bestMaxMMRdiff}")
 		for match in bestMatches:
@@ -926,6 +929,17 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 							print("Player not found as a member")
 					except:
 						pass
+  
+		# List of all players in current Matches
+		playersInMatch = []
+		for match in bestMatches:
+			playersInMatch = match.listOfUsers()
+		
+		# Add missedGames() to player not in Matches
+		for player in init_player_list:
+			if player.get_dID() not in playersInMatch:
+				player.addGameMissed()
+    
 		return bestMatches
 		# \step 6
 
