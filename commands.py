@@ -48,7 +48,7 @@ class commands:
 		admin_check = await inst.checkAdmin(user_id)
 		if not admin_check:
 			return
-		await inst.unscheduledGames(args, message.channel)
+		await inst.unscheduledGames(args)
   
 	async def rank(message, inst, args):
 		await inst.displayRank(message)
