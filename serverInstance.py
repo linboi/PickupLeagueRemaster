@@ -53,8 +53,6 @@ class serverInstance:
 						print("Player not found as a member")
 				except:
 						pass
-			
-			await self.announcementChannel.send(str(matches))
 			self.queue = []
 
 	async def removeFromQueue(self, player, channel):
