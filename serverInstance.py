@@ -204,6 +204,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		msg = await channel.send(match_string)
 		await msg.edit(suppress=True)
   
+	# Test function for MM troubleshooting
 	async def mmTest(self):
 		discord_id_list = [197057417358475264, 197058147167371265, 127796716408799232, 180398163620790279, 225650967058710529, 618520923204485121, 160471312517562368, 188370105413926912, 694560846814117999, 266644132825530389]
 		matches = await self.matchmakeV2(discord_id_list)
@@ -724,8 +725,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			# Check for players in every match -> if found, replace player
 			for match in self.currentMatches:
 				try:
-					await match.swapPlayers(discordIDOrigin, discordIDReplacement, msg_obj)
-					await msg_obj.channel.send(f"Replace Successful")
+					await match.replacePlayer(discordIDOrigin, discordIDReplacement, msg_obj)
+					await msg_obj.channel.send(f"✌️Replace Successful")
 				except:
 					await msg_obj.channel.send(f"Replacement Error")
 		else:
