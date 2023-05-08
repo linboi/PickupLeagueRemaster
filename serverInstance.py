@@ -206,7 +206,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
   
 	# Test function for MM troubleshooting
 	async def mmTest(self):
-		discord_id_list = [197057417358475264, 197058147167371265, 127796716408799232, 180398163620790279, 225650967058710529, 618520923204485121, 160471312517562368, 188370105413926912, 694560846814117999, 266644132825530389]
+		discord_id_list = [197057417358475264,162598131744112640,574206308803412037, 197058147167371265, 127796716408799232, 180398163620790279, 225650967058710529, 618520923204485121, 160471312517562368, 188370105413926912, 694560846814117999, 266644132825530389]
 		matches = await self.matchmakeV2(discord_id_list)
 		self.currentMatches.extend(matches)
 		match_string = str(matches).replace("[", "")
@@ -725,7 +725,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			# Check for players in every match -> if found, replace player
 			for match in self.currentMatches:
 				try:
-					await match.replacePlayer(discordIDOrigin, discordIDReplacement, msg_obj)
+					await match.replacePlayer(discordIDOrigin, discordIDReplacement, msg_obj, self.client)
 					await msg_obj.channel.send(f"✌️Replace Successful")
 				except:
 					await msg_obj.channel.send(f"Replacement Error")
@@ -946,11 +946,15 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		for match in bestMatches:
 			playersInMatch = match.listOfUsers()
 		
+  
+		players_left_out = "**__Players Left Out__**\n```"
 		# Add missedGames() to player not in Matches
 		for player in init_player_list:
 			if player.get_dID() not in playersInMatch:
 				player.addGameMissed()
-    
+				players_left_out += f"{player.get_username()}({player.get_pRole()}/{player.get_sRole()})\n"
+		players_left_out += f"```"
+		await self.announcementChannel.send(f"{players_left_out}")
 		return bestMatches
 		# \step 6
 
