@@ -935,8 +935,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 						memberFound = self.client.guilds[0].get_member(player)
 						if memberFound:
 							# Send the player a DM if found!
-							pass
-							#await memberFound.send(f"✨ You have been picked for a game, head over to {self.announcementChannel.mention} to see the teams!")
+							await memberFound.send(f"✨ You have been picked for a game, head over to {self.announcementChannel.mention} to see the teams!")
 						else:
 							print("Player not found as a member")
 					except:
