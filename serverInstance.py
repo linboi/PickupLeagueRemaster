@@ -628,9 +628,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
    
 	# Method to display Leaderboard
 	async def displayLeaderboard(self, channelToSendIn, pageNum=0, message=None):
-		res = self.cursor.execute(f"SELECT discordID, winCount, lossCount, leaderboardPoints, ROW_NUMBER() OVER (ORDER BY leaderboardPoints DESC), primaryRole, secondaryRole FROM Player ORDER BY leaderboardPoints DESC")
+		res = self.cursor.execute(f"SELECT discordID, winCount, lossCount, leaderboardPoints, ROW_NUMBER() OVER (ORDER BY leaderboardPoints DESC), primaryRole, secondaryRole FROM Player WHERE winCount > 0 OR lossCount > 0 ORDER BY leaderboardPoints DESC")
 		output = res.fetchall()
 		all_players = ""
+		print(output)
 		pageNum = min(pageNum, len(output)//20)
 		pageNum = max(pageNum, 0)
 		toPosition = min((pageNum+1)*20, len(output))
