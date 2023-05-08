@@ -738,8 +738,6 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
 		return total
 
-
-
 	# discordUser is None, isn't used either. Should maybe fix this idk 
 	async def matchmakeV2(self, playerIDList):
 		# List of all players in Queue
