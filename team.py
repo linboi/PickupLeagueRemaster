@@ -32,18 +32,23 @@ class Team:
 		
 	def set_top(self, player):
 		self.top = player
+		self.top.set_role("top")
 		
 	def set_mid(self, player):
 		self.mid = player
+		self.mid.set_role("mid")
 		
 	def set_jg(self, player):
 		self.jungle = player
+		self.jungle.set_role("jng")
 		
 	def set_adc(self, player):
 		self.adc = player
+		self.adc.set_role("adc")
 		
 	def set_sup(self, player):
 		self.support = player
+		self.support.set_role("sup")
 		
 	
 	# Getters

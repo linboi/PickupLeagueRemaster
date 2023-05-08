@@ -203,6 +203,16 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		match_string = match_string.replace("]", "")
 		msg = await channel.send(match_string)
 		await msg.edit(suppress=True)
+  
+	# Test function for MM troubleshooting
+	async def mmTest(self):
+		discord_id_list = [197057417358475264, 197058147167371265, 127796716408799232, 180398163620790279, 225650967058710529, 618520923204485121, 160471312517562368, 188370105413926912, 694560846814117999, 266644132825530389]
+		matches = await self.matchmakeV2(discord_id_list)
+		self.currentMatches.extend(matches)
+		match_string = str(matches).replace("[", "")
+		match_string = match_string.replace("]", "")
+		msg = await self.testChannel.send(match_string)
+		await msg.edit(suppress=True)
 
 	async def win(self, message):
 		activePlayerMatches = []
@@ -715,7 +725,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			# Check for players in every match -> if found, replace player
 			for match in self.currentMatches:
 				try:
-					await match.swapPlayer(discordIDOrigin, discordIDReplacement, msg_obj)
+					await match.replacePlayer(discordIDOrigin, discordIDReplacement, msg_obj)
+					await msg_obj.channel.send(f"✌️Replace Successful")
 				except:
 					await msg_obj.channel.send(f"Replacement Error")
 		else:
@@ -913,7 +924,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				while idx+1 < len(teamList):
 					blueTeam = Team(teamList[idx][0][0][0], teamList[idx][0][1][0], teamList[idx][0][2][0], teamList[idx][0][3][0], teamList[idx][0][4][0])
 					redTeam = Team(teamList[idx+1][0][0][0], teamList[idx+1][0][1][0], teamList[idx+1][0][2][0], teamList[idx+1][0][3][0], teamList[idx+1][0][4][0])
-					bestMatches.append(Match(self.cursor, self.con, matchID=len(bestMatches) + 1, blueTeam=blueTeam, redTeam=redTeam, startTime=str(datetime.datetime.now().date()) + ", " + str(datetime.datetime.now().hour) + ":00"))	
+					bestMatches.append(Match(self.cursor, self.con, matchID = len(bestMatches) + 1 + datetime.datetime.now().hour, blueTeam=blueTeam, redTeam=redTeam, startTime=str(datetime.datetime.now().date()) + ", " + str(datetime.datetime.now().hour) + ":00"))	
 					idx += 2
 		print(f"After comparing {team_count**5} possibities across {(team_count**5)*4} teams, lowest max mmr diff found was {bestMaxMMRdiff}")
 		for match in bestMatches:

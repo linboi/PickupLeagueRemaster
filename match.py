@@ -253,7 +253,7 @@ class Match:
         string += f"{self.blueTeam.get_adc().get_username():^15}{'(adc)':^5}{self.redTeam.get_adc().get_username():^15}\n"
         string += f"{self.blueTeam.get_sup().get_username():^15}{'(sup)':^5}{self.redTeam.get_sup().get_username():^15}\n```"
         opgg_red , opgg_blue = self.getOPGGLink()
-        string += f"\n🥶 [Blue Team OPGG]({opgg_red})\t|\t😡 [Red Team OPGG]({opgg_blue})"
+        string += f"\n **🔵 Blue Team OPGG:** {opgg_red}\n **🔴 Red Team OPGG:** {opgg_blue}"
         
         return string
     
@@ -263,14 +263,75 @@ class Match:
         red_link = self.redTeam.listOPGG()
         return blue_link, red_link
     
+    async def replacePlayer(self, discordID, otherID, message_obj):
+        listOfPlayers = [self.redTeam.getListPlayers() + self.blueTeam.getListPlayers()]
+        discordID = int(discordID)
+        otherID = int(otherID)
+        # [player(), "red or blue", "jng"]
+        team = []
+        res = self.cursor.execute(f"SELECT * FROM Player WHERE discordID = {otherID}")
+        player_details = res.fetchone()
+        try:
+            discordUser = await self.client.fetch_user(player_details[1])
+        except:
+            discordUser = None
+        replacement_player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
+                   player_details[9], player_details[10], player_details[11], self.cursor, self.con, discordUser)
+
+        
+        # Check if player exists in Game
+        for player in listOfPlayers:
+           for user in player:
+               
+            if(user.get_dID() == discordID):
+                # If the player does exist, what team?
+                # Red Team
+                for player in self.redTeam.getListPlayers():
+                    if player.get_dID() == discordID:
+                        team.append(player)
+                        team.append('red')
+                        team.append(player.get_role().lower())
+                        if team[2] == 'top':
+                            self.redTeam.set_top(replacement_player)
+                        elif team[2] == 'jng':
+                            self.redTeam.set_jg(replacement_player)
+                        elif team[2] == 'mid':
+                            self.redTeam.set_mid(replacement_player)
+                        elif team[2] == 'adc':
+                            self.redTeam.set_adc(replacement_player)
+                        elif team[2] == 'sup':
+                            self.redTeam.set_sup(replacement_player)
+                
+                # Blue Team
+                for player in self.blueTeam.getListPlayers():
+                    if player.get_dID() == discordID:
+                        team.append(player)
+                        team.append('blue')
+                        team.append(player.get_role())
+                        if team[2] == 'top':
+                            self.blueTeam.set_top(replacement_player)
+                        elif team[2] == 'jng':
+                            self.blueTeam.set_jg(replacement_player)
+                        elif team[2] == 'mid':
+                            self.blueTeam.set_mid(replacement_player)
+                        elif team[2] == 'adc':
+                            self.blueTeam.set_adc(replacement_player)
+                        elif team[2] == 'sup':
+                            self.blueTeam.set_sup(replacement_player)
+                            
+                new_details = self.displayMatchDetails() 
+                msg = await message_obj.channel.send(f"{new_details}")
+                await msg.edit(suppress=True)
+            else:
+                pass
+
+        
+    
     # Swap two players in a Match
     async def swapPlayers(self, discordID, otherID, message_obj):
         listOfPlayers = [self.redTeam.getListPlayers() + self.blueTeam.getListPlayers()]
-        print(listOfPlayers)
         discordID = int(discordID)
         otherID = int(otherID)
-        print(discordID)
-        print(otherID)
         blueFound = False
         redFound = False
         # [player(), "red or blue", "jng"]
@@ -310,7 +371,7 @@ class Match:
                         blueFound = True
     
         # If both players found -> replace player
-        if blueFound and redFound:
+        if blueFound or redFound:
             # Swap roles
             team[0].set_role(other_team[2])
             other_team[0].set_role(team[2])
@@ -363,8 +424,10 @@ class Match:
                 elif team[2] == 'sup':
                     self.redTeam.set_sup(other_team[0])
             
+            #self.findFairestTeams()
             new_details = self.displayMatchDetails() 
             await message_obj.channel.send(f"{new_details}")
+            print("done")
         else:
             pass
                 

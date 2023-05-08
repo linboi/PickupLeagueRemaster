@@ -82,6 +82,14 @@ class commands:
 
 	async def win(message, inst, args):
 		await inst.win(message)
+  
+	# Test function for mm troubleshooting
+	async def matchmakingtest(message, inst, args):
+		user_id = message.author.id
+		admin_check = await inst.checkAdmin(user_id)
+		if not admin_check:
+				return
+		await inst.mmTest()
   		
 	async def help(message, inst, args):
 		txt = "```List of commands:\n"
@@ -106,7 +114,8 @@ class commands:
 		'admin': isAdmin,
 		'replace': replace,
 		'roles': roles,
-		'help' :help
+		'help' :help,
+		'matchmaketest': matchmakingtest
 		}
 
 	async def parseReaction(reaction, inst):
