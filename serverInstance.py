@@ -199,20 +199,53 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		
 		matches = await self.matchmakeV2(playerIDs)
 		self.currentMatches.extend(matches)
-		match_string = str(matches).replace("[", "")
-		match_string = match_string.replace("]", "")
-		msg = await channel.send(match_string)
-		await msg.edit(suppress=True)
+  
+		#match_string = str(matches).replace("[", "")
+		#match_string = match_string.replace("]", "")
+  
+		# Display match in unique msg
+		for match in self.currentMatches:
+			match_string = match.displayMatchDetails()
+			match_msg = await self.testChannel.send(match_string)
+			await match_msg.edit(suppress=True)
+			# Check if user is in member list
+			pIDs = match.listOfUsers()
+			for player in pIDs:
+				try:
+					memberFound = self.client.guilds[0].get_member(player)
+					if memberFound:
+						# Send the player a DM if found!
+						await memberFound.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!")
+					else:
+						print("Player not found as a member")
+				except:
+					pass
   
 	# Test function for MM troubleshooting
 	async def mmTest(self):
-		discord_id_list = [197057417358475264,162598131744112640,574206308803412037, 197058147167371265, 127796716408799232, 180398163620790279, 225650967058710529, 618520923204485121, 160471312517562368, 188370105413926912, 694560846814117999, 266644132825530389]
+		discord_id_list = [165186656863780865, 197053913269010432, 187302526935105536, 574206308803412037, 197058147167371265, 127796716408799232, 180398163620790279, 225650967058710529, 618520923204485121, 160471312517562368, 188370105413926912, 694560846814117999, 266644132825530389,132288462563966977, 355707373500760065, 259820776608235520, 182965319969669120]
 		matches = await self.matchmakeV2(discord_id_list)
 		self.currentMatches.extend(matches)
 		match_string = str(matches).replace("[", "")
 		match_string = match_string.replace("]", "")
-		msg = await self.testChannel.send(match_string)
-		await msg.edit(suppress=True)
+  
+		for match in self.currentMatches:
+			match_string = match.displayMatchDetails()
+			match_msg = await self.testChannel.send(match_string)
+			await match_msg.edit(suppress=True)
+			print(match_msg)
+			# Check if user is in member list
+			pIDs = match.listOfUsers()
+			for player in pIDs:
+				try:
+					memberFound = self.client.guilds[0].get_member(player)
+					if memberFound:
+						# Send the player a DM if found!
+						await memberFound.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!")
+					else:
+						print("Player not found as a member")
+				except:
+					pass
 
 	async def win(self, message):
 		activePlayerMatches = []
@@ -927,19 +960,6 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 					bestMatches.append(Match(self.cursor, self.con, matchID = len(bestMatches) + 1 + datetime.datetime.now().hour, blueTeam=blueTeam, redTeam=redTeam, startTime=str(datetime.datetime.now().date()) + ", " + str(datetime.datetime.now().hour) + ":00"))	
 					idx += 2
 		print(f"After comparing {team_count**5} possibities across {(team_count**5)*4} teams, lowest max mmr diff found was {bestMaxMMRdiff}")
-		for match in bestMatches:
-				# Check if user is in member list
-				pIDs = match.listOfUsers()
-				for player in pIDs:
-					try:
-						memberFound = self.client.guilds[0].get_member(player)
-						if memberFound:
-							# Send the player a DM if found!
-							await memberFound.send(f"✨ You have been picked for a game, head over to {self.announcementChannel.mention} to see the teams!")
-						else:
-							print("Player not found as a member")
-					except:
-						pass
   
 		# List of all players in current Matches
 		playersInMatch = []
@@ -947,14 +967,13 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			playersInMatch = match.listOfUsers()
 		
   
-		players_left_out = "**__Players Left Out__**\n```"
+		
 		# Add missedGames() to player not in Matches
 		for player in init_player_list:
 			if player.get_dID() not in playersInMatch:
 				player.addGameMissed()
-				players_left_out += f"{player.get_username()}({player.get_pRole()}/{player.get_sRole()})\n"
-		players_left_out += f"```"
-		await self.announcementChannel.send(f"{players_left_out}")
+				print(f"{player.get_username()}")
+				
 		return bestMatches
 		# \step 6
 
