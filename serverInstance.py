@@ -37,7 +37,22 @@ class serverInstance:
 		if len(self.queue) % 10 == 0:
 			matches = await self.matchmakeV2(self.queue)
 			self.currentMatches.extend(matches)
-			await self.announcementChannel.send(str(matches))
+			# Display match in unique msg
+			match_string = self.currentMatches[-1].displayMatchDetails()
+			match_msg = await self.announcementChannel.send(match_string)
+			await match_msg.edit(suppress=True)
+			# Check if user is in member list
+			pIDs = self.currentMatches[-1].listOfUsers()
+			for player in pIDs:
+				try:
+					memberFound = self.client.guilds[0].get_member(player)
+					if memberFound:
+						# Send the player a DM if found!
+						await memberFound.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!")
+					else:
+						print("Player not found as a member")
+				except:
+						pass
 			self.queue = []
 
 	async def removeFromQueue(self, player, channel):
@@ -199,14 +214,12 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		
 		matches = await self.matchmakeV2(playerIDs)
 		self.currentMatches.extend(matches)
-  
 		#match_string = str(matches).replace("[", "")
 		#match_string = match_string.replace("]", "")
-  
 		# Display match in unique msg
 		for match in self.currentMatches:
 			match_string = match.displayMatchDetails()
-			match_msg = await self.testChannel.send(match_string)
+			match_msg = await channel.send(match_string)
 			await match_msg.edit(suppress=True)
 			# Check if user is in member list
 			pIDs = match.listOfUsers()
