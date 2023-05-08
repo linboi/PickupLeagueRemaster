@@ -82,6 +82,9 @@ class commands:
 
 	async def win(message, inst, args):
 		await inst.win(message)
+  
+	async def mm(message, inst, args):
+		await inst.mmTest()
   		
 	async def help(message, inst, args):
 		txt = "```List of commands:\n"
@@ -106,7 +109,8 @@ class commands:
 		'admin': isAdmin,
 		'replace': replace,
 		'roles': roles,
-		'help' :help
+		'help' :help,
+		'mm': mm
 		}
 
 	async def parseReaction(reaction, inst):
