@@ -414,12 +414,14 @@ class Match:
         ratingChange = kValue * (1-expectedScore)
         
         for player in winningTeam.getListPlayers():
+            player.fetchPlayerDB()
             player.addWin()
             player.updateRating(ratingChange)
             player.updateLP(ratingChange)
             player.update()
 
         for player in losingTeam.getListPlayers():
+            player.fetchPlayerDB()
             player.addLoss()
             player.updateRating(-ratingChange)
             player.updateLP(-ratingChange)

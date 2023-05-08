@@ -241,6 +241,18 @@ class Player:
         result = res.fetchall()
         self.playerAccounts = result
         
+    # Fetch player details from DB, and updates player obj
+    def fetchPlayerDB(self):
+        res = self.cursor.execute(f"SELECT * FROM Player WHERE discordID = {self.discordID}")
+        result = res.fetchone()
+        self.winCount = result[2]
+        self.lossCount = result[3]
+        self.internalRating = result[4]
+        self.LP = result[11]
+        self.signUpCount = result[10]
+        self.missedGameCount = result[9]
+        
+        
     # Sets the rating of a new player based upon their highest account
     def setInitMMR(self):
         
