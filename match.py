@@ -263,7 +263,7 @@ class Match:
         red_link = self.redTeam.listOPGG()
         return blue_link, red_link
     
-    async def replacePlayer(self, discordID, otherID, message_obj):
+    async def replacePlayer(self, discordID, otherID, message_obj, client):
         listOfPlayers = [self.redTeam.getListPlayers() + self.blueTeam.getListPlayers()]
         discordID = int(discordID)
         otherID = int(otherID)
@@ -272,7 +272,7 @@ class Match:
         res = self.cursor.execute(f"SELECT * FROM Player WHERE discordID = {otherID}")
         player_details = res.fetchone()
         try:
-            discordUser = await self.client.fetch_user(player_details[1])
+            discordUser = await client.fetch_user(player_details[1])
         except:
             discordUser = None
         replacement_player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
@@ -307,7 +307,7 @@ class Match:
                     if player.get_dID() == discordID:
                         team.append(player)
                         team.append('blue')
-                        team.append(player.get_role())
+                        team.append(player.get_role().lower())
                         if team[2] == 'top':
                             self.blueTeam.set_top(replacement_player)
                         elif team[2] == 'jng':
