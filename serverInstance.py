@@ -27,6 +27,7 @@ class serverInstance:
 		self.voiceChannels = voiceChannels
 		self.primaryRoleMSG = primaryRoleMsg
 		self.secondaryRoleMSG = secondaryRoleMsg
+		self.queue_state = False
 		self.currentMatches = []
 		self.playerIDNameMapping = {}
 	
@@ -59,6 +60,17 @@ class serverInstance:
 		if player in self.queue:
 			self.queue.remove(player)
 		await channel.send(f"{len(self.queue)} players in queue.\nEstimated wait time: Literally forever")
+  
+	# Switch for enabling/disabling queue
+	async def queueSwitch(self):
+		if self.queue_state == False:
+			self.queue_state = True
+		else:
+			self.queue_state = False
+		return self.queue_state
+
+	def getQueueState(self):
+		return self.queue_state
 	
 	# Mehtod which creates Matches based on available Players
 	async def matchmake(self, playerIDList):

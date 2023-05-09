@@ -11,14 +11,25 @@ class commands:
 		await message.channel.send("hiya")
 
 	async def queue(message, inst, args):
-		user_id = message.author.id
-		admin_check = await inst.checkAdmin(user_id)
-		if not admin_check:
-			return
-		await inst.addToQueue(message.author.id, message.channel)
+		state = inst.getQueueState()
+		if state:
+			await inst.addToQueue(message.author.id, message.channel)
+		
 
 	async def dequeue(message, inst, args):
 		await inst.removeFromQueue(message.author.id, message.channel)
+  
+	async def switchQueueState(message, inst, args):
+		user_id = message.author.id
+		admin_check = await inst.checkAdmin(user_id)
+		if not admin_check:
+				return
+
+		state = await inst.queueSwitch()
+		if state == False:
+			await message.channel.send("Queue is disabled")
+		else:
+			await message.channel.send("Queue is enabled")
 
 	async def signup(message, inst, args):
 		pRank, pName, signUpSuccess = await inst.signUpPlayer(args[0], message)
@@ -124,6 +135,7 @@ class commands:
 		'roles': roles,
 		'help' :help,
 		'resolve-match': adminWin,
+		'queue-switch': switchQueueState,
 		'matchmaketest': matchmakingtest
 		}
 
