@@ -159,7 +159,7 @@ class commands:
 		'resolve-match': adminWin,
 		'queue-switch': switchQueueState,
 		'matchmaketest': matchmakingtest,
-		'custom-match': customMatch,
+		'custom-match': customMatch
 		}
 
 	async def parseReaction(reaction, inst):
