@@ -841,7 +841,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			if player[1] in playerIDList:
 				shorterlist.append(player)
 		listOfPlayers = shorterlist
-		print("Shoter List Compiled:" + str(len(shorterlist)))
+		print("Shorter List Compiled:" + str(len(shorterlist)))
 		playerObjList = []
 		for player_details in listOfPlayers:
 			discordUser = None
@@ -877,6 +877,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		# /step 1
 		playerObjList.sort(key=getRatioOfMissedGames, reverse=True)
 		for player in playerObjList:
+			#print(getRatioOfMissedGames(player))
 			player.addSignUpCount()
 
 		# step 2
@@ -905,8 +906,23 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				fillIndex += 1
 		
 		# At this point either the list of fill players should be empty or the teams should be full
-
+		# in case not all fill players were used, we should check if they've been left out too much
+		for key in playersInRoles:
+			playersInRoles[key].sort(key=getRatioOfMissedGames)
+			idx = 0
+			#print(getRatioOfMissedGames(fillPlayers[fillIndex]))
+			
+			while fillIndex < len(fillPlayers) and idx < len(playersInRoles[key]) and getRatioOfMissedGames(playersInRoles[key][idx]) < getRatioOfMissedGames(fillPlayers[fillIndex]):
+				print(f"replaced {playersInRoles[key][idx]} with {fillPlayers[fillIndex]}")
+				playerObjList.append(playersInRoles[key][idx])
+				playersInRoles[key][idx] = fillPlayers[fillIndex]
+				fillIndex += 1
+				idx += 1
 		# /step 2
+
+		while fillIndex < len(fillPlayers):
+			fillPlayers[fillIndex].addGameMissed()
+			fillIndex += 1
 
 		# step 3
 		remainingPlayersNeeded = 0
@@ -917,8 +933,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		# step 4 bonus step goes here, I'm not doing it tonight. Instead we'll just grab the exact num of players we need
 		playerObjList.sort(key=getRatioOfMissedGames, reverse=True)
 		for player in playerObjList[remainingPlayersNeeded:]:
-			#player.addGameMissed()
+			#print(getRatioOfMissedGames(player))
+			player.addGameMissed()
 			print("MG +1")
+			#print(player)
 		playerObjList = playerObjList[:remainingPlayersNeeded]
 		# /step 4
 
@@ -977,7 +995,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		#						bestMatches.append(Match(self.cursor, self.con, matchID=0, blueTeam=blueTeam, redTeam=redTeam, startTime=datetime.datetime.now()))			
 		#						idx += 2
 		#return bestMatches
-		print(playersInRoles)
+		#print(playersInRoles)
 		for x in range(team_count**5):
 			teamList = []
 			for y in range(team_count):
@@ -1008,20 +1026,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 					redTeam = Team(teamList[idx+1][0][0][0], teamList[idx+1][0][1][0], teamList[idx+1][0][2][0], teamList[idx+1][0][3][0], teamList[idx+1][0][4][0])
 					bestMatches.append(Match(self.cursor, self.con, matchID = len(bestMatches) + 1 + datetime.datetime.now().hour, blueTeam=blueTeam, redTeam=redTeam, startTime=str(datetime.datetime.now().date()) + ", " + str(datetime.datetime.now().hour) + ":00"))	
 					idx += 2
-		print(f"After comparing {team_count**5} possibities across {(team_count**5)*4} teams, lowest max mmr diff found was {bestMaxMMRdiff}")
-  
-		# List of all players in current Matches
-		playersInMatch = []
-		for match in bestMatches:
-			playersInMatch = match.listOfUsers()
-		
-  
-		
-		# Add missedGames() to player not in Matches
-		for player in init_player_list:
-			if player.get_dID() not in playersInMatch:
-				player.addGameMissed()
-				print(f"{player.get_username()}")
+		print(f"After comparing {team_count**5} possibities across {(team_count**5)*team_count} teams, lowest max mmr diff found was {bestMaxMMRdiff}")
+
 				
 		return bestMatches
 		# \step 6
