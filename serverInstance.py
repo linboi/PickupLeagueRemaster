@@ -700,7 +700,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			discordID = message_obj.author.id
 			res = self.cursor.execute(f"SELECT leaderboardPoints, winCount, lossCount FROM Player WHERE discordID = {discordID}")
 			mmr = res.fetchone()
-			res = self.cursor.execute(f"SELECT discordID FROM Player ORDER BY leaderboardPoints DESC")
+			res = self.cursor.execute(f"SELECT discordID FROM Player WHERE winCount > 0 OR lossCount > 0 ORDER BY leaderboardPoints DESC")
 			output = res.fetchall()
 			test = []
 			for rank in output:
