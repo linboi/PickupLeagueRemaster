@@ -178,9 +178,9 @@ class Player:
     def getMMRinRole(self, role=None):
         if role == None:
             role = self.get_role
-        if self.get_pRole() == role:
+        if self.get_pRole() == role or self.get_pRole() == 'FILL':
             return self.internalRating
-        elif self.get_sRole() == role:
+        elif self.get_sRole() == role or self.get_sRole() == 'FILL':
             return self.internalRating - 200
         else:
             return self.internalRating - 300
