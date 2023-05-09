@@ -283,23 +283,26 @@ After a win, post a screenshot of the victory and type !win (only one player on 
    
 	async def adminWin(self, message, match_id, side):
 		correct_match = []
-		match_id = int(match_id)
-		print(match_id)
-		for match in self.currentMatches:
-			if match_id == int(match.get_matchID()) and side == 'BLUE':
-				correct_match.append((match, 'BLUE'))
-			elif match_id == int(match.get_matchID()) and side == 'RED':
-				correct_match.append((match, 'RED'))
-    
-		if len(correct_match) == 0:
-			await message.channel.send("Resolve Error, no match found.")
-		if len(correct_match) == 1:
-			correct_match[0][0].resolve(correct_match[0][1])
-			self.currentMatches.remove(correct_match[0][0])
-			await message.channel.send(f"🎊 Match *{match_id}* resolved, **{side}** side won!")
-		if len(correct_match) > 1:
-			await message.channel.send(f"Resolve Error, too many matches with this ID.")
+		try:
+			match_id = int(match_id)
+			for match in self.currentMatches:
 
+				if match_id == int(match.get_matchID()) and side == 'BLUE':
+					correct_match.append((match, 'BLUE'))
+				elif match_id == int(match.get_matchID()) and side == 'RED':
+					correct_match.append((match, 'RED'))
+				
+			if len(correct_match) == 0:
+				await message.channel.send("Resolve Error, no match found.")
+			if len(correct_match) == 1:
+				correct_match[0][0].resolve(correct_match[0][1])
+				self.currentMatches.remove(correct_match[0][0])
+				await message.channel.send(f"🎊 Match *{match_id}* resolved, **{side}** side won!")
+			if len(correct_match) > 1:
+				await message.channel.send(f"Resolve Error, too many matches with this ID.")
+		except:
+			await message.channel.send("Resolver Error, ID is not an number.")
+   		
 	# Scrape rank details from op.gg page
 	async def signUpPlayer(self, msg_content, message_obj):
 	
