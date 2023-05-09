@@ -10,6 +10,7 @@ from player import Player
 from match import Match
 from team import Team
 import random
+import discord
 
 
 class serverInstance:
@@ -41,7 +42,8 @@ class serverInstance:
 			# Display match in unique msg
 			match_string = self.currentMatches[-1].displayMatchDetails()
 			match_msg = await self.announcementChannel.send(match_string)
-			await match_msg.edit(suppress=True)
+			red_oplink, blue_oplink = self.currentMatches[-1].getOPGGLink()
+			await self.embedOPGGLink(red_oplink, blue_oplink, self.announcementChannel)
 			# Check if user is in member list
 			pIDs = self.currentMatches[-1].listOfUsers()
 			for player in pIDs:
@@ -168,6 +170,13 @@ class serverInstance:
 				except:
 					pass
  
+	async def embedOPGGLink(self, blue, red, channel):
+		embed_list = []
+		embed_list.append(discord.Embed(title="Red Team OPGG", url=red, color=0xe74c3c))
+		embed_list.append(discord.Embed(title="Blue Team OPGG", url=blue, color=0x3498db))
+		for embed in embed_list:
+			await channel.send(embed=(embed))
+		
  
 	async def createCustomMatch(self, id_list):
 		matches = await self.matchmakeV2(id_list)
@@ -176,7 +185,8 @@ class serverInstance:
 		for match in self.currentMatches:
 			match_string = match.displayMatchDetails()
 			match_msg = await self.announcementChannel.send(match_string)
-			await match_msg.edit(suppress=True)
+			red_oplink, blue_oplink = match.getOPGGLink()
+			await self.embedOPGGLink(red_oplink, blue_oplink, self.announcementChannel)
 			# Check if user is in member list
 			pIDs = match.listOfUsers()
 			for player in pIDs:
@@ -254,7 +264,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		for match in self.currentMatches:
 			match_string = match.displayMatchDetails()
 			match_msg = await channel.send(match_string)
-			await match_msg.edit(suppress=True)
+			red_oplink, blue_oplink = match.getOPGGLink()
+			await self.embedOPGGLink(red_oplink, blue_oplink, channel)
 			# Check if user is in member list
 			pIDs = match.listOfUsers()
 			for player in pIDs:
@@ -278,9 +289,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
   
 		for match in self.currentMatches:
 			match_string = match.displayMatchDetails()
-			match_msg = await self.testChannel.send(match_string)
-			await match_msg.edit(suppress=True)
-			print(match_msg)
+			await self.testChannel.send(match_string)
+			red_oplink, blue_oplink = match.getOPGGLink()
+			await self.embedOPGGLink(red_oplink, blue_oplink, self.testChannel)
 			# Check if user is in member list
 			pIDs = match.listOfUsers()
 			for player in pIDs:

@@ -252,8 +252,6 @@ class Match:
         string += f"{self.blueTeam.get_mid().get_username():^15}{'(mid)':^5}{self.redTeam.get_mid().get_username():^15}\n"
         string += f"{self.blueTeam.get_adc().get_username():^15}{'(adc)':^5}{self.redTeam.get_adc().get_username():^15}\n"
         string += f"{self.blueTeam.get_sup().get_username():^15}{'(sup)':^5}{self.redTeam.get_sup().get_username():^15}\n```"
-        opgg_red , opgg_blue = self.getOPGGLink()
-        string += f"\n **🔵 Blue Team OPGG:** {opgg_red}\n **🔴 Red Team OPGG:** {opgg_blue}"
         
         return string
     
