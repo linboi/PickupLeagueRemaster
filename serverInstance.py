@@ -27,6 +27,7 @@ class serverInstance:
 		self.voiceChannels = voiceChannels
 		self.primaryRoleMSG = primaryRoleMsg
 		self.secondaryRoleMSG = secondaryRoleMsg
+		self.queue_state = False
 		self.currentMatches = []
 		self.playerIDNameMapping = {}
 	
@@ -59,6 +60,17 @@ class serverInstance:
 		if player in self.queue:
 			self.queue.remove(player)
 		await channel.send(f"{len(self.queue)} players in queue.\nEstimated wait time: Literally forever")
+  
+	# Switch for enabling/disabling queue
+	async def queueSwitch(self):
+		if self.queue_state == False:
+			self.queue_state = True
+		else:
+			self.queue_state = False
+		return self.queue_state
+
+	def getQueueState(self):
+		return self.queue_state
 	
 	# Mehtod which creates Matches based on available Players
 	async def matchmake(self, playerIDList):
@@ -155,6 +167,28 @@ class serverInstance:
 						await memberFound.send(f"✨ You have been picked for a game, head over to {self.testChannel.mention} to see the teams!")
 				except:
 					pass
+ 
+ 
+	async def createCustomMatch(self, id_list):
+		matches = await self.matchmakeV2(id_list)
+		self.currentMatches.extend(matches)
+		# Display match in unique msg
+		for match in self.currentMatches:
+			match_string = match.displayMatchDetails()
+			match_msg = await self.announcementChannel.send(match_string)
+			await match_msg.edit(suppress=True)
+			# Check if user is in member list
+			pIDs = match.listOfUsers()
+			for player in pIDs:
+				try:
+					memberFound = self.client.guilds[0].get_member(player)
+					if memberFound:
+						# Send the player a DM if found!
+						await memberFound.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!")
+					else:
+						print("Player not found as a member")
+				except:
+					pass
 	
 	async def createGamesOnSchedule(self, schedule, channel):
 		await timing.sleep_until(schedule)
@@ -236,7 +270,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
   
 	# Test function for MM troubleshooting
 	async def mmTest(self):
-		discord_id_list = [165186656863780865, 197053913269010432, 187302526935105536, 574206308803412037, 197058147167371265, 127796716408799232, 180398163620790279, 225650967058710529, 618520923204485121, 160471312517562368, 188370105413926912, 694560846814117999, 266644132825530389,132288462563966977, 355707373500760065, 259820776608235520, 182965319969669120]
+		discord_id_list = [165186656863780865,228172213797388288, 343490464948813824, 413783321844383767, 197053913269010432, 187302526935105536, 574206308803412037, 197058147167371265, 127796716408799232, 180398163620790279, 225650967058710529, 618520923204485121, 160471312517562368, 188370105413926912, 694560846814117999, 266644132825530389,132288462563966977, 355707373500760065, 259820776608235520, 182965319969669120]
 		matches = await self.matchmakeV2(discord_id_list)
 		self.currentMatches.extend(matches)
 		match_string = str(matches).replace("[", "")
@@ -254,7 +288,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 					memberFound = self.client.guilds[0].get_member(player)
 					if memberFound:
 						# Send the player a DM if found!
-						await memberFound.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!")
+						pass
+						#await memberFound.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!")
 					else:
 						print("Player not found as a member")
 				except:
@@ -279,7 +314,29 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			await message.channel.send("🎊 WPGG, remember to upload a post-game screenshot!")
 		if len(activePlayerMatches) > 1:
 			await message.channel.send("Player found in more than one match, uh oh")
+   
+	async def adminWin(self, message, match_id, side):
+		correct_match = []
+		try:
+			match_id = int(match_id)
+			for match in self.currentMatches:
 
+				if match_id == int(match.get_matchID()) and side == 'BLUE':
+					correct_match.append((match, 'BLUE'))
+				elif match_id == int(match.get_matchID()) and side == 'RED':
+					correct_match.append((match, 'RED'))
+				
+			if len(correct_match) == 0:
+				await message.channel.send("Resolve Error, no match found.")
+			if len(correct_match) == 1:
+				correct_match[0][0].resolve(correct_match[0][1])
+				self.currentMatches.remove(correct_match[0][0])
+				await message.channel.send(f"🎊 Match *{match_id}* resolved, **{side}** side won!")
+			if len(correct_match) > 1:
+				await message.channel.send(f"Resolve Error, too many matches with this ID.")
+		except:
+			await message.channel.send("Resolver Error, ID is not an number.")
+   		
 	# Scrape rank details from op.gg page
 	async def signUpPlayer(self, msg_content, message_obj):
 	
@@ -806,7 +863,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			if player[1] in playerIDList:
 				shorterlist.append(player)
 		listOfPlayers = shorterlist
-		print("Shoter List Compiled:" + str(len(shorterlist)))
+		print("Shorter List Compiled:" + str(len(shorterlist)))
 		playerObjList = []
 		for player_details in listOfPlayers:
 			discordUser = None
@@ -842,6 +899,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		# /step 1
 		playerObjList.sort(key=getRatioOfMissedGames, reverse=True)
 		for player in playerObjList:
+			#print(getRatioOfMissedGames(player))
 			player.addSignUpCount()
 
 		# step 2
@@ -870,8 +928,23 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				fillIndex += 1
 		
 		# At this point either the list of fill players should be empty or the teams should be full
-
+		# in case not all fill players were used, we should check if they've been left out too much
+		for key in playersInRoles:
+			playersInRoles[key].sort(key=getRatioOfMissedGames)
+			idx = 0
+			#print(getRatioOfMissedGames(fillPlayers[fillIndex]))
+			
+			while fillIndex < len(fillPlayers) and idx < len(playersInRoles[key]) and getRatioOfMissedGames(playersInRoles[key][idx]) < getRatioOfMissedGames(fillPlayers[fillIndex]):
+				print(f"replaced {playersInRoles[key][idx]} with {fillPlayers[fillIndex]}")
+				playerObjList.append(playersInRoles[key][idx])
+				playersInRoles[key][idx] = fillPlayers[fillIndex]
+				fillIndex += 1
+				idx += 1
 		# /step 2
+
+		while fillIndex < len(fillPlayers):
+			fillPlayers[fillIndex].addGameMissed()
+			fillIndex += 1
 
 		# step 3
 		remainingPlayersNeeded = 0
@@ -882,8 +955,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		# step 4 bonus step goes here, I'm not doing it tonight. Instead we'll just grab the exact num of players we need
 		playerObjList.sort(key=getRatioOfMissedGames, reverse=True)
 		for player in playerObjList[remainingPlayersNeeded:]:
-			#player.addGameMissed()
+			#print(getRatioOfMissedGames(player))
+			player.addGameMissed()
 			print("MG +1")
+			#print(player)
 		playerObjList = playerObjList[:remainingPlayersNeeded]
 		# /step 4
 
@@ -942,7 +1017,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		#						bestMatches.append(Match(self.cursor, self.con, matchID=0, blueTeam=blueTeam, redTeam=redTeam, startTime=datetime.datetime.now()))			
 		#						idx += 2
 		#return bestMatches
-		print(playersInRoles)
+		#print(playersInRoles)
 		for x in range(team_count**5):
 			teamList = []
 			for y in range(team_count):
@@ -973,20 +1048,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 					redTeam = Team(teamList[idx+1][0][0][0], teamList[idx+1][0][1][0], teamList[idx+1][0][2][0], teamList[idx+1][0][3][0], teamList[idx+1][0][4][0])
 					bestMatches.append(Match(self.cursor, self.con, matchID = len(bestMatches) + 1 + datetime.datetime.now().hour, blueTeam=blueTeam, redTeam=redTeam, startTime=str(datetime.datetime.now().date()) + ", " + str(datetime.datetime.now().hour) + ":00"))	
 					idx += 2
-		print(f"After comparing {team_count**5} possibities across {(team_count**5)*4} teams, lowest max mmr diff found was {bestMaxMMRdiff}")
-  
-		# List of all players in current Matches
-		playersInMatch = []
-		for match in bestMatches:
-			playersInMatch = match.listOfUsers()
-		
-  
-		
-		# Add missedGames() to player not in Matches
-		for player in init_player_list:
-			if player.get_dID() not in playersInMatch:
-				player.addGameMissed()
-				print(f"{player.get_username()}")
+		print(f"After comparing {team_count**5} possibities across {(team_count**5)*team_count} teams, lowest max mmr diff found was {bestMaxMMRdiff}")
+
 				
 		return bestMatches
 		# \step 6

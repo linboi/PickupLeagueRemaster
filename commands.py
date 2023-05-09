@@ -2,6 +2,7 @@
 from player import Player
 from team import Team
 from match import Match
+import re
 
 class commands:
 	COMMAND_SYMBOL = "!"
@@ -11,14 +12,25 @@ class commands:
 		await message.channel.send("hiya")
 
 	async def queue(message, inst, args):
-		user_id = message.author.id
-		admin_check = await inst.checkAdmin(user_id)
-		if not admin_check:
-			return
-		await inst.addToQueue(message.author.id, message.channel)
+		state = inst.getQueueState()
+		if state:
+			await inst.addToQueue(message.author.id, message.channel)
+		
 
 	async def dequeue(message, inst, args):
 		await inst.removeFromQueue(message.author.id, message.channel)
+  
+	async def switchQueueState(message, inst, args):
+		user_id = message.author.id
+		admin_check = await inst.checkAdmin(user_id)
+		if not admin_check:
+				return
+
+		state = await inst.queueSwitch()
+		if state == False:
+			await message.channel.send("Queue is disabled")
+		else:
+			await message.channel.send("Queue is enabled")
 
 	async def signup(message, inst, args):
 		pRank, pName, signUpSuccess = await inst.signUpPlayer(args[0], message)
@@ -83,6 +95,14 @@ class commands:
 	async def win(message, inst, args):
 		await inst.win(message)
   
+	# Resolve match with matchid and side as input ('RED', 'BLUE')
+	async def adminWin(message, inst, args):
+		user_id = message.author.id
+		admin_check = await inst.checkAdmin(user_id)
+		if not admin_check:
+				return
+		await inst.adminWin(message, args[0], args[1])
+  
 	# Test function for mm troubleshooting
 	async def matchmakingtest(message, inst, args):
 		user_id = message.author.id
@@ -90,6 +110,27 @@ class commands:
 		if not admin_check:
 				return
 		await inst.mmTest()
+  
+	async def customMatch(message, inst, args):
+		user_id = message.author.id
+		admin_check = await inst.checkAdmin(user_id)
+		if not admin_check:
+				return
+		id_list = []
+		for arg in args:
+			arg_int = re.sub(r'[a-z<>@]', '', arg)
+			arg_int = arg_int.strip()
+			if arg_int != '':
+				id_list.append(arg_int)
+		idint_list = [int(i) for i in id_list]
+		if len(idint_list) == 10: 
+			try:
+				await inst.createCustomMatch(idint_list)
+				await message.channel.send("✅ Match Created")
+			except:
+				await message.channel.send("Match Creation Error, please make all players are valid discord @'s.")
+		else:
+			await message.channel.send(f"You need **10** players, you had *{len(idint_list)}*.")
   		
 	async def help(message, inst, args):
 		txt = "```List of commands:\n"
@@ -115,7 +156,10 @@ class commands:
 		'replace': replace,
 		'roles': roles,
 		'help' :help,
-		'matchmaketest': matchmakingtest
+		'resolve-match': adminWin,
+		'queue-switch': switchQueueState,
+		'matchmaketest': matchmakingtest,
+		'custom-match': customMatch
 		}
 
 	async def parseReaction(reaction, inst):
