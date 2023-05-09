@@ -236,7 +236,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
   
 	# Test function for MM troubleshooting
 	async def mmTest(self):
-		discord_id_list = [165186656863780865, 197053913269010432, 187302526935105536, 574206308803412037, 197058147167371265, 127796716408799232, 180398163620790279, 225650967058710529, 618520923204485121, 160471312517562368, 188370105413926912, 694560846814117999, 266644132825530389,132288462563966977, 355707373500760065, 259820776608235520, 182965319969669120]
+		discord_id_list = [165186656863780865,228172213797388288, 343490464948813824, 413783321844383767, 197053913269010432, 187302526935105536, 574206308803412037, 197058147167371265, 127796716408799232, 180398163620790279, 225650967058710529, 618520923204485121, 160471312517562368, 188370105413926912, 694560846814117999, 266644132825530389,132288462563966977, 355707373500760065, 259820776608235520, 182965319969669120]
 		matches = await self.matchmakeV2(discord_id_list)
 		self.currentMatches.extend(matches)
 		match_string = str(matches).replace("[", "")
@@ -254,7 +254,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 					memberFound = self.client.guilds[0].get_member(player)
 					if memberFound:
 						# Send the player a DM if found!
-						await memberFound.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!")
+						pass
+						#await memberFound.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!")
 					else:
 						print("Player not found as a member")
 				except:
@@ -279,6 +280,25 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			await message.channel.send("🎊 WPGG, remember to upload a post-game screenshot!")
 		if len(activePlayerMatches) > 1:
 			await message.channel.send("Player found in more than one match, uh oh")
+   
+	async def adminWin(self, message, match_id, side):
+		correct_match = []
+		match_id = int(match_id)
+		print(match_id)
+		for match in self.currentMatches:
+			if match_id == int(match.get_matchID()) and side == 'BLUE':
+				correct_match.append((match, 'BLUE'))
+			elif match_id == int(match.get_matchID()) and side == 'RED':
+				correct_match.append((match, 'RED'))
+    
+		if len(correct_match) == 0:
+			await message.channel.send("Resolve Error, no match found.")
+		if len(correct_match) == 1:
+			correct_match[0][0].resolve(correct_match[0][1])
+			self.currentMatches.remove(correct_match[0][0])
+			await message.channel.send(f"🎊 Match *{match_id}* resolved, **{side}** side won!")
+		if len(correct_match) > 1:
+			await message.channel.send(f"Resolve Error, too many matches with this ID.")
 
 	# Scrape rank details from op.gg page
 	async def signUpPlayer(self, msg_content, message_obj):
