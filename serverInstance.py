@@ -281,7 +281,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
   
 	# Test function for MM troubleshooting
 	async def mmTest(self):
-		discord_id_list = [165186656863780865,228172213797388288, 343490464948813824, 413783321844383767, 197053913269010432, 187302526935105536, 574206308803412037, 197058147167371265, 127796716408799232, 180398163620790279, 225650967058710529, 618520923204485121, 160471312517562368, 188370105413926912, 694560846814117999, 266644132825530389,132288462563966977, 355707373500760065, 259820776608235520, 182965319969669120]
+		discord_id_list = [165186656863780865, 343490464948813824, 413783321844383767, 197053913269010432, 187302526935105536, 574206308803412037, 197058147167371265, 127796716408799232, 180398163620790279, 225650967058710529, 618520923204485121, 160471312517562368, 188370105413926912, 694560846814117999, 266644132825530389,132288462563966977, 355707373500760065, 259820776608235520, 182965319969669120]
 		matches = await self.matchmakeV2(discord_id_list)
 		self.currentMatches.extend(matches)
 		match_string = str(matches).replace("[", "")
@@ -840,7 +840,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			# Check for players in every match -> if found, replace player
 			for match in self.currentMatches:
 				try:
-					await match.replacePlayer(discordIDOrigin, discordIDReplacement, msg_obj, self.client)
+					await match.replacePlayer(discordIDOrigin, discordIDReplacement, self.announcementChannel, self.client)
+					# Display match in unique msg
+					red_oplink, blue_oplink = match.getOPGGLink()
+					await self.embedOPGGLink(red_oplink, blue_oplink, self.announcementChannel)
 					await msg_obj.channel.send(f"✌️Replace Successful")
 				except:
 					await msg_obj.channel.send(f"Replacement Error")

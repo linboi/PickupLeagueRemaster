@@ -261,7 +261,7 @@ class Match:
         red_link = self.redTeam.listOPGG()
         return blue_link, red_link
     
-    async def replacePlayer(self, discordID, otherID, message_obj, client):
+    async def replacePlayer(self, discordID, otherID, channel, client):
         listOfPlayers = [self.redTeam.getListPlayers() + self.blueTeam.getListPlayers()]
         discordID = int(discordID)
         otherID = int(otherID)
@@ -318,8 +318,7 @@ class Match:
                             self.blueTeam.set_sup(replacement_player)
                             
                 new_details = self.displayMatchDetails() 
-                msg = await message_obj.channel.send(f"{new_details}")
-                await msg.edit(suppress=True)
+                await channel.send(f"{new_details}")
             else:
                 pass
 
