@@ -83,6 +83,14 @@ class commands:
 	async def win(message, inst, args):
 		await inst.win(message)
   
+	# Resolve match with matchid and side as input ('RED', 'BLUE')
+	async def adminWin(message, inst, args):
+		user_id = message.author.id
+		admin_check = await inst.checkAdmin(user_id)
+		if not admin_check:
+				return
+		await inst.adminWin(message, args[0], args[1])
+  
 	# Test function for mm troubleshooting
 	async def matchmakingtest(message, inst, args):
 		user_id = message.author.id
@@ -115,6 +123,7 @@ class commands:
 		'replace': replace,
 		'roles': roles,
 		'help' :help,
+		'resolve-match': adminWin,
 		'matchmaketest': matchmakingtest
 		}
 
