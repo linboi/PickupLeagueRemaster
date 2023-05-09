@@ -2,6 +2,7 @@
 from player import Player
 from team import Team
 from match import Match
+import re
 
 class commands:
 	COMMAND_SYMBOL = "!"
@@ -109,6 +110,27 @@ class commands:
 		if not admin_check:
 				return
 		await inst.mmTest()
+  
+	async def customMatch(message, inst, args):
+		user_id = message.author.id
+		admin_check = await inst.checkAdmin(user_id)
+		if not admin_check:
+				return
+		id_list = []
+		for arg in args:
+			arg_int = re.sub(r'[a-z<>@]', '', arg)
+			arg_int = arg_int.strip()
+			if arg_int != '':
+				id_list.append(arg_int)
+		idint_list = [int(i) for i in id_list]
+		if len(idint_list) == 10: 
+			try:
+				await inst.createCustomMatch(idint_list)
+				await message.channel.send("✅ Match Created")
+			except:
+				await message.channel.send("Match Creation Error, please make all players are valid discord @'s.")
+		else:
+			await message.channel.send(f"You need **10** players, you had *{len(idint_list)}*.")
   		
 	async def help(message, inst, args):
 		txt = "```List of commands:\n"
@@ -136,7 +158,8 @@ class commands:
 		'help' :help,
 		'resolve-match': adminWin,
 		'queue-switch': switchQueueState,
-		'matchmaketest': matchmakingtest
+		'matchmaketest': matchmakingtest,
+		'custom-match': customMatch
 		}
 
 	async def parseReaction(reaction, inst):

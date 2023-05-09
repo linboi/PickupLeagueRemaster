@@ -167,6 +167,28 @@ class serverInstance:
 						await memberFound.send(f"✨ You have been picked for a game, head over to {self.testChannel.mention} to see the teams!")
 				except:
 					pass
+ 
+ 
+	async def createCustomMatch(self, id_list):
+		matches = await self.matchmakeV2(id_list)
+		self.currentMatches.extend(matches)
+		# Display match in unique msg
+		for match in self.currentMatches:
+			match_string = match.displayMatchDetails()
+			match_msg = await self.announcementChannel.send(match_string)
+			await match_msg.edit(suppress=True)
+			# Check if user is in member list
+			pIDs = match.listOfUsers()
+			for player in pIDs:
+				try:
+					memberFound = self.client.guilds[0].get_member(player)
+					if memberFound:
+						# Send the player a DM if found!
+						await memberFound.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!")
+					else:
+						print("Player not found as a member")
+				except:
+					pass
 	
 	async def createGamesOnSchedule(self, schedule, channel):
 		await timing.sleep_until(schedule)
