@@ -252,8 +252,6 @@ class Match:
         string += f"{self.blueTeam.get_mid().get_username():^15}{'(mid)':^5}{self.redTeam.get_mid().get_username():^15}\n"
         string += f"{self.blueTeam.get_adc().get_username():^15}{'(adc)':^5}{self.redTeam.get_adc().get_username():^15}\n"
         string += f"{self.blueTeam.get_sup().get_username():^15}{'(sup)':^5}{self.redTeam.get_sup().get_username():^15}\n```"
-        opgg_red , opgg_blue = self.getOPGGLink()
-        string += f"\n **🔵 Blue Team OPGG:** {opgg_red}\n **🔴 Red Team OPGG:** {opgg_blue}"
         
         return string
     
@@ -263,7 +261,7 @@ class Match:
         red_link = self.redTeam.listOPGG()
         return blue_link, red_link
     
-    async def replacePlayer(self, discordID, otherID, message_obj, client):
+    async def replacePlayer(self, discordID, otherID, channel, client):
         listOfPlayers = [self.redTeam.getListPlayers() + self.blueTeam.getListPlayers()]
         discordID = int(discordID)
         otherID = int(otherID)
@@ -320,8 +318,7 @@ class Match:
                             self.blueTeam.set_sup(replacement_player)
                             
                 new_details = self.displayMatchDetails() 
-                msg = await message_obj.channel.send(f"{new_details}")
-                await msg.edit(suppress=True)
+                await channel.send(f"{new_details}")
             else:
                 pass
 
