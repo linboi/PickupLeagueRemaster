@@ -182,7 +182,7 @@ class serverInstance:
 		matches = await self.matchmakeV2(id_list)
 		self.currentMatches.extend(matches)
 		# Display match in unique msg
-		for match in self.currentMatches:
+		for match in matches:
 			match_string = match.displayMatchDetails()
 			match_msg = await self.announcementChannel.send(match_string)
 			red_oplink, blue_oplink = match.getOPGGLink()
@@ -261,7 +261,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		#match_string = str(matches).replace("[", "")
 		#match_string = match_string.replace("]", "")
 		# Display match in unique msg
-		for match in self.currentMatches:
+		for match in matches:
 			match_string = match.displayMatchDetails()
 			match_msg = await channel.send(match_string)
 			red_oplink, blue_oplink = match.getOPGGLink()
@@ -287,7 +287,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		match_string = str(matches).replace("[", "")
 		match_string = match_string.replace("]", "")
   
-		for match in self.currentMatches:
+		for match in matches:
 			match_string = match.displayMatchDetails()
 			await self.testChannel.send(match_string)
 			red_oplink, blue_oplink = match.getOPGGLink()
@@ -1060,7 +1060,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				while idx+1 < len(teamList):
 					blueTeam = Team(teamList[idx][0][0][0], teamList[idx][0][1][0], teamList[idx][0][2][0], teamList[idx][0][3][0], teamList[idx][0][4][0])
 					redTeam = Team(teamList[idx+1][0][0][0], teamList[idx+1][0][1][0], teamList[idx+1][0][2][0], teamList[idx+1][0][3][0], teamList[idx+1][0][4][0])
-					bestMatches.append(Match(self.cursor, self.con, matchID = len(bestMatches) + 1 + datetime.datetime.now().hour, blueTeam=blueTeam, redTeam=redTeam, startTime=str(datetime.datetime.now().date()) + ", " + str(datetime.datetime.now().hour) + ":00"))	
+					bestMatches.append(Match(self.cursor, self.con, matchID = len(bestMatches) + 1 + datetime.datetime.now().hour + datetime.datetime.now().second, blueTeam=blueTeam, redTeam=redTeam, startTime=str(datetime.datetime.now().date()) + ", " + str(datetime.datetime.now().hour) + ":00"))	
 					idx += 2
 		print(f"After comparing {team_count**5} possibities across {(team_count**5)*team_count} teams, lowest max mmr diff found was {bestMaxMMRdiff}")
 
