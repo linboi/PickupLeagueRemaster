@@ -119,9 +119,9 @@ class Player:
         self.role = role
         
         # Set RoleMMR based on assigned role
-        if role == self.primaryRole.lower():
+        if role.lower() == self.primaryRole.lower():
             self.setRoleMMR(0)
-        elif role == self.secondaryRole.lower():
+        elif role.lower() == self.secondaryRole.lower():
             self.setRoleMMR(1)
         elif self.primaryRole == 'FILL':
             self.setRoleMMR(0)
