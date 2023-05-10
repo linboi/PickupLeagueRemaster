@@ -179,10 +179,13 @@ class Player:
         if role == None:
             role = self.get_role
         if self.get_pRole() == role or self.get_pRole() == 'FILL':
+            print(f"me {self.get_pRole()} - {self.internalRating} - {self.get_rating()} - {self.getHighestAccountName()}")
             return self.internalRating
         elif self.get_sRole() == role or self.get_sRole() == 'FILL':
+            print(f"me {self.get_pRole()} - {self.internalRating-200} - {self.get_rating()} - {self.getHighestAccountName()}")
             return self.internalRating - 200
         else:
+            print(f"me {self.get_pRole()} - {self.internalRating-300} - {self.get_rating()} - {self.getHighestAccountName()}")
             return self.internalRating - 300
 
     # Get a list of Names from a players Accounts
