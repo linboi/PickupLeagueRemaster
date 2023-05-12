@@ -875,11 +875,12 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			# Check for players in every match -> if found, replace player
 			for match in self.currentMatches:
 				try:
-					await match.replacePlayer(discordIDOrigin, discordIDReplacement, self.announcementChannel, self.client)
+					player_found = await match.replacePlayer(discordIDOrigin, discordIDReplacement, self.announcementChannel, self.client)
 					# Display match in unique msg
-					red_oplink, blue_oplink = match.getOPGGLink()
-					await self.embedOPGGLink(red_oplink, blue_oplink, self.announcementChannel)
-					await msg_obj.channel.send(f"✌️Replace Successful")
+					if player_found:
+						red_oplink, blue_oplink = match.getOPGGLink()
+						await self.embedOPGGLink(red_oplink, blue_oplink, self.announcementChannel)
+						await msg_obj.channel.send(f"✌️Replace Successful")
 				except:
 					await msg_obj.channel.send(f"Replacement Error")
 		else:
