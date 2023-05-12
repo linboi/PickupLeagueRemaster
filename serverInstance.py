@@ -75,7 +75,7 @@ class serverInstance:
 		return self.queue_state
 
 	async def setRole(self):
-		pu_role = "test-pu"
+		pu_role = "Pickup Only"
 		# Fetch all roles
 		for role in await self.client.guilds[0].fetch_roles():
 			# If role found, fetch db for users discord id's
