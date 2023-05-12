@@ -31,6 +31,7 @@ class serverInstance:
 		self.queue_state = False
 		self.currentMatches = []
 		self.playerIDNameMapping = {}
+		self.role_id = 1106554938101870663
 	
 	async def addToQueue(self, player, channel):
 		if player not in self.queue:
@@ -102,6 +103,10 @@ class serverInstance:
 						await user.add_roles(role)
 					except:
 						pass
+  
+	async def testTag(self, message):
+		pu_role = discord.utils.get(self.client.guilds[0].roles, id=self.role_id)
+		await message.channel.send(f"{pu_role.mention}")
    
 	# Mehtod which creates Matches based on available Players
 	async def matchmake(self, playerIDList):
@@ -247,10 +252,11 @@ class serverInstance:
 
 	async def triggerGamesAtGivenTimes(self, timeObjs, channel):
 		relativeTimeString = ""
+		pu_role = discord.utils.get(self.client.guilds[0].roles, id=self.role_id)
 		for idx, times in enumerate(timeObjs):
 			relativeTimeString += (f"Game {idx+1}: <t:" + str(int(time.mktime(times.timetuple()))) + ":R>\n")
 
-		checkinMessage = await channel.send(f"Check in for registered players\n\
+		checkinMessage = await channel.send(f"Check in for registered players {pu_role.mention}\n\
 React with the corresponding number to check in for a game\n\
 {relativeTimeString}\n\
 After a win, post a screenshot of the victory and type !win (only one player on the winning team must do this).\n\
