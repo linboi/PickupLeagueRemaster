@@ -39,6 +39,8 @@ class commands:
 		# Give access to '#select-roles' channel
 		if(signUpSuccess == False):
 			await message.channel.send("Failed 😔 please try again!")
+		if(signUpSuccess == True):
+			await inst.applyRole(message)
    
 	async def addAccount(message, inst, args):
 		pRank, pName, signUpSuccess = await inst.addAccount(args[0], message)
