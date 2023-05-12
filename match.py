@@ -322,7 +322,7 @@ class Match:
                 await channel.send(f"{new_details}")
                 player_found = True
             else:
-                player_found = False
+                pass
             
             
         return player_found
