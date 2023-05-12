@@ -880,7 +880,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 					if player_found:
 						red_oplink, blue_oplink = match.getOPGGLink()
 						await self.embedOPGGLink(red_oplink, blue_oplink, self.announcementChannel)
-						await msg_obj.channel.send(f"✌️Replace Successful")
+						await msg_obj.channel.send(f"✌️Replacement Successful")
 				except:
 					await msg_obj.channel.send(f"Replacement Error")
 		else:
