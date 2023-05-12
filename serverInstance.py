@@ -73,6 +73,24 @@ class serverInstance:
 
 	def getQueueState(self):
 		return self.queue_state
+
+	async def setRole(self):
+		pu_role = "test-pu"
+		# Fetch all roles
+		for role in await self.client.guilds[0].fetch_roles():
+			# If role found, fetch db for users discord id's
+			if role.name == pu_role:
+					res = self.cursor.execute("SELECT discordID FROM Player")
+					result = res.fetchall()
+					# For every disc id add role
+					for player in result:
+						print(player[0])
+						try:
+							user = self.client.guilds[0].get_member(int(player[0]))
+							await user.add_roles(role)
+							print("Added")
+						except:
+							pass
 	
 	# Mehtod which creates Matches based on available Players
 	async def matchmake(self, playerIDList):
