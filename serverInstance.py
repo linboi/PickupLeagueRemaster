@@ -206,8 +206,8 @@ class serverInstance:
  
 	async def embedOPGGLink(self, blue, red, channel):
 		embed_list = []
-		embed_list.append(discord.Embed(title="Red Team OPGG", url=red, color=0xe74c3c))
 		embed_list.append(discord.Embed(title="Blue Team OPGG", url=blue, color=0x3498db))
+		embed_list.append(discord.Embed(title="Red Team OPGG", url=red, color=0xe74c3c))
 		for embed in embed_list:
 			await channel.send(embed=(embed))
 		
