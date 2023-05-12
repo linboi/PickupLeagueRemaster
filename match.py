@@ -265,6 +265,7 @@ class Match:
         listOfPlayers = [self.redTeam.getListPlayers() + self.blueTeam.getListPlayers()]
         discordID = int(discordID)
         otherID = int(otherID)
+        player_found = False
         # [player(), "red or blue", "jng"]
         team = []
         res = self.cursor.execute(f"SELECT * FROM Player WHERE discordID = {otherID}")
@@ -319,8 +320,13 @@ class Match:
                             
                 new_details = self.displayMatchDetails() 
                 await channel.send(f"{new_details}")
+                player_found = True
             else:
                 pass
+            
+            
+        return player_found
+            
 
         
     

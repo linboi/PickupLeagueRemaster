@@ -93,13 +93,6 @@ class commands:
 
 	async def roles(message, inst, args):
 		await inst.roles(message)
-  
-	async def setRole(message, inst, args):
-		user_id = message.author.id
-		admin_check = await inst.checkAdmin(user_id)
-		if not admin_check:
-				return
-		await inst.setRole()
 
 	async def win(message, inst, args):
 		await inst.win(message)
@@ -168,8 +161,7 @@ class commands:
 		'resolve-match': adminWin,
 		'queue-switch': switchQueueState,
 		'matchmaketest': matchmakingtest,
-		'custom-match': customMatch,
-		'role': setRole
+		'custom-match': customMatch
 		}
 
 	async def parseReaction(reaction, inst):
