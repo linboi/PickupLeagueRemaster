@@ -84,7 +84,6 @@ class serverInstance:
 					result = res.fetchall()
 					# For every disc id add role
 					for player in result:
-						print(player[0])
 						try:
 							user = self.client.guilds[0].get_member(int(player[0]))
 							await user.add_roles(role)
