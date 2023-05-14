@@ -252,11 +252,11 @@ class serverInstance:
 
 	async def triggerGamesAtGivenTimes(self, timeObjs, channel):
 		relativeTimeString = ""
-		pu_role = discord.utils.get(self.client.guilds[0].roles, id=self.role_id)
+		//pu_role = discord.utils.get(self.client.guilds[0].roles, id=self.role_id)
 		for idx, times in enumerate(timeObjs):
 			relativeTimeString += (f"Game {idx+1}: <t:" + str(int(time.mktime(times.timetuple()))) + ":R>\n")
 
-		checkinMessage = await channel.send(f"Check in for registered players {pu_role.mention}\n\
+		checkinMessage = await channel.send(f"Check in for registered players\n\
 React with the corresponding number to check in for a game\n\
 {relativeTimeString}\n\
 After a win, post a screenshot of the victory and type !win (only one player on the winning team must do this).\n\
