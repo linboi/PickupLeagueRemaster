@@ -97,6 +97,13 @@ class commands:
 	async def win(message, inst, args):
 		await inst.win(message)
   
+	async def testTag(message, inst, args):
+		user_id = message.author.id
+		admin_check = await inst.checkAdmin(user_id)
+		if not admin_check:
+			return
+		await inst.testTag(message)
+  
 	# Resolve match with matchid and side as input ('RED', 'BLUE')
 	async def adminWin(message, inst, args):
 		user_id = message.author.id
@@ -161,7 +168,8 @@ class commands:
 		'resolve-match': adminWin,
 		'queue-switch': switchQueueState,
 		'matchmaketest': matchmakingtest,
-		'custom-match': customMatch
+		'custom-match': customMatch,
+		'test': testTag
 		}
 
 	async def parseReaction(reaction, inst):
