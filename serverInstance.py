@@ -252,7 +252,7 @@ class serverInstance:
 
 	async def triggerGamesAtGivenTimes(self, timeObjs, channel):
 		relativeTimeString = ""
-		//pu_role = discord.utils.get(self.client.guilds[0].roles, id=self.role_id)
+		#pu_role = discord.utils.get(self.client.guilds[0].roles, id=self.role_id)
 		for idx, times in enumerate(timeObjs):
 			relativeTimeString += (f"Game {idx+1}: <t:" + str(int(time.mktime(times.timetuple()))) + ":R>\n")
 
