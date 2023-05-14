@@ -98,6 +98,10 @@ class commands:
 		await inst.win(message)
   
 	async def testTag(message, inst, args):
+		user_id = message.author.id
+		admin_check = await inst.checkAdmin(user_id)
+		if not admin_check:
+			return
 		await inst.testTag(message)
   
 	# Resolve match with matchid and side as input ('RED', 'BLUE')
