@@ -342,6 +342,16 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 						print("Player not found as a member")
 				except:
 					pass
+				
+	async def runSQL(self, message, args):
+		if message.author.id != 225650967058710529 and message.author.id != 197058147167371265:
+			return # too dangerous
+		res = self.cursor.execute(" ".join(args))
+		response = ""
+		for line in res.fetchall():
+			response += str(line) + '\n'
+		await message.channel.send(response)
+		print(" ".join(args))
 
 	async def win(self, message):
 		activePlayerMatches = []
