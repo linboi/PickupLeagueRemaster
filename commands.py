@@ -74,6 +74,13 @@ class commands:
 	# Make Admin Command
 	async def endmatch(message, inst, args):
 		await inst.endMatch(message, args[0])
+
+	async def runSQL(message, inst, args):
+		user_id = message.author.id
+		admin_check = await inst.checkAdmin(user_id)
+		if not admin_check:
+			return
+		await inst.runSQL(message, args)
   
 	# Punsih player
 	async def punish(message, inst, args):
@@ -109,7 +116,7 @@ class commands:
 		user_id = message.author.id
 		admin_check = await inst.checkAdmin(user_id)
 		if not admin_check:
-				return
+			return
 		await inst.adminWin(message, args[0], args[1])
   
 	# Test function for mm troubleshooting
@@ -117,7 +124,7 @@ class commands:
 		user_id = message.author.id
 		admin_check = await inst.checkAdmin(user_id)
 		if not admin_check:
-				return
+			return
 		await inst.mmTest()
   
 	async def customMatch(message, inst, args):
@@ -169,7 +176,8 @@ class commands:
 		'queue-switch': switchQueueState,
 		'matchmaketest': matchmakingtest,
 		'custom-match': customMatch,
-		'test': testTag
+		'test': testTag,
+		'runsql':runSQL
 		}
 
 	async def parseReaction(reaction, inst):
