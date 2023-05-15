@@ -28,7 +28,7 @@ class commands:
 
 		state = await inst.queueSwitch()
 		if state == False:
-			await message.channel.send("Queue is disabled")
+			await message.channel.send("Queue is disabled, and list emptied.")
 		else:
 			await message.channel.send("Queue is enabled")
 
