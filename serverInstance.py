@@ -131,7 +131,7 @@ class serverInstance:
 			except:
 				discordUser = None
 			player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
-                   player_details[9], player_details[10], player_details[11], self.cursor, self.con, discordUser)
+				   player_details[9], player_details[10], player_details[11], self.cursor, self.con, discordUser)
 			# Add player to list
 			playerObjList.append(player)
    
@@ -864,7 +864,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
    
    
 	async def replacePlayer(self, msg_obj, discordIDOrigin, discordIDReplacement):
-     
+	 
 		# Check called by (isAdmin)
 		user_id = msg_obj.author.id
 		admin_check = await self.checkAdmin(user_id)
@@ -924,7 +924,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 			except:
 				discordUser = None
 			player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
-                   player_details[9], player_details[10], player_details[11], self.cursor, self.con, discordUser)
+				   player_details[9], player_details[10], player_details[11], self.cursor, self.con, discordUser)
 			# Add player to list
 			playerObjList.append(player)
    
