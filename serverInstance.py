@@ -38,27 +38,36 @@ class serverInstance:
 		if player not in self.queue:
 			self.queue.append(player)
 		await channel.send(f"{len(self.queue)} players in queue.\nEstimated wait time: Literally forever")
-		if len(self.queue) % 10 == 0:
-			matches = await self.matchmakeV2(self.queue)
-			self.currentMatches.extend(matches)
-			# Display match in unique msg
-			match_string = self.currentMatches[-1].displayMatchDetails()
-			match_msg = await self.gameChannel.send(match_string)
-			red_oplink, blue_oplink = self.currentMatches[-1].getOPGGLink()
-			await self.embedOPGGLink(red_oplink, blue_oplink, self.gameChannel)
-			# Check if user is in member list
-			pIDs = self.currentMatches[-1].listOfUsers()
-			for player in pIDs:
-				try:
-					memberFound = self.client.guilds[0].get_member(player)
-					if memberFound:
-						# Send the player a DM if found!
-						await memberFound.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!")
-					else:
-						print("Player not found as a member")
-				except:
-						pass
-			self.queue = []
+		if len(self.queue) % 30 == 0:
+			# Once 30 is reachead add delay
+			timeObjs = datetime.datetime.now().replace(minute=int(datetime.datetime.now().minute) + 1)
+			await channel.send(f"**Player Threshold Reached.**\n__Queue will close in <t:" + str(int(time.mktime(timeObjs.timetuple()))) + ":R>!__")
+			await asyncio.sleep(60)
+			try:
+				matches = await self.matchmakeV2(self.queue)
+				self.currentMatches.extend(matches)
+				# Display match in unique msg
+				# Display match in unique msg
+				for match in matches:
+					match_string = match.displayMatchDetails()
+					match_msg = await self.gameChannel.send(match_string)
+					red_oplink, blue_oplink = match.getOPGGLink()
+					await self.embedOPGGLink(red_oplink, blue_oplink, self.gameChannel)
+					# Check if user is in member list
+					pIDs = match.listOfUsers()
+					for player in pIDs:
+						try:
+							memberFound = self.client.guilds[0].get_member(player)
+							if memberFound:
+								# Send the player a DM if found!
+								await memberFound.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!")
+							else:
+								print("Player not found as a member")
+						except:
+							pass
+				self.queue = []
+			except:
+				await channel.send(f"Not enough players in queue, unable to start games!")
 
 	async def removeFromQueue(self, player, channel):
 		if player in self.queue:
