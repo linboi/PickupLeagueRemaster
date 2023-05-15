@@ -80,6 +80,7 @@ class serverInstance:
 			self.queue_state = True
 		else:
 			self.queue_state = False
+			self.queue = []
 		return self.queue_state
 
 	def getQueueState(self):
