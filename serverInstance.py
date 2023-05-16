@@ -33,6 +33,8 @@ class serverInstance:
 		self.playerIDNameMapping = {}
 		self.gameChannel = gameChannel
 		self.roleID = roleID
+  
+		
 	
 	async def addToQueue(self, player, channel):
 		if player not in self.queue:
@@ -117,7 +119,8 @@ class serverInstance:
   
 	async def testTag(self, message):
 		pu_role = discord.utils.get(self.client.guilds[0].roles, id=self.roleID)
-		await message.channel.send(f"{pu_role.mention}")
+		#await message.channel.send(f"{pu_role.mention}")
+		await self.gameChannel.send("Working!")
    
 	# Mehtod which creates Matches based on available Players
 	async def matchmake(self, playerIDList):
