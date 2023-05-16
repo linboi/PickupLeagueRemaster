@@ -119,7 +119,7 @@ class serverInstance:
   
 	async def testTag(self, message):
 		pu_role = discord.utils.get(self.client.guilds[0].roles, id=self.roleID)
-		#await message.channel.send(f"{pu_role.mention}")
+		await message.channel.send(f"{pu_role.mention}")
 		await self.gameChannel.send("Working!")
    
 	# Mehtod which creates Matches based on available Players
@@ -285,7 +285,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
 		gamesList = []
 		for idx, timeAndEmoji in enumerate(waitSecondsAndEmoji):
-			gamesList.append(self.createGames(timeAndEmoji[0], timeAndEmoji[1], self.gameChannel, checkinMessage.id))
+			gamesList.append(self.createGames(timeAndEmoji[0], timeAndEmoji[1], channel, checkinMessage.id))
 
 		await asyncio.gather(*gamesList)
 
