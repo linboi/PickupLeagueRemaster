@@ -363,7 +363,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		response = ""
 		for line in res.fetchall():
 			response += str(line) + '\n'
-		await message.channel.send(response)
+		await message.channel.send(f"{max(res.rowcount, 0)} rows affected.")
+		if response != "":
+			await message.channel.send(response)
 		print(" ".join(args))
 
 	async def win(self, message):
