@@ -4,9 +4,10 @@ import random
 import itertools
 import copy
 import datetime
+import asyncio
 
 class Match:
-	def __init__(self, cursor, con, matchID=None, blueTeam=None, redTeam=None, startTime='TODAY'):
+	def __init__(self, cursor, con, client, matchID=None, blueTeam=None, redTeam=None, startTime='TODAY'):
 		
 		self.matchID = matchID
 		self.blueTeam = blueTeam
@@ -14,6 +15,9 @@ class Match:
 		self.startTime = startTime
 		self.cursor = cursor
 		self.con = con
+		self.blueBets = {}
+		self.redBets = {}
+		self.client = client
 		
 	def __repr__(self):
 		string = f"   \n✨ **MatchID** (*{self.matchID}*)\t \t⏲️ **Match Time** (*{self.startTime}*)\t \t 🏅 **MMR Difference** (*{round(self.calculateMMRDifference(self.blueTeam, self.redTeam))}*)"
@@ -468,10 +472,12 @@ class Match:
 			winningTeam = self.blueTeam
 			losingTeam = self.redTeam
 			winner = 1
+			self.resolveBets(self.blueBets, self.redBets)
 		elif winner == 'RED':
 			winningTeam = self.redTeam
 			losingTeam = self.blueTeam
 			winner = -1
+			self.resolveBets(self.redBets, self.blueBets)
 		
 		MMRdiff = losingTeam.get_avgMMR() - winningTeam.get_avgMMR()
 		expectedScore = 1/(1 + 10**(MMRdiff/500))
@@ -511,7 +517,72 @@ class Match:
 							({csvnames})")
 		self.con.commit()
 		
+	def resolveBets(self, winners, losers):
+		totalPool = 0
+		winnerPool = 0
+		for key in winners:
+			totalPool += winners[key]
+			winnerPool += winners[key]
+		for key in losers:
+			totalPool += losers[key]
+		for key in winners:
+			winnings = (winners[key]/winnerPool)*totalPool
+			self.cursor.execute(f"""
+				UPDATE Player 
+				SET bettingPoints = bettingPoints + {winnings}
+				WHERE discordID = {key}
+			""")
+			self.con.commit()
 		
-	
-	
+	async def openBetting(self, message):
+		await message.add_reaction('🔵')
+		await message.add_reaction('🔴')
+
+		def check(reaction, user):
+			return (reaction.message.id == message.id and reaction.emoji in ['🔴', '🔵'])
 		
+		bettingClosed = False
+		
+		while not bettingClosed:
+			team, user = await self.client.wait_for('reaction_add', check=check, timeout=420.0)
+			teamChosen = ""
+			if team.emoji == '🔵':
+				teamChosen = "BLUE"
+			if team.emoji == '🔴':
+				teamChosen = "RED"
+			asyncio.create_task(self.respondToBet(user, teamChosen))
+		
+
+	async def respondToBet(self, user, team):
+		if team == "":
+			print("this code should be unreachable")
+			return
+		res = self.con.execute(f"SELECT bettingPoints FROM Player WHERE discordID = {user.id}")
+		balance, = res.fetchone()	# I know the comma looks weird here, python syntax for turning a single element tuple into that element is strange
+
+		await user.send(f"How much do you want to bet on team {team} in match {self.matchID} (current balance: {balance}):")
+		def check(message):
+			return message.author.id == user.id and int(message.content) > 0
+		msg = await self.client.wait_for('message', check=check, timeout=420.0)
+		amount = int(msg.content)
+		res = self.con.execute(f"SELECT bettingPoints FROM Player WHERE discordID = {user.id}")
+		balance, = res.fetchone()	# after any awaits we have to check that the user still has enough to make the bet
+		# basically from here to committing the bet is a critical section, no awaits allowed
+		if balance < amount:
+			await user.send("Insufficient balance")	#except here because we're not committing the bet
+			return
+		res = self.con.execute(f"UPDATE Player SET bettingPoints = bettingPoints-{amount} WHERE discordID = {user.id}")
+		if res.rowcount != 1:
+			print("Bet failed")
+			return
+		if team == "BLUE":
+			if user.id in self.blueBets:
+				self.blueBets[user.id] += amount
+			else:
+				self.blueBets[user.id] = amount
+		else:
+			if user.id in self.redBets:
+				self.redBets[user.id] += amount
+			else:
+				self.redBets[user.id] = amount
+		await user.send(f"Successfully placed a bet of {amount} on team {team} in match {self.matchID}!")

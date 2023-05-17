@@ -54,6 +54,7 @@ class serverInstance:
 					match_string = match.displayMatchDetails()
 					match_msg = await self.gameChannel.send(match_string)
 					red_oplink, blue_oplink = match.getOPGGLink()
+					await match.openBetting(match_msg)
 					await self.embedOPGGLink(red_oplink, blue_oplink, self.gameChannel)
 					# Check if user is in member list
 					pIDs = match.listOfUsers()
@@ -157,7 +158,7 @@ class serverInstance:
 		required_players = match_count * 10
 	
 		# Shuffle players
-		tempMatch = Match(self.cursor, self.con)
+		tempMatch = Match(self.cursor, self.con, self.client)
 		# Ordered QP List & add PQP for players who were left out
 		ordered_pq_list = tempMatch.shuffle_orderPQ(playerObjList, required_players)
 	
@@ -176,7 +177,7 @@ class serverInstance:
 			# Get top 10 players
 			mCount = len(self.currentMatches) + 1
 			# Init a Match 
-			initMatch = Match(self.cursor, self.con)
+			initMatch = Match(self.cursor, self.con, self.client)
 			# Shuffle Selected Players
 			ordered_player_list = ordered_mmr_list[((mCount-1)*10):(mCount*10)]
 			shuffled_list = sorted(ordered_player_list, key=lambda k: random.random())
@@ -233,6 +234,7 @@ class serverInstance:
 		for match in matches:
 			match_string = match.displayMatchDetails()
 			match_msg = await self.gameChannel.send(match_string)
+			await match.openBetting(match_msg)
 			red_oplink, blue_oplink = match.getOPGGLink()
 			await self.embedOPGGLink(red_oplink, blue_oplink, self.gameChannel)
 			# Check if user is in member list
@@ -314,6 +316,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		for match in matches:
 			match_string = match.displayMatchDetails()
 			match_msg = await channel.send(match_string)
+			await match.openBetting(match_msg)
 			red_oplink, blue_oplink = match.getOPGGLink()
 			await self.embedOPGGLink(red_oplink, blue_oplink, channel)
 			# Check if user is in member list
@@ -339,7 +342,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
   
 		for match in matches:
 			match_string = match.displayMatchDetails()
-			await self.testChannel.send(match_string)
+			match_msg = await self.testChannel.send(match_string)
+			await match.openBetting(match_msg)
 			red_oplink, blue_oplink = match.getOPGGLink()
 			await self.embedOPGGLink(red_oplink, blue_oplink, self.testChannel)
 			# Check if user is in member list
@@ -1123,7 +1127,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				while idx+1 < len(teamList):
 					blueTeam = Team(teamList[idx][0][0][0], teamList[idx][0][1][0], teamList[idx][0][2][0], teamList[idx][0][3][0], teamList[idx][0][4][0])
 					redTeam = Team(teamList[idx+1][0][0][0], teamList[idx+1][0][1][0], teamList[idx+1][0][2][0], teamList[idx+1][0][3][0], teamList[idx+1][0][4][0])
-					bestMatches.append(Match(self.cursor, self.con, matchID = len(bestMatches) + 1 + datetime.datetime.now().hour + datetime.datetime.now().second, blueTeam=blueTeam, redTeam=redTeam, startTime=str(datetime.datetime.now().date()) + ", " + str(datetime.datetime.now().hour) + ":00"))	
+					bestMatches.append(Match(self.cursor, self.con, self.client, matchID = len(bestMatches) + 1 + datetime.datetime.now().hour + datetime.datetime.now().second, blueTeam=blueTeam, redTeam=redTeam, startTime=str(datetime.datetime.now().date()) + ", " + str(datetime.datetime.now().hour) + ":00"))	
 					idx += 2
 		print(f"After comparing {team_count**5} possibities across {(team_count**5)*team_count} teams, lowest max mmr diff found was {bestMaxMMRdiff}")
 
