@@ -1,7 +1,6 @@
 from player import Player
 from team import Team
 import random
-import itertools
 import copy
 import datetime
 
