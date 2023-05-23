@@ -5,6 +5,7 @@ import itertools
 import copy
 import datetime
 import asyncio
+import time
 
 class Match:
 	def __init__(self, cursor, con, client, matchID=None, blueTeam=None, redTeam=None, startTime='TODAY'):
@@ -537,33 +538,53 @@ class Match:
 	async def openBetting(self, message):
 		await message.add_reaction('🔵')
 		await message.add_reaction('🔴')
-
+		closingTime = datetime.datetime.now() + datetime.timedelta(minutes=5)
+		matchMessage = message.content
+		await message.edit(content=(matchMessage + "\nBetting closes:<t:" + str(int(time.mktime(closingTime.timetuple()))) + ":R>"))
 		def check(reaction, user):
 			return (reaction.message.id == message.id and reaction.emoji in ['🔴', '🔵'])
 		
 		bettingClosed = False
 		
 		while not bettingClosed:
-			team, user = await self.client.wait_for('reaction_add', check=check, timeout=420.0)
-			teamChosen = ""
-			if team.emoji == '🔵':
-				teamChosen = "BLUE"
-			if team.emoji == '🔴':
-				teamChosen = "RED"
-			asyncio.create_task(self.respondToBet(user, teamChosen))
+			try:
+				team, user = await self.client.wait_for('reaction_add', check=check, timeout=(closingTime - datetime.datetime.now()).total_seconds())
+				teamChosen = ""
+				if team.emoji == '🔵':
+					teamChosen = "BLUE"
+				if team.emoji == '🔴':
+					teamChosen = "RED"
+				asyncio.create_task(self.respondToBet(user, teamChosen, closingTime))
+			except asyncio.TimeoutError:
+				bettingClosed = True
+		await message.clear_reactions()
 		
 
-	async def respondToBet(self, user, team):
+	async def respondToBet(self, user, team, closingTime):
 		if team == "":
 			print("this code should be unreachable")
 			return
+		if team == "BLUE":
+			for player in self.redTeam.getListPlayers():
+				if player.get_dID() == user.id:
+					await user.send("You can't bet against yourself.")
+					return
+		if team == "RED":
+			for player in self.blueTeam.getListPlayers():
+				if player.get_dID() == user.id:
+					await user.send("You can't bet against yourself.")
+					return
 		res = self.con.execute(f"SELECT bettingPoints FROM Player WHERE discordID = {user.id}")
 		balance, = res.fetchone()	# I know the comma looks weird here, python syntax for turning a single element tuple into that element is strange
 
 		await user.send(f"How much do you want to bet on team {team} in match {self.matchID} (current balance: {balance}):")
 		def check(message):
 			return message.author.id == user.id and int(message.content) > 0
-		msg = await self.client.wait_for('message', check=check, timeout=420.0)
+		try: 
+			msg = await self.client.wait_for('message', check=check, timeout=(closingTime - datetime.datetime.now()).total_seconds())
+		except asyncio.TimeoutError:
+			await user.send("Out of time.")
+			return
 		amount = int(msg.content)
 		res = self.con.execute(f"SELECT bettingPoints FROM Player WHERE discordID = {user.id}")
 		balance, = res.fetchone()	# after any awaits we have to check that the user still has enough to make the bet

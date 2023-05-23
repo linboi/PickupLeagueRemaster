@@ -988,12 +988,15 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 	# discordUser is None, isn't used either. Should maybe fix this idk 
 	async def matchmakeV2(self, playerIDList):
 		# List of all players in Queue
+		if self.client.user.id in playerIDList:
+			playerIDList.remove(self.client.user.id)
 		res = self.cursor.execute("SELECT * FROM Player")# WHERE discordID in ({seq})".format(seq=','.join(['?']*len(playerIDList))))
 		listOfPlayers = res.fetchall()
 		shorterlist = []
 		for player in listOfPlayers:
 			if player[1] in playerIDList:
 				shorterlist.append(player)
+				self.cursor.execute(f"UPDATE Player SET bettingPoints = bettingPoints + 100 WHERE discordID = {player[1]}")
 		listOfPlayers = shorterlist
 		print("Shorter List Compiled:" + str(len(shorterlist)))
 		playerObjList = []
