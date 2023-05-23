@@ -54,7 +54,7 @@ class serverInstance:
 					match_string = match.displayMatchDetails()
 					match_msg = await self.gameChannel.send(match_string)
 					red_oplink, blue_oplink = match.getOPGGLink()
-					await match.openBetting(match_msg)
+					asyncio.create_task(match.openBetting(match_msg))
 					await self.embedOPGGLink(red_oplink, blue_oplink, self.gameChannel)
 					# Check if user is in member list
 					pIDs = match.listOfUsers()
@@ -234,7 +234,7 @@ class serverInstance:
 		for match in matches:
 			match_string = match.displayMatchDetails()
 			match_msg = await self.gameChannel.send(match_string)
-			await match.openBetting(match_msg)
+			asyncio.create_task(match.openBetting(match_msg))
 			red_oplink, blue_oplink = match.getOPGGLink()
 			await self.embedOPGGLink(red_oplink, blue_oplink, self.gameChannel)
 			# Check if user is in member list
@@ -316,7 +316,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		for match in matches:
 			match_string = match.displayMatchDetails()
 			match_msg = await channel.send(match_string)
-			await match.openBetting(match_msg)
+			asyncio.create_task(match.openBetting(match_msg))
 			red_oplink, blue_oplink = match.getOPGGLink()
 			await self.embedOPGGLink(red_oplink, blue_oplink, channel)
 			# Check if user is in member list
@@ -343,7 +343,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		for match in matches:
 			match_string = match.displayMatchDetails()
 			match_msg = await self.testChannel.send(match_string)
-			await match.openBetting(match_msg)
+			asyncio.create_task(match.openBetting(match_msg))
 			red_oplink, blue_oplink = match.getOPGGLink()
 			await self.embedOPGGLink(red_oplink, blue_oplink, self.testChannel)
 			# Check if user is in member list
@@ -655,7 +655,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 					self.con.commit()
 					await self.testChannel.send(f"✨ {user_name} has changed their PRIMARY role to {position}")
 				else:
-					await self.testChannel.send(f"✨ {user_name}'s SECONDARY role is already set to {position} ")
+					self.cursor.execute(f"UPDATE Player SET primaryRole = '{position}', secondaryRole = 'FILL' WHERE discordID = {discordID}")
+					self.con.commit()
+					await self.testChannel.send(f"✨ {user_name}'s SECONDARY role is already set to {position}, setting SECONDARY to FILL")
 				
 			# Secondary Role
 			else:
@@ -667,7 +669,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 					self.con.commit()
 					await self.testChannel.send(f"✨ {user_name} has changed their SECONDARY role to {position}")
 				else:
-					await self.testChannel.send(f"✨ {user_name}'s PRIMARY role is already set to {position}")
+					self.cursor.execute(f"UPDATE Player SET secondaryRole = '{position}', primaryRole = 'FILL' WHERE discordID = {discordID}")
+					self.con.commit()
+					await self.testChannel.send(f"✨ {user_name}'s PRIMARY role is already set to {position}, setting PRIMARY to FILL")
 
 	async def roles(self, message):
 		roleMsg = await message.author.send("Choose your primary role:\n🥶 - TOP\n✨ - JG\n😎  - MID\n😭 - AD\n🤡  - SUP\n🤔  - FILL\n\nyou can change your role in the future, use !roles again.")
@@ -688,7 +692,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		primaryRole, user = await self.client.wait_for('reaction_add', check=check)
 		await message.author.send("Now choose secondary role")
 		secondaryRole, _ = await self.client.wait_for('reaction_add', check=check)
-		print("got here")
+
 		await self.updatePlayerRole(user.id, 1, roleMapping[primaryRole.emoji])
 		await self.updatePlayerRole(user.id, 2, roleMapping[secondaryRole.emoji])
 
@@ -778,7 +782,6 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		res = self.cursor.execute(f"SELECT discordID, winCount, lossCount, leaderboardPoints, ROW_NUMBER() OVER (ORDER BY leaderboardPoints DESC), primaryRole, secondaryRole FROM Player WHERE winCount > 0 OR lossCount > 0 ORDER BY leaderboardPoints DESC")
 		output = res.fetchall()
 		all_players = ""
-		print(output)
 		pageNum = min(pageNum, len(output)//20)
 		pageNum = max(pageNum, 0)
 		toPosition = min((pageNum+1)*20, len(output))
@@ -791,7 +794,6 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 				except:
 					discord_name = player[0]
 				self.playerIDNameMapping[player[0]] = discord_name
-				print(discord_name)
 			else:
 				discord_name = self.playerIDNameMapping[player[0]]
 			pos = f"#{player[4]}"
@@ -832,7 +834,56 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		elif emoji.emoji == '➡':
 			await self.displayLeaderboard(channelToSendIn, pageNum=pageNum+1, message=message)
 
+	async def displayBettyBoard(self, channelToSendIn, pageNum=0, message=None):
+		res = self.cursor.execute(f"SELECT discordID, bettingPoints, ROW_NUMBER() OVER (ORDER BY bettingPoints DESC) FROM Player WHERE bettingPoints <> 2000.0 ORDER BY bettingPoints DESC")
+		output = res.fetchall()
+		all_players = ""
+		pageNum = min(pageNum, len(output)//20)
+		pageNum = max(pageNum, 0)
+		toPosition = min((pageNum+1)*20, len(output))
+		fromPosition = pageNum*20
 
+		for player in output[fromPosition:toPosition:]:
+			if player[0] not in self.playerIDNameMapping:
+				try:
+					discord_name = (await self.client.fetch_user(player[0])).display_name
+				except:
+					discord_name = player[0]
+				self.playerIDNameMapping[player[0]] = discord_name
+			else:
+				discord_name = self.playerIDNameMapping[player[0]]
+			pos = f"#{player[2]}"
+			pos = pos.ljust(5)
+			id = f"{discord_name}"
+			id = id.ljust(20)
+			bettingPoints = f"{int(player[1])} Betties"
+			bettingPoints = bettingPoints.ljust(8)
+
+			all_players += f"{pos}" + f"{id}" + f"{bettingPoints}\n"
+
+   
+		now = date.today()
+		if message == None:
+			message = await channelToSendIn.send(f"**__Updated Bettyboard__***\t\tLast Updated: {now}*```{all_players}```")
+			await message.add_reaction('⬅')
+			await message.add_reaction('➡')
+		else:
+			await message.edit(content=f"**__Updated Bettyboard__***\t\tLast Updated: {now}*```{all_players}```")
+
+		def check(reaction, user):
+			return reaction.message.id == message.id and reaction.emoji in ['⬅', '➡']
+
+		try:
+			emoji, user = await self.client.wait_for('reaction_add', check=check, timeout=300)
+			await emoji.remove(user)
+		except asyncio.TimeoutError:
+			await message.clear_reactions()
+			return
+		
+		if emoji.emoji == '⬅':
+			await self.displayBettyBoard(channelToSendIn, pageNum=pageNum-1, message=message)
+		elif emoji.emoji == '➡':
+			await self.displayBettyBoard(channelToSendIn, pageNum=pageNum+1, message=message)
   
 	# Method to End a Current Match if not started or void
 	async def endMatch(self, message_obj, matchID): 
