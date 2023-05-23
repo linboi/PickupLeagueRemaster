@@ -1,5 +1,3 @@
-import random
-
 class Player:
 
 	def __init__(self, playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGameCount, signUpCount, LP, cursor, con, discordUser):
