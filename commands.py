@@ -70,6 +70,9 @@ class commands:
 	# Make Admin Command
 	async def leaderboard(message, inst, args):
 		await inst.displayLeaderboard(message.channel)
+
+	async def bettyboard(message, inst, args):
+		await inst.displayBettyBoard(message.channel)
   
 	# Make Admin Command
 	async def endmatch(message, inst, args):
@@ -164,6 +167,9 @@ class commands:
 		'unscheduledgame' : unscheduledGame,
 		'rank': rank,
 		'leaderboard': leaderboard,
+		'lb': leaderboard,
+		'bettyboard': bettyboard,
+		'bb': bettyboard,
 		'end-match': endmatch,
 		'punish': punish,
 		'swap': swap,
