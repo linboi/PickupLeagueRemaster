@@ -315,10 +315,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		# Display match in unique msg
 		for match in matches:
 			match_string = match.displayMatchDetails()
-			match_msg = await channel.send(match_string)
+			match_msg = await self.game_channel.send(match_string)
 			asyncio.create_task(match.openBetting(match_msg))
 			red_oplink, blue_oplink = match.getOPGGLink()
-			await self.embedOPGGLink(red_oplink, blue_oplink, channel)
+			await self.embedOPGGLink(red_oplink, blue_oplink, self.game_channel)
 			# Check if user is in member list
 			pIDs = match.listOfUsers()
 			for player in pIDs:
