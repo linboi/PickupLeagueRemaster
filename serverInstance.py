@@ -996,7 +996,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 		for player in listOfPlayers:
 			if player[1] in playerIDList:
 				shorterlist.append(player)
-				self.cursor.execute(f"UPDATE Player SET bettingPoints = bettingPoints + 100 WHERE discordID = {player[1]}")
+				self.cursor.execute(f"UPDATE Player SET bettingPoints = bettingPoints + 100, pointsFromSignup = pointsFromSignup + 100 WHERE discordID = {player[1]}")
 		listOfPlayers = shorterlist
 		print("Shorter List Compiled:" + str(len(shorterlist)))
 		playerObjList = []
