@@ -87,7 +87,7 @@ class serverInstance:
                             memberFound = self.client.guilds[0].get_member(player)
                             if memberFound:
                                 # Send the player a DM if found!
-                                await memberFound.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!")
+                                await memberFound.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!\n **Tournament Code:** {tournament_code}")
                             else:
                                 print("Player not found as a member")
                         except:
@@ -272,7 +272,7 @@ class serverInstance:
                     memberFound = self.client.guilds[0].get_member(player)
                     if memberFound:
                         # Send the player a DM if found!
-                        await memberFound.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!")
+                        await memberFound.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!\n **Tournament Code:** {tournament_code}")
                     else:
                         print("Player not found as a member")
                 except:
@@ -356,7 +356,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                     memberFound = self.client.guilds[0].get_member(player)
                     if memberFound:
                         # Send the player a DM if found!
-                        await memberFound.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!")
+                        await memberFound.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!\n **Tournament Code:** {tournament_code}")
                     else:
                         print("Player not found as a member")
                 except:
@@ -385,8 +385,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                     memberFound = self.client.guilds[0].get_member(player)
                     if memberFound:
                         # Send the player a DM if found!
-                        pass
-                        #await memberFound.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!")
+                        #pass
+                        await memberFound.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!\n **Tournament Code:** {tournament_code}")
                     else:
                         print("Player not found as a member")
                 except:
