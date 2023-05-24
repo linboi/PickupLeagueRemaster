@@ -15,7 +15,6 @@ class commands:
 		state = inst.getQueueState()
 		if state:
 			await inst.addToQueue(message.author.id, message.channel)
-		
 
 	async def dequeue(message, inst, args):
 		await inst.removeFromQueue(message.author.id, message.channel)
@@ -189,7 +188,6 @@ class commands:
 	async def parseReaction(reaction, inst):
 		# Change Player Role
 		await inst.changePlayerRole(reaction)
-  
   
 	async def parse(message, inst):
 		client = inst.client
