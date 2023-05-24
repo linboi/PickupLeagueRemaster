@@ -131,3 +131,5 @@ dmypy.json
 # Ignore secret file so nobody pushes a secret key to a public repository
 secret.json
 copy.db
+tournament_codes.csv
+parsed_tournament_codes.csv
