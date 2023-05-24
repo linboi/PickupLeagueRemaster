@@ -11,11 +11,14 @@ from match import Match
 from team import Team
 import random
 import discord
+import csv
 
 
 class serverInstance:
     def __init__(self):
         self.queue = []
+        self.tournament_code_list = []
+        self.fetch_tournament_file()
 
     def ready(self, client, roleChannel, testChannel, announcementChannel, generalChannel, gameChannel, voiceChannels, roleID, primaryRoleMsg, secondaryRoleMsg, cursor, con):
         self.client = client
@@ -33,9 +36,29 @@ class serverInstance:
         self.playerIDNameMapping = {}
         self.gameChannel = gameChannel
         self.roleID = roleID
-  
         
+  
+    # Import Tournament Codes
+    def fetch_tournament_file(self):
+        tournament_list = []
+        with open("./tournament_codes.csv", "r") as f:
+            for code in f:
+                tournament_list.append(code.split(","))
+        self.tournament_code_list = tournament_list[0]
     
+    # Fetch unused Code & Remove from list
+    async def fetch_tournament_code(self):
+        code = self.tournament_code_list[0]
+        self.tournament_code_list.pop(0)
+        return str(code)
+    
+    # Update the Tournament Code file
+    async def update_tournament_file(self):
+        with open("./tournament_codes.csv", "w") as f:
+            for code in self.tournament_code_list:
+                f.write(f"{code},")
+                
+                
     async def addToQueue(self, player, channel):
         if player not in self.queue:
             self.queue.append(player)
@@ -51,7 +74,8 @@ class serverInstance:
                 # Display match in unique msg
                 # Display match in unique msg
                 for match in matches:
-                    match_string = match.displayMatchDetails()
+                    tournament_code = await self.fetch_tournament_code()
+                    match_string = match.displayMatchDetails(tournament_code)
                     match_msg = await self.gameChannel.send(match_string)
                     red_oplink, blue_oplink = match.getOPGGLink()
                     asyncio.create_task(match.openBetting(match_msg))
@@ -69,6 +93,7 @@ class serverInstance:
                         except:
                             pass
                 self.queue = []
+                await self.update_tournament_file()
             except:
                 await channel.send(f"Not enough players in queue, unable to start games!")
 
@@ -232,9 +257,12 @@ class serverInstance:
         self.currentMatches.extend(matches)
         # Display match in unique msg
         for match in matches:
-            match_string = match.displayMatchDetails()
+            tournament_code = await self.fetch_tournament_code()
+            match_string = match.displayMatchDetails(tournament_code)
             match_msg = await self.gameChannel.send(match_string)
             asyncio.create_task(match.openBetting(match_msg))
+            #####
+            
             red_oplink, blue_oplink = match.getOPGGLink()
             await self.embedOPGGLink(red_oplink, blue_oplink, self.gameChannel)
             # Check if user is in member list
@@ -249,6 +277,7 @@ class serverInstance:
                         print("Player not found as a member")
                 except:
                     pass
+        await self.update_tournament_file()
     
     async def createGamesOnSchedule(self, schedule, channel):
         await timing.sleep_until(schedule)
@@ -314,7 +343,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         #match_string = match_string.replace("]", "")
         # Display match in unique msg
         for match in matches:
-            match_string = match.displayMatchDetails()
+            tournament_code = await self.fetch_tournament_code()
+            match_string = match.displayMatchDetails(tournament_code)
             match_msg = await self.gameChannel.send(match_string)
             asyncio.create_task(match.openBetting(match_msg))
             red_oplink, blue_oplink = match.getOPGGLink()
@@ -331,6 +361,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                         print("Player not found as a member")
                 except:
                     pass
+        await self.update_tournament_file()
   
     # Test function for MM troubleshooting
     async def mmTest(self):
@@ -341,7 +372,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         match_string = match_string.replace("]", "")
   
         for match in matches:
-            match_string = match.displayMatchDetails()
+            tournament_code = await self.fetch_tournament_code()
+            match_string = match.displayMatchDetails(tournament_code)
             match_msg = await self.testChannel.send(match_string)
             asyncio.create_task(match.openBetting(match_msg))
             red_oplink, blue_oplink = match.getOPGGLink()
@@ -359,6 +391,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                         print("Player not found as a member")
                 except:
                     pass
+        await self.update_tournament_file()
                 
     async def runSQL(self, message, args):
         if message.author.id != 225650967058710529 and message.author.id != 197058147167371265:
