@@ -249,6 +249,10 @@ class Match:
         
     # Return the details of the current match in string
     def displayMatchDetails(self, tournament_code):
+        discordIDs = ", ".join(str(p.get_dID()) for p in self.blueTeam.getListPlayers() + self.redTeam.getListPlayers())
+        print(discordIDs)
+        res = self.cursor.execute(f"SELECT [name] FROM Account JOIN Player ON Account.playerID = Player.playerID WHERE Player.discordID in ({discordIDs})")
+        invite_string = ",".join(str(name[0]) for name in res)
         string = f"   \n✨ MatchID ({self.matchID})\t\t🏅 MMR Difference ({round(self.calculateMMRDifference(self.blueTeam, self.redTeam))})"
         string += f"\n```{'[Blue Team]': ^15}{'':^5}{'[Red Team]':^15}\n\n"
         string += f"{self.blueTeam.get_top().get_username():^15}{'(top)':^5}{self.redTeam.get_top().get_username():^15}\n"
@@ -257,6 +261,7 @@ class Match:
         string += f"{self.blueTeam.get_adc().get_username():^15}{'(adc)':^5}{self.redTeam.get_adc().get_username():^15}\n"
         string += f"{self.blueTeam.get_sup().get_username():^15}{'(sup)':^5}{self.redTeam.get_sup().get_username():^15}\n```"
         string += f"{tournament_code}\n"
+        string += f"Invite list: {invite_string}"
         
         return string
     
