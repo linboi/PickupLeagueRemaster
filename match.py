@@ -469,16 +469,13 @@ class Match:
         return listOfUsers
             
     def resolve(self, winner):
-        winningColour = winner
         if winner == 'BLUE':
             winningTeam = self.blueTeam
             losingTeam = self.redTeam
-            winner = 1
             self.resolveBets(self.blueBets, self.redBets)
         elif winner == 'RED':
             winningTeam = self.redTeam
             losingTeam = self.blueTeam
-            winner = -1
             self.resolveBets(self.redBets, self.blueBets)
         
         MMRdiff = losingTeam.get_avgMMR() - winningTeam.get_avgMMR()
@@ -500,20 +497,20 @@ class Match:
             player.updateRating(-ratingChange)
             player.updateLP(-ratingChange)
             player.update()
-        self.update(ratingChange, winner, winningTeam, losingTeam, winningColour)
+        self.update(ratingChange, winningTeam, losingTeam, winner)
         
-    def update(self, ratingchange, winner, winningTeam, losingTeam, winningColour):
-        if winningColour != 'BLUE':
-            losingColour = 'BLUE'
+    def update(self, ratingchange, winningTeam, losingTeam, winner):
+        if winner != 'BLUE':
+            loser = 'BLUE'
         else:
-            losingColour = 'RED'
+            loser = 'RED'
         self.cursor.execute(f"UPDATE Match SET resolutionTime = '{datetime.datetime.now()}'")
         for p in winningTeam.getListPlayers():
             self.cursor.execute(f"""INSERT INTO PlayerMatch (playerID, matchID, ratingChange, [role], team)
-                                    VALUES ({p.get_pID()}, {self.matchID}, {ratingchange}, '{p.get_role()}', '{winningColour}')""")
+                                    VALUES ({p.get_pID()}, {self.matchID}, {ratingchange}, '{p.get_role()}', '{winner}')""")
         for p in losingTeam.getListPlayers():
             self.cursor.execute(f"""INSERT INTO PlayerMatch (playerID, matchID, ratingChange, [role], team)
-                                    VALUES ({p.get_pID()}, {self.matchID}, {-ratingchange}, '{p.get_role()}', '{losingColour}')""")
+                                    VALUES ({p.get_pID()}, {self.matchID}, {-ratingchange}, '{p.get_role()}', '{loser}')""")
         self.con.commit()
         
     def resolveBets(self, winners, losers):
