@@ -1214,10 +1214,14 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 while idx+1 < len(teamList):
                     blueTeam = Team(teamList[idx][0][0][0], teamList[idx][0][1][0], teamList[idx][0][2][0], teamList[idx][0][3][0], teamList[idx][0][4][0])
                     redTeam = Team(teamList[idx+1][0][0][0], teamList[idx+1][0][1][0], teamList[idx+1][0][2][0], teamList[idx+1][0][3][0], teamList[idx+1][0][4][0])
-                    bestMatches.append(Match(self.cursor, self.con, self.client, matchID = len(bestMatches) + 1 + datetime.datetime.now().hour + datetime.datetime.now().second, blueTeam=blueTeam, redTeam=redTeam, startTime=str(datetime.datetime.now().date()) + ", " + str(datetime.datetime.now().hour) + ":00"))	
+                    print(str(datetime.datetime.now()))
+                    bestMatches.append(Match(self.cursor, self.con, self.client, matchID = None, blueTeam=blueTeam, redTeam=redTeam, startTime=str(datetime.datetime.now())))
                     idx += 2
         print(f"After comparing {team_count**5} possibities across {(team_count**5)*team_count} teams, lowest max mmr diff found was {bestMaxMMRdiff}")
-
+        for match in bestMatches:
+            self.cursor.execute(f"INSERT INTO Match (matchTime) VALUES ('{match.startTime}')")
+            self.con.commit()
+            match.matchID = self.cursor.lastrowid
                 
         return bestMatches
         # \step 6
