@@ -249,6 +249,14 @@ class Match:
         
     # Return the details of the current match in string
     def displayMatchDetails(self, tournament_code):
+        discordIDs = ", ".join(str(p.get_dID()) for p in self.blueTeam.getListPlayers() + self.redTeam.getListPlayers())
+        res = self.cursor.execute(f"SELECT [name] FROM Account JOIN Player ON Account.playerID = Player.playerID WHERE Player.discordID in ({discordIDs})").fetchall()
+        invite_strings = []
+        idx = 0
+        while idx < len(res):
+            invite_string = ",".join(str(name[0]) for name in res[idx:min(len(res)-1, idx+10)])
+            invite_strings.append(invite_string)
+            idx += 10
         string = f"   \n✨ MatchID ({self.matchID})\t\t🏅 MMR Difference ({round(self.calculateMMRDifference(self.blueTeam, self.redTeam))})"
         string += f"\n```{'[Blue Team]': ^15}{'':^5}{'[Red Team]':^15}\n\n"
         string += f"{self.blueTeam.get_top().get_username():^15}{'(top)':^5}{self.redTeam.get_top().get_username():^15}\n"
@@ -256,7 +264,9 @@ class Match:
         string += f"{self.blueTeam.get_mid().get_username():^15}{'(mid)':^5}{self.redTeam.get_mid().get_username():^15}\n"
         string += f"{self.blueTeam.get_adc().get_username():^15}{'(adc)':^5}{self.redTeam.get_adc().get_username():^15}\n"
         string += f"{self.blueTeam.get_sup().get_username():^15}{'(sup)':^5}{self.redTeam.get_sup().get_username():^15}\n```"
-        string += f"{tournament_code}\n"
+        string += f"{tournament_code}"
+        for i, invite_string in enumerate(invite_strings):
+            string += f"\nInvite list{i}: {invite_string}"
         
         return string
     
