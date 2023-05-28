@@ -18,6 +18,7 @@ class Match:
         self.blueBets = {}
         self.redBets = {}
         self.client = client
+        self.tournament_code = None
         
     def __repr__(self):
         string = f"   \n✨ **MatchID** (*{self.matchID}*)\t \t⏲️ **Match Time** (*{self.startTime}*)\t \t 🏅 **MMR Difference** (*{round(self.calculateMMRDifference(self.blueTeam, self.redTeam))}*)"
@@ -48,6 +49,12 @@ class Match:
     
     def get_blue(self):
         return self.blueTeam
+    
+    def get_tournament_code(self):
+        return self.tournament_code
+    
+    def set_tournament_code(self, code):
+        self.tournament_code = code
     
     
     # Primary fn() for Matchmaking
@@ -248,7 +255,7 @@ class Match:
         return mmrDifference
         
     # Return the details of the current match in string
-    def displayMatchDetails(self, tournament_code):
+    def displayMatchDetails(self):
         discordIDs = ", ".join(str(p.get_dID()) for p in self.blueTeam.getListPlayers() + self.redTeam.getListPlayers())
         res = self.cursor.execute(f"SELECT [name] FROM Account JOIN Player ON Account.playerID = Player.playerID WHERE Player.discordID in ({discordIDs})").fetchall()
         invite_strings = []
@@ -264,7 +271,7 @@ class Match:
         string += f"{self.blueTeam.get_mid().get_username():^15}{'(mid)':^5}{self.redTeam.get_mid().get_username():^15}\n"
         string += f"{self.blueTeam.get_adc().get_username():^15}{'(adc)':^5}{self.redTeam.get_adc().get_username():^15}\n"
         string += f"{self.blueTeam.get_sup().get_username():^15}{'(sup)':^5}{self.redTeam.get_sup().get_username():^15}\n```"
-        string += f"{tournament_code}"
+        string += f"{self.tournament_code}"
         for i, invite_string in enumerate(invite_strings):
             string += f"\nInvite list{i}: {invite_string}"
         
