@@ -996,7 +996,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             new_mmr = result[0] - 50
             add_signupCount = result[1] + 3
             user = await self.client.fetch_user(discordID)
-            self.cursor.execute(f"UPDATE Player SET leaderboardPoints = {new_mmr}, signupCount = {add_signupCount} WHERE discordID = {discordID}")
+            self.cursor.execute(f"UPDATE Player SET leaderboardPoints = {new_mmr}, QP = QP - 2 WHERE discordID = {discordID}")
             self.con.commit()
             await message_obj.channel.send(f"🔨 {user.mention} has been given a penalty of -50**LP** and added to **Low Priority Queue**")
         
@@ -1109,12 +1109,12 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         def getRatioOfMissedGames(player):
             if player.get_signUpCount() == 0:
                 return 1
-            return player.get_missedGameCount()/player.get_signUpCount()
+            return (player.get_missedGameCount()/player.get_signUpCount()) + player.get_QP()
         
         # /step 1
         playerObjList.sort(key=getRatioOfMissedGames, reverse=True)
         for player in playerObjList:
-            #print(getRatioOfMissedGames(player))
+            print(getRatioOfMissedGames(player))
             player.addSignUpCount()
 
         # step 2
@@ -1122,7 +1122,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         usedPlayers = []
         for player in playerObjList:
             if player.get_pRole() in playersInRoles:
-                if len(playersInRoles[player.get_pRole()]) < team_count:
+                if (len(playersInRoles[player.get_pRole().upper()]) < team_count) and player.get_QP() >= 0:
                     playersInRoles[player.get_pRole()].append(player)
                     usedPlayers.append(player)
         playerObjList = [player for player in playerObjList if player not in usedPlayers]	# this is just remaining players now
@@ -1131,7 +1131,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         # Find them
         fillPlayers = []
         for player in playerObjList:
-            if player.get_pRole() == "FILL":
+            if player.get_pRole().upper() == "FILL" and player.get_QP() >= 0:
                 fillPlayers.append(player)
         playerObjList = [player for player in playerObjList if player not in fillPlayers]	# this is just remaining non fill primary players now
         
@@ -1159,6 +1159,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         while fillIndex < len(fillPlayers):
             fillPlayers[fillIndex].addGameMissed()
+            fillPlayers[fillIndex].set_QP(fillPlayers[fillIndex].get_QP()+1)
             fillIndex += 1
 
         # step 3
@@ -1172,7 +1173,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         for player in playerObjList[remainingPlayersNeeded:]:
             #print(getRatioOfMissedGames(player))
             player.addGameMissed()
-            print("MG +1")
+            player.set_QP(player.get_QP()+1)
             #print(player)
         playerObjList = playerObjList[:remainingPlayersNeeded]
         # /step 4
@@ -1197,6 +1198,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         #print(playersInRoles)
         # /step 5
         #At this point we should have a dictionary with keys of the 5 roles, where the values are lists of players of length (team_count)
+
+        for key in playersInRoles:
+            for player in playersInRoles[key]:
+                player.set_QP(min(player.get_QP() + 1, 0))
 
         # step 6
         # what we're going to do here is try every combination of swapping players WITHIN THEIR ASSIGNED ROLES to find the closest set of matches
