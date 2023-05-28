@@ -278,6 +278,49 @@ class serverInstance:
                 except:
                     pass
         await self.update_tournament_file()
+
+    async def setMatch(self, initMsg):
+        roles = ['TOP', 'JNG', 'MID', 'ADC', 'SUP']
+        teams = ['BLUE', 'RED']
+        
+        playerObjs = []
+        def check(message):
+            if message.author.id == initMsg.author.id and len(message.mentions) == 1 and message.channel.id == initMsg.channel.id:
+                res = self.cursor.execute(f"SELECT * FROM Player WHERE discordID = {message.mentions[0].id}").fetchone()
+                if res == None:
+                    return False
+            return True
+        for team in teams:
+            for role in roles:
+                await initMsg.channel.send(f"Mention player for {team} : {role}:")
+                msg = await self.client.wait_for('message', check=check)
+                player_details = self.cursor.execute(f"SELECT * FROM Player WHERE discordID = {msg.mentions[0].id}").fetchone()
+                
+                discordUser = None
+                try:
+                    discordUser = await self.client.fetch_user(player_details[1])
+                except:
+                    discordUser = None
+                player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
+                    player_details[9], player_details[10], player_details[11], self.cursor, self.con, discordUser)
+                playerObjs.append(player)
+
+        if(len(playerObjs) != 10):
+            initMsg.channel.send("Failed to create match")
+            return
+        
+        blueTeam = Team(playerObjs[0], playerObjs[1], playerObjs[2], playerObjs[3], playerObjs[4])
+        redTeam = Team(playerObjs[5], playerObjs[6], playerObjs[7], playerObjs[8], playerObjs[9])
+        startTime = datetime.datetime.now()
+        self.cursor.execute(f"INSERT INTO Match (matchTime) VALUES ('{startTime}')")
+        self.con.commit()
+        match = Match(self.cursor, self.con, self.client, self.cursor.lastrowid, blueTeam=blueTeam, redTeam=redTeam, startTime=startTime)
+        self.currentMatches.append(match)
+        tournament_code = await self.fetch_tournament_code()
+        match_string = match.displayMatchDetails(tournament_code)
+        match_msg = await self.gameChannel.send(match_string)
+        red_oplink, blue_oplink = match.getOPGGLink()
+        await self.embedOPGGLink(red_oplink, blue_oplink, self.gameChannel)
     
     async def createGamesOnSchedule(self, schedule, channel):
         await timing.sleep_until(schedule)
@@ -1214,7 +1257,6 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 while idx+1 < len(teamList):
                     blueTeam = Team(teamList[idx][0][0][0], teamList[idx][0][1][0], teamList[idx][0][2][0], teamList[idx][0][3][0], teamList[idx][0][4][0])
                     redTeam = Team(teamList[idx+1][0][0][0], teamList[idx+1][0][1][0], teamList[idx+1][0][2][0], teamList[idx+1][0][3][0], teamList[idx+1][0][4][0])
-                    print(str(datetime.datetime.now()))
                     bestMatches.append(Match(self.cursor, self.con, self.client, matchID = None, blueTeam=blueTeam, redTeam=redTeam, startTime=str(datetime.datetime.now())))
                     idx += 2
         print(f"After comparing {team_count**5} possibities across {(team_count**5)*team_count} teams, lowest max mmr diff found was {bestMaxMMRdiff}")

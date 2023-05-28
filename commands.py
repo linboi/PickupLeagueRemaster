@@ -156,6 +156,13 @@ class commands:
             txt += f"!{command}\n" #and a description
         await message.channel.send(txt + "```")
 
+    async def setMatch(message, inst, args):
+        user_id = message.author.id
+        admin_check = await inst.checkAdmin(user_id)
+        if not admin_check:
+            return
+        await inst.setMatch(message)
+
     userCommands = {
         'hello' : hello,
         'queue' : queue,
@@ -181,6 +188,7 @@ class commands:
         'queue-switch': switchQueueState,
         'matchmaketest': matchmakingtest,
         'custom-match': customMatch,
+        'set-match' : setMatch,
         'test': testTag,
         'runsql':runSQL
         }
