@@ -521,7 +521,7 @@ class Match:
             loser = 'BLUE'
         else:
             loser = 'RED'
-        self.cursor.execute(f"UPDATE Match SET resolutionTime = '{datetime.datetime.now()}'")
+        self.cursor.execute(f"UPDATE Match SET resolutionTime = '{datetime.datetime.now()}' WHERE matchID = {self.matchID}")
         for p in winningTeam.getListPlayers():
             self.cursor.execute(f"""INSERT INTO PlayerMatch (playerID, matchID, ratingChange, [role], team)
                                     VALUES ({p.get_pID()}, {self.matchID}, {ratingchange}, '{p.get_role()}', '{winner}')""")
