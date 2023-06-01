@@ -185,25 +185,22 @@ class Match:
 
     # Set initial roles for each team
     def setInitTeams(self, players):
+        red_players = []
+        red_players.append(players['top'][0])
+        red_players.append(players['jng'][0])
+        red_players.append(players['mid'][0])
+        red_players.append(players['adc'][0])
+        red_players.append(players['sup'][0])
+        self.redTeam = Team(*red_players)
 
-        redTeam = Team()
-        blueTeam = Team()
-
-        redTeam.set_top(players['top'][0])
-        redTeam.set_jg(players['jng'][0])
-        redTeam.set_mid(players['mid'][0])
-        redTeam.set_adc(players['adc'][0])
-        redTeam.set_sup(players['sup'][0])
-
-        blueTeam.set_top(players['top'][1])
-        blueTeam.set_jg(players['jng'][1])
-        blueTeam.set_mid(players['mid'][1])
-        blueTeam.set_adc(players['adc'][1])
-        blueTeam.set_sup(players['sup'][1])
-
-        self.redTeam = redTeam
-        self.blueTeam = blueTeam
-
+        blue_players = []
+        blue_players.append(players['top'][1])
+        blue_players.append(players['jng'][1])
+        blue_players.append(players['mid'][1])
+        blue_players.append(players['adc'][1])
+        blue_players.append(players['sup'][1])
+        self.blueTeam = Team(*blue_players)
+        
     # Find fairest team for group of 10 players, swap players in respective roles -> sets new teams
     def findFairestTeams(self):
 
@@ -247,9 +244,6 @@ class Match:
 
     # MMR Difference Between Both Teams
     def calculateMMRDifference(self, teamR, teamB):
-        # Calculate AVG MMR of Init Teams
-        teamR.calculateAvgMMR()
-        teamB.calculateAvgMMR()
         # Get the AVG MMR of both teams
         btMMR = teamB.get_avgMMR()
         rtMMR = teamR.get_avgMMR()
@@ -285,13 +279,12 @@ class Match:
 
     # Return OPGG Link of Hightest Account per Player()
     def getOPGGLink(self):
-        blue_link = self.blueTeam.listOPGG()
-        red_link = self.redTeam.listOPGG()
+        blue_link = self.blueTeam.get_multi_opgg()
+        red_link = self.redTeam.get_multi_opgg()
         return blue_link, red_link
 
     async def replacePlayer(self, discordID, otherID, channel, client):
-        listOfPlayers = [self.redTeam.getListPlayers() +
-                         self.blueTeam.getListPlayers()]
+        listOfPlayers = [self.redTeam.get_player_list() + self.blueTeam.get_player_list()]
         discordID = int(discordID)
         otherID = int(otherID)
         player_found = False
