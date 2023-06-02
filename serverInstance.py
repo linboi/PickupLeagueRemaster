@@ -82,33 +82,32 @@ class serverInstance:
             try:
                 matches = await self.matchmakeV2(self.queue)
                 self.currentMatches.extend(matches)
-                # Display match in unique msg
-                # Display match in unique msg
-                for match in matches:
-                    tournament_code = await self.fetch_tournament_code()
-                    match.set_tournament_code(tournament_code)
-                    match_string = match.get_details_string()
-                    match_msg = await self.gameChannel.send(match_string)
-                    red_oplink, blue_oplink = match.getOPGGLink()
-                    asyncio.create_task(match.openBetting(match_msg))
-                    await self.embedOPGGLink(red_oplink, blue_oplink, self.gameChannel)
-                    # Check if user is in member list
-                    pIDs = match.listOfUsers()
-                    for player in pIDs:
-                        try:
-                            memberFound = self.client.guilds[0].get_member(
-                                player)
-                            if memberFound:
-                                # Send the player a DM if found!
-                                await memberFound.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!\n **Tournament Code:** {tournament_code}")
-                            else:
-                                print("Player not found as a member")
-                        except:
-                            pass
+                await self.publish_matches(matches, self.gameChannel)
                 self.queue = []
                 await self.update_tournament_file()
             except:
                 await channel.send(f"Not enough players in queue, unable to start games!")
+
+    async def publish_matches(self, matches, channel):
+        for match in matches:
+            tournament_code = await self.fetch_tournament_code()
+            match.set_tournament_code(tournament_code)
+            match_string = match.get_details_string()
+            match_msg = await channel.send(match_string)
+            asyncio.create_task(match.openBetting(match_msg))
+            red_oplink, blue_oplink = match.getOPGGLink()
+            await self.embedOPGGLink(red_oplink, blue_oplink, channel)
+            match_players = match.listOfUsers()
+            for player in match_players:
+                try:
+                    member = self.client.guilds[0].get_member(player)
+                    if member:
+                        await member.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!\n **Tournament Code:** {tournament_code}")
+                    else:
+                        print(
+                            f"{player.get_username()} not found as a member of the discord server.")
+                except:
+                    pass
 
     async def removeFromQueue(self, player, channel):
         if player in self.queue:
@@ -270,29 +269,7 @@ class serverInstance:
     async def createCustomMatch(self, id_list):
         matches = await self.matchmakeV2(id_list)
         self.currentMatches.extend(matches)
-        # Display match in unique msg
-        for match in matches:
-            tournament_code = await self.fetch_tournament_code()
-            match.set_tournament_code(tournament_code)
-            match_string = match.get_details_string()
-            match_msg = await self.gameChannel.send(match_string)
-            asyncio.create_task(match.openBetting(match_msg))
-            #####
-
-            red_oplink, blue_oplink = match.getOPGGLink()
-            await self.embedOPGGLink(red_oplink, blue_oplink, self.gameChannel)
-            # Check if user is in member list
-            pIDs = match.listOfUsers()
-            for player in pIDs:
-                try:
-                    memberFound = self.client.guilds[0].get_member(player)
-                    if memberFound:
-                        # Send the player a DM if found!
-                        await memberFound.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!\n **Tournament Code:** {tournament_code}")
-                    else:
-                        print("Player not found as a member")
-                except:
-                    pass
+        await self.publish_matches(matches, self.gameChannel)
         await self.update_tournament_file()
 
     async def setMatch(self, initMsg):
@@ -410,32 +387,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                     playerIDs.append(user.id)
 
         matches = await self.matchmakeV2(playerIDs)
-        leftout = (len(playerIDs))%10
+        leftout = (len(playerIDs)) % 10
         await self.gameChannel.send(f"GAME {emoji}:\nEnough players signed up for {len(matches)} games! {leftout} players were left out " + ":)" if leftout == 0 else ":(")
         self.currentMatches.extend(matches)
-        # match_string = str(matches).replace("[", "")
-        # match_string = match_string.replace("]", "")
-        # Display match in unique msg
-        for match in matches:
-            tournament_code = await self.fetch_tournament_code()
-            match.set_tournament_code(tournament_code)
-            match_string = match.get_details_string()
-            match_msg = await self.gameChannel.send(match_string)
-            asyncio.create_task(match.openBetting(match_msg))
-            red_oplink, blue_oplink = match.getOPGGLink()
-            await self.embedOPGGLink(red_oplink, blue_oplink, self.gameChannel)
-            # Check if user is in member list
-            pIDs = match.listOfUsers()
-            for player in pIDs:
-                try:
-                    memberFound = self.client.guilds[0].get_member(player)
-                    if memberFound:
-                        # Send the player a DM if found!
-                        await memberFound.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!\n **Tournament Code:** {tournament_code}")
-                    else:
-                        print("Player not found as a member")
-                except:
-                    pass
+        await self.publish_matches(matches, self.gameChannel)
         await self.update_tournament_file()
 
     # Test function for MM troubleshooting
@@ -444,30 +399,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                            225650967058710529, 618520923204485121, 160471312517562368, 188370105413926912, 694560846814117999, 266644132825530389, 132288462563966977, 355707373500760065, 259820776608235520, 182965319969669120]
         matches = await self.matchmakeV2(discord_id_list)
         self.currentMatches.extend(matches)
-        match_string = str(matches).replace("[", "")
-        match_string = match_string.replace("]", "")
-
-        for match in matches:
-            tournament_code = await self.fetch_tournament_code()
-            match.set_tournament_code(tournament_code)
-            match_string = match.get_details_string()
-            match_msg = await self.testChannel.send(match_string)
-            asyncio.create_task(match.openBetting(match_msg))
-            red_oplink, blue_oplink = match.getOPGGLink()
-            await self.embedOPGGLink(red_oplink, blue_oplink, self.testChannel)
-            # Check if user is in member list
-            pIDs = match.listOfUsers()
-            for player in pIDs:
-                try:
-                    memberFound = self.client.guilds[0].get_member(player)
-                    if memberFound:
-                        # Send the player a DM if found!
-                        # pass
-                        await memberFound.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!\n **Tournament Code:** {tournament_code}")
-                    else:
-                        print("Player not found as a member")
-                except:
-                    pass
+        await self.publish_matches(matches, self.testChannel)
         await self.update_tournament_file()
 
     async def runSQL(self, message, args):
