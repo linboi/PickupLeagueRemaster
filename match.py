@@ -200,7 +200,7 @@ class Match:
         blue_players.append(players['adc'][1])
         blue_players.append(players['sup'][1])
         self.blueTeam = Team(*blue_players)
-        
+
     # Find fairest team for group of 10 players, swap players in respective roles -> sets new teams
     def findFairestTeams(self):
 
