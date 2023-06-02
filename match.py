@@ -544,7 +544,7 @@ class Match:
     async def openBetting(self, message):
         await message.add_reaction('🔵')
         await message.add_reaction('🔴')
-        closingTime = datetime.datetime.now() + datetime.timedelta(minutes=5)
+        closingTime = datetime.datetime.now() + datetime.timedelta(minutes=11)
         matchMessage = message.content
         await message.edit(content=(matchMessage + "\nBetting closes:<t:" + str(int(time.mktime(closingTime.timetuple()))) + ":R>"))
 
