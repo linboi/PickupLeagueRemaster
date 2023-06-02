@@ -252,7 +252,7 @@ class Match:
         return mmrDifference
 
     # Return the details of the current match in string
-    def displayMatchDetails(self):
+    def get_details_string(self):
         discordIDs = ", ".join(str(p.get_dID()) for p in self.blueTeam.get_player_list(
         ) + self.redTeam.get_player_list())
         res = self.cursor.execute(
@@ -341,7 +341,7 @@ class Match:
                             elif team[2] == 'sup':
                                 self.blueTeam.set_sup(replacement_player)
 
-                    new_details = self.displayMatchDetails()
+                    new_details = self.get_details_string()
                     await channel.send(f"{new_details}")
                     player_found = True
                 else:
@@ -449,7 +449,7 @@ class Match:
                     self.redTeam.set_sup(other_team[0])
 
             # self.findFairestTeams()
-            new_details = self.displayMatchDetails()
+            new_details = self.get_details_string()
             await message_obj.channel.send(f"{new_details}")
             print("done")
         else:
