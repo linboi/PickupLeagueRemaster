@@ -7,7 +7,7 @@ class rasp:
     def restart_pi():
         # restart pi
         process = subprocess.Popen(
-            ["dir", "-l"], shell=True, stdout=subprocess.PIPE)
+            ["sudo", "reboot"], shell=True, stdout=subprocess.PIPE)
         output = process.communicate()[0]
         print(output)
 
