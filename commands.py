@@ -107,7 +107,12 @@ class commands:
         await inst.roles(message)
 
     async def win(message, inst, args):
-        await inst.win(message)
+        try:
+            gameID = int(args[0])
+        except:
+            await message.channel.send("Please include the gameID found at the top of the match summary screen.\nIf this is unavailable for some reason, use 0.")
+        else:
+            await inst.win(message, gameID)
 
     async def testTag(message, inst, args):
         user_id = message.author.id
