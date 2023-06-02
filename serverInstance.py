@@ -681,6 +681,64 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             success = False
 
         return rank_str.upper(), summoner_name, success
+    
+    def updateAccount(self, url):
+
+        # Assign Headers, so scraping is not BLOCKED
+        headers = requests.utils.default_headers()
+        headers.update({
+            'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0',
+        })
+
+        # Try scrape OP.GG URL
+        try:
+            op_url = url.strip()
+            res_url = requests.get(op_url, headers=headers)
+            doc = BeautifulSoup(res_url.text, "html.parser")
+        except Exception as e:
+            print(e)
+            summoner_name = "Invalid Account"
+            rank_str = "Invalid Link"
+            success = False
+
+        # Try scraping valid OP.GG URL - Rank, Summoner Name.
+        try:
+            rank = doc.find_all(class_="tier")
+            rank = rank[0].decode_contents().strip()
+            rank = rank.replace("<!-- -->", "")
+            rank = rank.split()
+
+            lp = doc.find_all(class_="lp")
+            lp = lp[0].decode_contents().strip()
+            lp = lp.replace("<!-- -->", "")
+            lp = lp.split()
+            lp = lp[0]
+            lp = lp.replace(",", "")
+
+            rank_str = ""
+            for char in rank:
+                rank_str += char[0]
+
+            # Add rank division for Masters, GM, and Challenger players
+            if len(rank) == 1:
+                rank.append(lp)
+
+            summoner_name = doc.find_all(class_="summoner-name")
+            summoner_name = summoner_name[0].decode_contents().strip()
+
+            # Check if player exists in Player DB, returns a boolean
+            #doesPlayerExist = await self.checkPlayerExsits(discordID)
+
+            # Player already exists, add account
+            self.updateAccountRank(op_url, rank)
+            success = True
+        except Exception as e:
+            print(e)
+            rank_str = "Signup first before adding an account!"
+            summoner_name = "Invalid Account"
+            success = False
+
+        return rank_str.upper(), summoner_name, success
 
     # Check if player exists in Table DB, returns a boolean
     async def checkPlayerExsits(self, discordID):
@@ -699,7 +757,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
     def addPlayer(self, discordID, summoner_name, op_url, rank):
 
         self.cursor.execute(
-            f"INSERT INTO Player (discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, isAdmin, missedGames, signupCount, leaderboardPoints) VALUES ({discordID}, 0, 0, 1500, 'FILL', 'FILL', 0, 0, 0, 1200)")
+            f"INSERT INTO Player (discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, isAdmin, missedGames, signupCount, leaderboardPoints, QP) VALUES ({discordID}, 0, 0, 1500, 'FILL', 'FILL', 0, 0, 0, 1200, 0)")
         self.con.commit()
 
         # Add player account to Account table
@@ -731,6 +789,13 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         # Name, OPGG, PID, Rank, Rank DIV
         self.cursor.execute(
             f"INSERT INTO Account (name, opgg, playerID, rankTier, rankDivision) VALUES ('{summoner_name}', '{op_url}', {fetchedPlayerID[0]}, '{rank[0]}', {rank[1]})")
+        self.con.commit()
+
+    def updateAccountRank(self, op_url, rank):
+        # Name, OPGG, PID, Rank, Rank DIV
+        print(rank)
+        self.cursor.execute(
+            f"UPDATE Account SET rankTier = '{rank[0]}', rankDivision = {rank[1]} WHERE [opgg] = '{op_url}'")
         self.con.commit()
 
     # Update roles of player
@@ -1119,6 +1184,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 discordUser = None
             player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
                             player_details[9], player_details[10], player_details[11], self.cursor, self.con, discordUser)
+            player.updateMMR()
             # Add player to list
             playerObjList.append(player)
 
@@ -1328,3 +1394,12 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         return bestMatches
         # \step 6
+
+    async def updatePlayerMMRs(self, msg):
+        pIDs = self.cursor.execute(f"SELECT playerID FROM Player").fetchall()
+        for p, in pIDs:
+            print(p)
+            accounts = self.cursor.execute(f"SELECT opgg FROM Account WHERE playerID = {p}").fetchall()
+            for account, in accounts:
+                result = self.updateAccount(account)
+                await msg.channel.send(f"updated rank for {result[1]}")

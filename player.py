@@ -285,4 +285,54 @@ class Player:
             if counter_new > counter_old:
                 counter_old = counter_new
 
-        self.internalRating = counter_new
+                self.internalRating = counter_new
+
+    def updateMMR(self):
+
+        if len(self.playerAccounts) == 0:
+            return
+        # Tier Mappings
+        mappingTiers = {
+            'iron': 0,
+            'bronze': 400,
+            'silver': 800,
+            'gold': 1200,
+            'platinum': 1600,
+            'diamond': 2000,
+            'master': 2400,
+            'grandmaster': 2800,
+            'challenger': 3200
+        }
+
+        # Div Mappings
+        mappingDivs = {
+            '1': 300,
+            '2': 200,
+            '3': 100,
+            '4': 0
+        }
+
+        # Init counters
+        counter_old = 0
+        counter_new = 0
+        maxMMR = 0
+        for account in self.playerAccounts:
+            counter_new = 0
+            counter_new = mappingTiers[account[4]]
+
+            if counter_new >= 2400:
+                counter_new += int(account[5])
+            else:
+                counter_new += mappingDivs[account[5]]
+
+            if counter_new > counter_old:
+                counter_old = counter_new
+
+                maxMMR = counter_new
+
+        ratings = self.cursor.execute(
+            f"SELECT ratingChange FROM PlayerMatch WHERE playerID = {self.playerID}").fetchall()
+        totalRatingChange = 0
+        for rating, in ratings:
+            totalRatingChange += rating
+        self.internalRating = maxMMR + totalRatingChange
