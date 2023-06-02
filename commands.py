@@ -184,7 +184,7 @@ class commands:
         if not admin_check:
             return
         output = rasp.update_pi()
-        await message.channel.send(f"```{output}```")
+        await message.channel.send(f"{output}")
     
     async def rasp_reboot(message, inst, args):
         user_id = message.author.id
