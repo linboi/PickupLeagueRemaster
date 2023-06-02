@@ -105,7 +105,8 @@ class serverInstance:
                         # Send the player a DM if found!
                         await member.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!\n **Tournament Code:** {tournament_code}")
                     else:
-                        print("Player not found as a member")
+                        print(
+                            f"{player.get_username()} not found as a member of the discord server.")
                 except:
                     pass
 
