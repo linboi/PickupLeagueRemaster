@@ -284,8 +284,7 @@ class Match:
         return blue_link, red_link
 
     async def replacePlayer(self, discordID, otherID, channel, client):
-        listOfPlayers = [self.redTeam.getListPlayers() +
-                         self.blueTeam.getListPlayers()]
+        listOfPlayers = [self.redTeam.get_player_list() + self.blueTeam.get_player_list()]
         discordID = int(discordID)
         otherID = int(otherID)
         player_found = False
