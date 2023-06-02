@@ -508,6 +508,7 @@ class Match:
             player.updateLP(-ratingChange)
             player.update()
         self.update(ratingChange, winningTeam, losingTeam, winner)
+        return ratingChange
 
     def update(self, ratingchange, winningTeam, losingTeam, winner):
         if winner != 'BLUE':

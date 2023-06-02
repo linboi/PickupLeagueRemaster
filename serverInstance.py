@@ -496,9 +496,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         if len(activePlayerMatches) == 0:
             await message.channel.send("Player not found in any active matches")
         if len(activePlayerMatches) == 1:
-            activePlayerMatches[0][0].resolve(activePlayerMatches[0][1])
+            ratingChange = activePlayerMatches[0][0].resolve(activePlayerMatches[0][1])
             self.currentMatches.remove(activePlayerMatches[0][0])
-            await message.channel.send("🎊 WPGG, remember to upload a post-game screenshot!")
+            await message.channel.send("🎊 WPGG, remember to upload a post-game screenshot! ({ratingChange}LP)")
         if len(activePlayerMatches) > 1:
             await message.channel.send("Player found in more than one match, uh oh")
 
@@ -516,9 +516,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             if len(correct_match) == 0:
                 await message.channel.send("Resolve Error, no match found.")
             if len(correct_match) == 1:
-                correct_match[0][0].resolve(correct_match[0][1])
+                ratingChange = correct_match[0][0].resolve(correct_match[0][1])
                 self.currentMatches.remove(correct_match[0][0])
-                await message.channel.send(f"🎊 Match *{match_id}* resolved, **{side}** side won!")
+                await message.channel.send(f"🎊 Match *{match_id}* resolved, **{side}** side won! ({int(ratingChange)}LP)")
             if len(correct_match) > 1:
                 await message.channel.send(f"Resolve Error, too many matches with this ID.")
         except:
