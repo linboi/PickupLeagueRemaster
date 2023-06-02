@@ -245,8 +245,8 @@ class Match:
     # MMR Difference Between Both Teams
     def calculateMMRDifference(self, teamR, teamB):
         # Get the AVG MMR of both teams
-        btMMR = teamB.get_avgMMR()
-        rtMMR = teamR.get_avgMMR()
+        btMMR = teamB.get_avg_MMR()
+        rtMMR = teamR.get_avg_MMR()
         # Get the MMR Difference between init teams
         mmrDifference = abs(rtMMR - btMMR)
         return mmrDifference

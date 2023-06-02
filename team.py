@@ -7,8 +7,8 @@ class Team:
         self.set_sup(support)
 
     # Setters
-    def set_avgMMR(self, MMR):
-        self.avgMMR = MMR
+    def set_avg_MMR(self, MMR):
+        self.avg_MMR = MMR
 
     def set_top(self, player):
         self.top = player
@@ -31,9 +31,9 @@ class Team:
         self.support.set_role("sup")
 
     # Getters
-    def get_avgMMR(self):
-        self.calculate_avg_mmr()
-        return self.avgMMR
+    def get_avg_MMR(self):
+        self.calculate_avg_MMR()
+        return self.avg_MMR
 
     def get_top(self):
         return self.top
@@ -50,12 +50,12 @@ class Team:
     def get_sup(self):
         return self.support
 
-    def calculate_avg_mmr(self):
-        total_mmr = 0
+    def calculate_avg_MMR(self):
+        total_MMR = 0
         player_list = self.get_player_list()
         for player in player_list:
-            total_mmr += player.get_roleMMR()
-        self.set_avgMMR(total_mmr / 5)
+            total_MMR += player.get_roleMMR()
+        self.set_avg_MMR(total_MMR / 5)
 
     def get_player_list(self):
         players = [self.top, self.jungle,
