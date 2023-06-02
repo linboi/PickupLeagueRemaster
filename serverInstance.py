@@ -973,7 +973,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         fromPosition = pageNum*20
 
         for player in output[fromPosition:toPosition:]:
-            recentGames = self.cursor.execute(f"SELECT ratingChange FROM PlayerMatch WHERE playerID = {player[7]} LIMIT 3").fetchall()
+            recentGames = self.cursor.execute(f"SELECT ratingChange FROM PlayerMatch WHERE playerID = {player[7]} ORDER BY PlayerMatchID LIMIT 3").fetchall()
             hotstreak = "  "
             if len(recentGames) >= 3:
                 hotstreak = "🔥"
