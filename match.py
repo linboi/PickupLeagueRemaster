@@ -22,16 +22,7 @@ class Match:
         self.tournament_code = None
 
     def __repr__(self):
-        string = f"   \n✨ **MatchID** (*{self.matchID}*)\t \t⏲️ **Match Time** (*{self.startTime}*)\t \t 🏅 **MMR Difference** (*{round(self.calculateMMRDifference(self.blueTeam, self.redTeam))}*)"
-        string += f"\n```{'[Blue Team]': ^15}{'':^5}{'[Red Team]':^15}\n\n"
-        string += f"{self.blueTeam.get_top().get_username():^15}{'(top)':^5}{self.redTeam.get_top().get_username():^15}\n"
-        string += f"{self.blueTeam.get_jg().get_username():^15}{'(jng)':^5}{self.redTeam.get_jg().get_username():^15}\n"
-        string += f"{self.blueTeam.get_mid().get_username():^15}{'(mid)':^5}{self.redTeam.get_mid().get_username():^15}\n"
-        string += f"{self.blueTeam.get_adc().get_username():^15}{'(adc)':^5}{self.redTeam.get_adc().get_username():^15}\n"
-        string += f"{self.blueTeam.get_sup().get_username():^15}{'(sup)':^5}{self.redTeam.get_sup().get_username():^15}\n```"
-        opgg_red, opgg_blue = self.getOPGGLink()
-        string += f"\n **🔵 Blue Team OPGG:** {opgg_red}\n **🔴 Red Team OPGG:** {opgg_blue}"
-        return string
+        return self.get_details_string()
 
     def set_red(self, team):
         self.redTeam = team
@@ -252,7 +243,7 @@ class Match:
         return mmrDifference
 
     # Return the details of the current match in string
-    def displayMatchDetails(self):
+    def get_details_string(self):
         discordIDs = ", ".join(str(p.get_dID()) for p in self.blueTeam.get_player_list(
         ) + self.redTeam.get_player_list())
         res = self.cursor.execute(
@@ -341,7 +332,7 @@ class Match:
                             elif team[2] == 'sup':
                                 self.blueTeam.set_sup(replacement_player)
 
-                    new_details = self.displayMatchDetails()
+                    new_details = self.get_details_string()
                     await channel.send(f"{new_details}")
                     player_found = True
                 else:
@@ -449,7 +440,7 @@ class Match:
                     self.redTeam.set_sup(other_team[0])
 
             # self.findFairestTeams()
-            new_details = self.displayMatchDetails()
+            new_details = self.get_details_string()
             await message_obj.channel.send(f"{new_details}")
             print("done")
         else:

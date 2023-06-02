@@ -76,7 +76,7 @@ class serverInstance:
                 for match in matches:
                     tournament_code = await self.fetch_tournament_code()
                     match.set_tournament_code(tournament_code)
-                    match_string = match.displayMatchDetails()
+                    match_string = match.get_details_string()
                     match_msg = await self.gameChannel.send(match_string)
                     red_oplink, blue_oplink = match.getOPGGLink()
                     asyncio.create_task(match.openBetting(match_msg))
@@ -232,7 +232,7 @@ class serverInstance:
         # await self.testChannel.send(f"**__Current Matches__**:\n")
         for match in self.currentMatches:
             # Display Details of Match
-            msg = await self.testChannel.send(f"{match.displayMatchDetails()}\n")
+            msg = await self.testChannel.send(f"{match.get_details_string()}\n")
             await msg.edit(suppress=True)
             await self.testChannel.send(f"---------------------------------------------")
 
@@ -263,7 +263,7 @@ class serverInstance:
         for match in matches:
             tournament_code = await self.fetch_tournament_code()
             match.set_tournament_code(tournament_code)
-            match_string = match.displayMatchDetails()
+            match_string = match.get_details_string()
             match_msg = await self.gameChannel.send(match_string)
             asyncio.create_task(match.openBetting(match_msg))
             #####
@@ -329,7 +329,7 @@ class serverInstance:
                       blueTeam=blueTeam, redTeam=redTeam, startTime=startTime)
         self.currentMatches.append(match)
         tournament_code = await self.fetch_tournament_code()
-        match_string = match.displayMatchDetails(tournament_code)
+        match_string = match.get_details_string(tournament_code)
         match_msg = await self.gameChannel.send(match_string)
         red_oplink, blue_oplink = match.getOPGGLink()
         await self.embedOPGGLink(red_oplink, blue_oplink, self.gameChannel)
@@ -406,7 +406,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         for match in matches:
             tournament_code = await self.fetch_tournament_code()
             match.set_tournament_code(tournament_code)
-            match_string = match.displayMatchDetails()
+            match_string = match.get_details_string()
             match_msg = await self.gameChannel.send(match_string)
             asyncio.create_task(match.openBetting(match_msg))
             red_oplink, blue_oplink = match.getOPGGLink()
@@ -437,7 +437,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         for match in matches:
             tournament_code = await self.fetch_tournament_code()
             match.set_tournament_code(tournament_code)
-            match_string = match.displayMatchDetails()
+            match_string = match.get_details_string()
             match_msg = await self.testChannel.send(match_string)
             asyncio.create_task(match.openBetting(match_msg))
             red_oplink, blue_oplink = match.getOPGGLink()
