@@ -456,10 +456,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         activePlayerMatches = []
         activePlayer = message.author.id
         for match in self.currentMatches:
-            for player in match.blueTeam.getListPlayers():
+            for player in match.blueTeam.get_player_list():
                 if player.get_dID() == activePlayer:
                     activePlayerMatches.append((match, 'BLUE'))
-            for player in match.redTeam.getListPlayers():
+            for player in match.redTeam.get_player_list():
                 if player.get_dID() == activePlayer:
                     activePlayerMatches.append((match, 'RED'))
 

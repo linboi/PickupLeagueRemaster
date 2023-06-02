@@ -210,8 +210,8 @@ class Match:
         best_difference = self.calculateMMRDifference(
             self.redTeam, self.blueTeam)
 
-        for rplayer in teamR.getListPlayers():
-            for bplayer in teamB.getListPlayers():
+        for rplayer in teamR.get_player_list():
+            for bplayer in teamB.get_player_list():
                 if rplayer.get_role() == bplayer.get_role():
                     # Swap players
                     role = rplayer.get_role()
@@ -253,8 +253,8 @@ class Match:
 
     # Return the details of the current match in string
     def displayMatchDetails(self):
-        discordIDs = ", ".join(str(p.get_dID()) for p in self.blueTeam.getListPlayers(
-        ) + self.redTeam.getListPlayers())
+        discordIDs = ", ".join(str(p.get_dID()) for p in self.blueTeam.get_player_list(
+        ) + self.redTeam.get_player_list())
         res = self.cursor.execute(
             f"SELECT [name] FROM Account JOIN Player ON Account.playerID = Player.playerID WHERE Player.discordID in ({discordIDs})").fetchall()
         invite_strings = []
@@ -284,7 +284,8 @@ class Match:
         return blue_link, red_link
 
     async def replacePlayer(self, discordID, otherID, channel, client):
-        listOfPlayers = [self.redTeam.get_player_list() + self.blueTeam.get_player_list()]
+        listOfPlayers = [self.redTeam.get_player_list() +
+                         self.blueTeam.get_player_list()]
         discordID = int(discordID)
         otherID = int(otherID)
         player_found = False
@@ -307,7 +308,7 @@ class Match:
                 if (user.get_dID() == discordID):
                     # If the player does exist, what team?
                     # Red Team
-                    for player in self.redTeam.getListPlayers():
+                    for player in self.redTeam.get_player_list():
                         if player.get_dID() == discordID:
                             team.append(player)
                             team.append('red')
@@ -324,7 +325,7 @@ class Match:
                                 self.redTeam.set_sup(replacement_player)
 
                     # Blue Team
-                    for player in self.blueTeam.getListPlayers():
+                    for player in self.blueTeam.get_player_list():
                         if player.get_dID() == discordID:
                             team.append(player)
                             team.append('blue')
@@ -351,8 +352,8 @@ class Match:
     # Swap two players in a Match
 
     async def swapPlayers(self, discordID, otherID, message_obj):
-        listOfPlayers = [self.redTeam.getListPlayers() +
-                         self.blueTeam.getListPlayers()]
+        listOfPlayers = [self.redTeam.get_player_list() +
+                         self.blueTeam.get_player_list()]
         discordID = int(discordID)
         otherID = int(otherID)
         blueFound = False
@@ -368,7 +369,7 @@ class Match:
                 if (user.get_dID() == discordID or user.get_dID() == otherID):
                     # If the player does exist, what team?
                     # Red Team
-                    for player in self.redTeam.getListPlayers():
+                    for player in self.redTeam.get_player_list():
                         if player.get_dID() == discordID:
                             team.append(player)
                             team.append('red')
@@ -381,7 +382,7 @@ class Match:
                             blueFound = True
 
                     # Blue Team
-                    for player in self.blueTeam.getListPlayers():
+                    for player in self.blueTeam.get_player_list():
                         if player.get_dID() == discordID:
                             team.append(player)
                             team.append('blue')
@@ -478,8 +479,8 @@ class Match:
 
     # Return list of Players on both team
     def listOfUsers(self):
-        listOfPlayers = [self.redTeam.getListPlayers() +
-                         self.blueTeam.getListPlayers()]
+        listOfPlayers = [self.redTeam.get_player_list() +
+                         self.blueTeam.get_player_list()]
         listOfUsers = []
         for player in listOfPlayers:
             for user in player:
@@ -496,20 +497,20 @@ class Match:
             losingTeam = self.blueTeam
             self.resolveBets(self.redBets, self.blueBets)
 
-        MMRdiff = losingTeam.get_avgMMR() - winningTeam.get_avgMMR()
+        MMRdiff = losingTeam.get_avg_MMR() - winningTeam.get_avg_MMR()
         expectedScore = 1/(1 + 10**(MMRdiff/500))
 
         kValue = 100
         ratingChange = kValue * (1-expectedScore)
 
-        for player in winningTeam.getListPlayers():
+        for player in winningTeam.get_player_list():
             player.fetchPlayerDB()
             player.addWin()
             player.updateRating(ratingChange)
             player.updateLP(ratingChange)
             player.update()
 
-        for player in losingTeam.getListPlayers():
+        for player in losingTeam.get_player_list():
             player.fetchPlayerDB()
             player.addLoss()
             player.updateRating(-ratingChange)
@@ -524,10 +525,10 @@ class Match:
             loser = 'RED'
         self.cursor.execute(
             f"UPDATE Match SET resolutionTime = '{datetime.datetime.now()}' WHERE matchID = {self.matchID}")
-        for p in winningTeam.getListPlayers():
+        for p in winningTeam.get_player_list():
             self.cursor.execute(f"""INSERT INTO PlayerMatch (playerID, matchID, ratingChange, [role], team)
                                     VALUES ({p.get_pID()}, {self.matchID}, {ratingchange}, '{p.get_role()}', '{winner}')""")
-        for p in losingTeam.getListPlayers():
+        for p in losingTeam.get_player_list():
             self.cursor.execute(f"""INSERT INTO PlayerMatch (playerID, matchID, ratingChange, [role], team)
                                     VALUES ({p.get_pID()}, {self.matchID}, {-ratingchange}, '{p.get_role()}', '{loser}')""")
         self.con.commit()
@@ -580,12 +581,12 @@ class Match:
             print("this code should be unreachable")
             return
         if team == "BLUE":
-            for player in self.redTeam.getListPlayers():
+            for player in self.redTeam.get_player_list():
                 if player.get_dID() == user.id:
                     await user.send("You can't bet against yourself.")
                     return
         if team == "RED":
-            for player in self.blueTeam.getListPlayers():
+            for player in self.blueTeam.get_player_list():
                 if player.get_dID() == user.id:
                     await user.send("You can't bet against yourself.")
                     return
