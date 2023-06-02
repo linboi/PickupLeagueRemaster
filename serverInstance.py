@@ -37,6 +37,17 @@ class serverInstance:
         self.gameChannel = gameChannel
         self.roleID = roleID
 
+    # Send the user a DM with player database
+    async def upload_db(self, file, user_id):
+        member = self.client.guilds[0].get_member(
+                                user_id)
+        try:
+            if member:
+                await member.send(file=file)
+        except:
+            await self.generalChannel.send("Member not found")
+
+
     # Import Tournament Codes
 
     def fetch_tournament_file(self):
