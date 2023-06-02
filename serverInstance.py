@@ -482,7 +482,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             await message.channel.send(response)
         print(" ".join(args))
 
-    async def win(self, message):
+    async def win(self, message, gameID):
         activePlayerMatches = []
         activePlayer = message.author.id
         for match in self.currentMatches:
@@ -496,7 +496,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         if len(activePlayerMatches) == 0:
             await message.channel.send("Player not found in any active matches")
         if len(activePlayerMatches) == 1:
-            ratingChange = activePlayerMatches[0][0].resolve(activePlayerMatches[0][1])
+            ratingChange = activePlayerMatches[0][0].resolve(activePlayerMatches[0][1], gameID)
             self.currentMatches.remove(activePlayerMatches[0][0])
             await message.channel.send("🎊 WPGG, remember to upload a post-game screenshot! ({ratingChange}LP)")
         if len(activePlayerMatches) > 1:
