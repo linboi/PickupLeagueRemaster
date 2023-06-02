@@ -164,6 +164,13 @@ class commands:
             return
         await inst.setMatch(message)
 
+    async def update(message, inst, args):
+        user_id = message.author.id
+        admin_check = await inst.checkAdmin(user_id)
+        if not admin_check:
+            return
+        await inst.updatePlayerMMRs(message)
+
     userCommands = {
         'hello': hello,
         'queue': queue,
@@ -191,7 +198,8 @@ class commands:
         'custom-match': customMatch,
         'set-match': setMatch,
         'test': testTag,
-        'runsql': runSQL
+        'runsql': runSQL,
+        'update': update
     }
 
     async def parseReaction(reaction, inst):
