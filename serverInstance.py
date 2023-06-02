@@ -102,7 +102,6 @@ class serverInstance:
                 try:
                     member = self.client.guilds[0].get_member(player)
                     if member:
-                        # Send the player a DM if found!
                         await member.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!\n **Tournament Code:** {tournament_code}")
                     else:
                         print(
