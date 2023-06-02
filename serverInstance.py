@@ -962,7 +962,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
     # Method to display Leaderboard
     async def displayLeaderboard(self, channelToSendIn, pageNum=0, message=None):
         res = self.cursor.execute(
-            f"SELECT discordID, winCount, lossCount, leaderboardPoints, ROW_NUMBER() OVER (ORDER BY leaderboardPoints DESC), primaryRole, secondaryRole FROM Player WHERE winCount > 0 OR lossCount > 0 ORDER BY leaderboardPoints DESC")
+            f"SELECT discordID, winCount, lossCount, leaderboardPoints, ROW_NUMBER() OVER (ORDER BY leaderboardPoints DESC), primaryRole, secondaryRole, playerID FROM Player WHERE winCount > 0 OR lossCount > 0 ORDER BY leaderboardPoints DESC")
         output = res.fetchall()
         all_players = ""
         pageNum = min(pageNum, len(output)//20)
@@ -971,6 +971,13 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         fromPosition = pageNum*20
 
         for player in output[fromPosition:toPosition:]:
+            recentGames = self.cursor.execute(f"SELECT ratingChange FROM PlayerMatch WHERE playerID = {player[7]} LIMIT 3").fetchall()
+            hotstreak = "  "
+            if len(recentGames) >= 3:
+                hotstreak = "🔥"
+                for game, in recentGames:
+                    if game <= 0:
+                        hotstreak = "  "
             if player[0] not in self.playerIDNameMapping:
                 try:
                     discord_name = (await self.client.fetch_user(player[0])).display_name
@@ -982,17 +989,16 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             pos = f"#{player[4]}"
             pos = pos.ljust(5)
             id = f"{discord_name}"
-            id = id.ljust(20)
-            win = f"\t({player[1]}W"
-            win = win.rjust(6)
-            loss = f"{player[2]}L)"
+            id = id.ljust(23)
+            winloss = f" ({player[1]}W/{player[2]}L)"
+            winloss = winloss.ljust(12)
             leaderboardPoints = f"{int(player[3])}LP"
-            leaderboardPoints = leaderboardPoints.ljust(8)
+            leaderboardPoints = leaderboardPoints.ljust(7)
             pRole = player[5]
             sRole = player[6]
 
-            all_players += f"{pos}" + f"{id}" + f"{leaderboardPoints}" + \
-                f"{win}/" + f"{loss} ({pRole}/{sRole})\n"
+            all_players += f"{pos}" + f"{id}" + f"{leaderboardPoints}{hotstreak}" + \
+                f"{winloss} ({pRole}/{sRole})\n"
 
         now = date.today()
         if message == None:
