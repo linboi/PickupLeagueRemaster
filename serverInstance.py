@@ -97,13 +97,13 @@ class serverInstance:
             asyncio.create_task(match.openBetting(match_msg))
             red_oplink, blue_oplink = match.getOPGGLink()
             await self.embedOPGGLink(red_oplink, blue_oplink, channel)
-            pIDs = match.listOfUsers()
-            for player in pIDs:
+            match_players = match.listOfUsers()
+            for player in match_players:
                 try:
-                    memberFound = self.client.guilds[0].get_member(player)
-                    if memberFound:
+                    member = self.client.guilds[0].get_member(player)
+                    if member:
                         # Send the player a DM if found!
-                        await memberFound.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!\n **Tournament Code:** {tournament_code}")
+                        await member.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!\n **Tournament Code:** {tournament_code}")
                     else:
                         print("Player not found as a member")
                 except:
