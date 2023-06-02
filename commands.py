@@ -2,6 +2,8 @@
 from player import Player
 from team import Team
 from match import Match
+from rasp import rasp
+import discord
 import re
 
 
@@ -171,6 +173,30 @@ class commands:
             return
         await inst.updatePlayerMMRs(message)
 
+    async def rasp_update(message, inst, args):
+        user_id = message.author.id
+        admin_check = await inst.checkAdmin(user_id)
+        if not admin_check:
+            return
+        output = rasp.update_pi()
+        await message.channel.send(f"```{output}```")
+    
+    async def rasp_reboot(message, inst, args):
+        user_id = message.author.id
+        admin_check = await inst.checkAdmin(user_id)
+        if not admin_check:
+            return
+        rasp.restart_pi()
+
+    async def rasp_upload(message, inst, args):
+        file = discord.File("copy.db")
+        user_id = message.author.id
+        admin_check = await inst.checkAdmin(user_id)
+        if not admin_check:
+            return
+        await inst.upload_db(file, user_id)
+        
+
     userCommands = {
         'hello': hello,
         'queue': queue,
@@ -199,7 +225,10 @@ class commands:
         'set-match': setMatch,
         'test': testTag,
         'runsql': runSQL,
-        'update': update
+        'update': update,
+        'fetch-db': rasp_upload,
+        'git-pull': rasp_update,
+        'restart-pi': rasp_reboot
     }
 
     async def parseReaction(reaction, inst):
