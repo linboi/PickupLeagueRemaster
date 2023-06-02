@@ -478,7 +478,7 @@ class Match:
                 listOfUsers.append(user.get_dID())
         return listOfUsers
 
-    def resolve(self, winner):
+    def resolve(self, winner, gameID):
         if winner == 'BLUE':
             winningTeam = self.blueTeam
             losingTeam = self.redTeam
@@ -507,16 +507,16 @@ class Match:
             player.updateRating(-ratingChange)
             player.updateLP(-ratingChange)
             player.update()
-        self.update(ratingChange, winningTeam, losingTeam, winner)
+        self.update(ratingChange, winningTeam, losingTeam, winner, gameID)
         return ratingChange
 
-    def update(self, ratingchange, winningTeam, losingTeam, winner):
+    def update(self, ratingchange, winningTeam, losingTeam, winner, gameID):
         if winner != 'BLUE':
             loser = 'BLUE'
         else:
             loser = 'RED'
         self.cursor.execute(
-            f"UPDATE Match SET resolutionTime = '{datetime.datetime.now()}' WHERE matchID = {self.matchID}")
+            f"UPDATE Match SET resolutionTime = '{datetime.datetime.now()}', gameID = {gameID} WHERE matchID = {self.matchID}")
         for p in winningTeam.get_player_list():
             self.cursor.execute(f"""INSERT INTO PlayerMatch (playerID, matchID, ratingChange, [role], team)
                                     VALUES ({p.get_pID()}, {self.matchID}, {ratingchange}, '{p.get_role()}', '{winner}')""")
