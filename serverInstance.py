@@ -410,6 +410,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                     playerIDs.append(user.id)
 
         matches = await self.matchmakeV2(playerIDs)
+        leftout = (len(playerIDs))%10
+        await self.gameChannel.send(f"GAME {emoji}:\nEnough players signed up for {len(matches)} games! {leftout} players were left out " + ":)" if leftout == 0 else ":(")
         self.currentMatches.extend(matches)
         # match_string = str(matches).replace("[", "")
         # match_string = match_string.replace("]", "")
@@ -1203,6 +1205,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         # Number of macthes to create
         match_count = players_in_queue // 10
+
+        if match_count < 1:
+            return []
 
         team_count = match_count * 2
 
