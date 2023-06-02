@@ -185,7 +185,7 @@ class commands:
             return
         output = rasp.update_pi()
         await message.channel.send(f"```{output}```")
-    
+
     async def rasp_reboot(message, inst, args):
         user_id = message.author.id
         admin_check = await inst.checkAdmin(user_id)
@@ -200,7 +200,6 @@ class commands:
         if not admin_check:
             return
         await inst.upload_db(file, user_id)
-        
 
     userCommands = {
         'hello': hello,
