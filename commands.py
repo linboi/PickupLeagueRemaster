@@ -174,10 +174,18 @@ class commands:
         await inst.updatePlayerMMRs(message)
 
     async def rasp_update(message, inst, args):
+        user_id = message.author.id
+        admin_check = await inst.checkAdmin(user_id)
+        if not admin_check:
+            return
         output = rasp.update_pi()
         await message.channel.send(f"```{output}```")
     
     async def rasp_reboot(message, inst, args):
+        user_id = message.author.id
+        admin_check = await inst.checkAdmin(user_id)
+        if not admin_check:
+            return
         rasp.restart_pi()
 
     async def rasp_upload(message, inst, args):
