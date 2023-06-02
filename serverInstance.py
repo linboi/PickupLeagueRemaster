@@ -516,7 +516,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             if len(correct_match) == 0:
                 await message.channel.send("Resolve Error, no match found.")
             if len(correct_match) == 1:
-                ratingChange = correct_match[0][0].resolve(correct_match[0][1])
+                ratingChange = correct_match[0][0].resolve(correct_match[0][1], 0)
                 self.currentMatches.remove(correct_match[0][0])
                 await message.channel.send(f"🎊 Match *{match_id}* resolved, **{side}** side won! ({int(ratingChange)}LP)")
             if len(correct_match) > 1:
