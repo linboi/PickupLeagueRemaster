@@ -11,6 +11,6 @@ class rasp:
     def update_pi():
         # update bot version
         process = subprocess.Popen(
-            ["git", "pull", "origin", "release"], stdout=subprocess.PIPE)
+            ["git", "pull", "origin", "release"], stdout=subprocess.PIPE, universal_newlines=True)
         output = process.communicate()[0]
         return output
