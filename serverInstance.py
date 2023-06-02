@@ -11,7 +11,6 @@ from match import Match
 from team import Team
 import random
 import discord
-import csv
 
 
 class serverInstance:

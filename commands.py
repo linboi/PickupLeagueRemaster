@@ -1,7 +1,3 @@
-
-from player import Player
-from team import Team
-from match import Match
 from rasp import rasp
 import discord
 import re
