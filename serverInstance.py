@@ -82,7 +82,7 @@ class serverInstance:
             try:
                 matches = await self.matchmakeV2(self.queue)
                 self.currentMatches.extend(matches)
-                self.publish_matches(matches, self.gameChannel)
+                await self.publish_matches(matches, self.gameChannel)
                 self.queue = []
                 await self.update_tournament_file()
             except:
@@ -269,7 +269,7 @@ class serverInstance:
     async def createCustomMatch(self, id_list):
         matches = await self.matchmakeV2(id_list)
         self.currentMatches.extend(matches)
-        self.publish_matches(matches, self.gameChannel)
+        await self.publish_matches(matches, self.gameChannel)
         await self.update_tournament_file()
 
     async def setMatch(self, initMsg):
@@ -390,7 +390,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         leftout = (len(playerIDs)) % 10
         await self.gameChannel.send(f"GAME {emoji}:\nEnough players signed up for {len(matches)} games! {leftout} players were left out " + ":)" if leftout == 0 else ":(")
         self.currentMatches.extend(matches)
-        self.publish_matches(matches, self.gameChannel)
+        await self.publish_matches(matches, self.gameChannel)
         await self.update_tournament_file()
 
     # Test function for MM troubleshooting
@@ -399,7 +399,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                            225650967058710529, 618520923204485121, 160471312517562368, 188370105413926912, 694560846814117999, 266644132825530389, 132288462563966977, 355707373500760065, 259820776608235520, 182965319969669120]
         matches = await self.matchmakeV2(discord_id_list)
         self.currentMatches.extend(matches)
-        self.publish_matches(matches, self.testChannel)
+        await self.publish_matches(matches, self.testChannel)
         await self.update_tournament_file()
 
     async def runSQL(self, message, args):
