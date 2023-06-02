@@ -52,7 +52,7 @@ class Team:
 
     def calculate_avg_mmr(self):
         total_mmr = 0
-        player_list = self.getListPlayers()
+        player_list = self.get_player_list()
         for player in player_list:
             total_mmr += player.get_roleMMR()
         self.set_avgMMR(total_mmr / 5)
@@ -63,7 +63,7 @@ class Team:
         return players
 
     def get_multi_opgg(self):
-        players = self.getListPlayers()
+        players = self.get_player_list()
         multi_opgg = "https://www.op.gg/multisearch/euw?summoners="
         for player in players:
             username = player.getHighestAccountName()
