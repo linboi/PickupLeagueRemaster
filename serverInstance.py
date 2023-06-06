@@ -1167,6 +1167,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         for player in playerObjList:
             print(getRatioOfMissedGames(player))
             player.addSignUpCount()
+            player.addSignUpCount()
 
         # step 2
         playersInRoles = {'TOP': [], 'JNG': [],
@@ -1216,6 +1217,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         while fillIndex < len(fillPlayers):
             fillPlayers[fillIndex].addGameMissed()
+            fillPlayers[fillIndex].addGameMissed()
             fillPlayers[fillIndex].set_QP(fillPlayers[fillIndex].get_QP()+1)
             fillIndex += 1
 
@@ -1229,6 +1231,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         playerObjList.sort(key=getRatioOfMissedGames, reverse=True)
         for player in playerObjList[remainingPlayersNeeded:]:
             # print(getRatioOfMissedGames(player))
+            player.addGameMissed()
             player.addGameMissed()
             player.set_QP(player.get_QP()+1)
             # print(player)
@@ -1252,6 +1255,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         for key in playersInRoles:
             while len(playersInRoles[key]) < team_count and remainingPlayerIndex < len(playerObjList):
                 playersInRoles[key].append(playerObjList[remainingPlayerIndex])
+                playerObjList[remainingPlayerIndex].addGameMissed()
                 remainingPlayerIndex += 1
 
         # print(playersInRoles)
