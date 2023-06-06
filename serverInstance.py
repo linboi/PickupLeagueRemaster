@@ -388,7 +388,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         matches = await self.matchmakeV2(playerIDs)
         leftout = (len(playerIDs)) % 10
-        await self.gameChannel.send(f"GAME {emoji}:\nEnough players signed up for {len(matches)} games! {leftout} players were left out " + ":)" if leftout == 0 else ":(")
+        await self.gameChannel.send(f"GAME {emoji}:\nEnough players signed up for {len(matches)} games! {leftout} players were left out " + (":)" if leftout == 0 else ":("))
         self.currentMatches.extend(matches)
         await self.publish_matches(matches, self.gameChannel)
         await self.update_tournament_file()
