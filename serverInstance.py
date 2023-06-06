@@ -1167,6 +1167,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         for player in playerObjList:
             print(getRatioOfMissedGames(player))
             player.addSignUpCount()
+            player.addSignUpCount()
 
         # step 2
         playersInRoles = {'TOP': [], 'JNG': [],
