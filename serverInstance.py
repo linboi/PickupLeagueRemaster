@@ -430,7 +430,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         if len(activePlayerMatches) == 1:
             ratingChange = activePlayerMatches[0][0].resolve(activePlayerMatches[0][1], gameID)
             self.currentMatches.remove(activePlayerMatches[0][0])
-            await message.channel.send(f"🎊 WPGG, remember to upload a post-game screenshot! ({ratingChange}LP)")
+            await message.channel.send(f"🎊 WPGG, remember to upload a post-game screenshot! (+{ratingChange:.0f}LP)")
         if len(activePlayerMatches) > 1:
             await message.channel.send("Player found in more than one match, uh oh")
 
