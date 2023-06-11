@@ -64,7 +64,10 @@ class commands:
         admin_check = await inst.checkAdmin(user_id)
         if not admin_check:
             return
-        await inst.unscheduledGames(args)
+        if args[0].lower() == "aram":
+            await inst.unscheduledGames(args[1:], mode="aram")
+        else:
+            await inst.unscheduledGames(args)
 
     async def rank(message, inst, args):
         await inst.displayRank(message)
