@@ -108,6 +108,22 @@ class serverInstance:
                             f"{player.get_username()} not found as a member of the discord server.")
                 except:
                     pass
+                
+    async def publish_aram_matches(self, matches, channel):
+        for match in matches:
+            match_string = match.get_details_string()
+            match_msg = await channel.send(match_string)
+            match_players = match.listOfUsers()
+            for player in match_players:
+                try:
+                    member = self.client.guilds[0].get_member(player)
+                    if member:
+                        await member.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!\n")
+                    else:
+                        print(
+                            f"{player.get_username()} not found as a member of the discord server.")
+                except:
+                    pass
 
     async def removeFromQueue(self, player, channel):
         if player in self.queue:
@@ -339,7 +355,7 @@ class serverInstance:
 
         await self.createGamesOnSchedule(schedule, channel)
 
-    async def triggerGamesAtGivenTimes(self, timeObjs, channel):
+    async def triggerGamesAtGivenTimes(self, timeObjs, channel, mode=None):
         relativeTimeString = ""
         pu_role = discord.utils.get(
             self.client.guilds[0].roles, id=self.roleID)
@@ -348,7 +364,14 @@ class serverInstance:
             relativeTimeString += (f"Game {idx+1}: <t:" +
                                    str(int(time.mktime(times.timetuple()))) + ":R>\n")
 
-        checkinMessage = await channel.send(f"Check in for registered players {pu_role.mention}\n \
+        if mode == "aram":
+            checkinMessage = await channel.send(f"ARAM Check in for registered players {pu_role.mention}\n \
+React with the corresponding number to check in for a game\n\
+{relativeTimeString}\n\
+After a win, post a screenshot of the victory and type !win (only one player on the winning team must do this).\n\
+")
+        else:
+            checkinMessage = await channel.send(f"Check in for registered players {pu_role.mention}\n \
 React with the corresponding number to check in for a game\n\
 {relativeTimeString}\n\
 After a win, post a screenshot of the victory and type !win (only one player on the winning team must do this).\n\
@@ -364,18 +387,18 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         gamesList = []
         for idx, timeAndEmoji in enumerate(waitSecondsAndEmoji):
             gamesList.append(self.createGames(
-                timeAndEmoji[0], timeAndEmoji[1], channel, checkinMessage.id))
+                timeAndEmoji[0], timeAndEmoji[1], channel, checkinMessage.id, mode=mode))
 
         await asyncio.gather(*gamesList)
 
-    async def unscheduledGames(self, minutesUntil):
+    async def unscheduledGames(self, minutesUntil, mode=None):
         timeObjs = []
         for minutes in minutesUntil:
             timeObjs.append(datetime.datetime.now() +
                             datetime.timedelta(minutes=int(minutes)))
-        await self.triggerGamesAtGivenTimes(timeObjs, self.announcementChannel)
+        await self.triggerGamesAtGivenTimes(timeObjs, self.announcementChannel, mode=mode)
 
-    async def createGames(self, numSeconds, emoji, channel, messageID):
+    async def createGames(self, numSeconds, emoji, channel, messageID, mode=None):
         await asyncio.sleep(numSeconds)
         message = await channel.fetch_message(messageID)
         msg = f"Users who reacted for game {emoji}:"
@@ -386,12 +409,18 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 async for user in reaction.users():
                     playerIDs.append(user.id)
 
-        matches = await self.matchmakeV2(playerIDs)
+        if mode == "aram":
+            matches = await self.matchmake_aram(playerIDs)
+        else:
+            matches = await self.matchmakeV2(playerIDs)
         leftout = (len(playerIDs)) % 10
         await self.gameChannel.send(f"GAME {emoji}:\nEnough players signed up for {len(matches)} games! {leftout} players were left out " + (":)" if leftout == 0 else ":("))
         self.currentMatches.extend(matches)
-        await self.publish_matches(matches, self.gameChannel)
-        await self.update_tournament_file()
+        if mode == "aram":
+            await self.publish_matches(matches, self.gameChannel)
+        else:
+            await self.publish_matches(matches, self.gameChannel)
+            await self.update_tournament_file()
 
     # Test function for MM troubleshooting
     async def mmTest(self):
@@ -1361,3 +1390,60 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             for account, in accounts:
                 result = self.updateAccount(account)
                 await msg.channel.send(f"updated rank for {result[1]}")
+
+
+    async def matchmake_aram(self, playerIDList):
+        if self.client.user.id in playerIDList:
+            playerIDList.remove(self.client.user.id)
+        # WHERE discordID in ({seq})".format(seq=','.join(['?']*len(playerIDList))))
+        res = self.cursor.execute("SELECT * FROM Player")
+        listOfPlayers = res.fetchall()
+        shorterlist = []
+        for player in listOfPlayers:
+            if player[1] in playerIDList:
+                shorterlist.append(player)
+                self.cursor.execute(
+                    f"UPDATE Player SET bettingPoints = bettingPoints + 100, pointsFromSignup = pointsFromSignup + 100 WHERE discordID = {player[1]}")
+        listOfPlayers = shorterlist
+        print("Shorter List Compiled:" + str(len(shorterlist)))
+        playerObjList = []
+        for player_details in listOfPlayers:
+            discordUser = None
+            try:
+                discordUser = await self.client.fetch_user(player_details[1])
+            except:
+                discordUser = None
+            player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
+                            player_details[9], player_details[10], player_details[11], self.cursor, self.con, discordUser)
+            player.updateMMR(mode="ARAM")
+            # Add player to list
+            playerObjList.append(player)
+
+        players_in_queue = len(playerObjList)
+
+        # Number of macthes to create
+        match_count = players_in_queue // 10
+
+        if match_count < 1:
+            return []
+
+        team_count = match_count * 2
+
+        # Number of players required
+        required_players = match_count * 10
+
+        def getRatioOfMissedGames(player):
+            if player.get_signUpCount() == 0:
+                return 1
+            return (player.get_missedGameCount()/player.get_signUpCount()) + player.get_QP()
+
+        playerObjList.sort(key=getRatioOfMissedGames, reverse=True)
+        for player in playerObjList:
+            print(getRatioOfMissedGames(player))
+            player.addSignUpCount()
+            player.addSignUpCount()
+
+        playersInGames = playerObjList[:required_players]
+
+
+        
