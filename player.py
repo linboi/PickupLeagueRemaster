@@ -1,6 +1,6 @@
 class Player:
 
-    def __init__(self, playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGameCount, signUpCount, LP, cursor, con, discordUser):
+    def __init__(self, playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGameCount, signUpCount, LP, ARAM_rating, ARAM_wins, ARAM_losses, cursor, con, discordUser):
 
         self.playerID = playerID
         self.discordID = discordID
@@ -19,6 +19,9 @@ class Player:
         self.isAdmin = isAdmin
         self.signUpCount = signUpCount
         self.missedGameCount = missedGameCount
+        self.ARAM_rating = ARAM_rating
+        self.ARAM_wins = ARAM_wins
+        self.ARAM_losses = ARAM_losses
 
         self.cursor = cursor
         self.con = con
@@ -149,7 +152,9 @@ class Player:
     # Updates player in DB
     def update(self):
         self.cursor.execute(
-            f"UPDATE Player SET winCount = {self.winCount}, lossCount = {self.lossCount}, internalRating = {self.internalRating}, QP = {self.QP}, isAdmin = {self.isAdmin}, missedGames = {self.missedGameCount}, signupCount = {self.signUpCount}, leaderboardPoints = {self.LP} WHERE playerID = {self.playerID}")
+            f"""UPDATE Player SET winCount = {self.winCount}, lossCount = {self.lossCount}, internalRating = {self.internalRating}, QP = {self.QP}, isAdmin = {self.isAdmin}, 
+            missedGames = {self.missedGameCount}, signupCount = {self.signUpCount}, leaderboardPoints = {self.LP}, aramRating = {self.ARAM_rating},
+            aramWins = {self.ARAM_wins}, aramLosses = {self.ARAM_losses}  WHERE playerID = {self.playerID}""")
         self.con.commit()
 
     def set_QP(self, QP):
@@ -257,8 +262,8 @@ class Player:
             'platinum': 1600,
             'diamond': 2000,
             'master': 2400,
-            'grandmaster': 2800,
-            'challenger': 3200
+            'grandmaster': 2400,
+            'challenger': 2400
         }
 
         # Div Mappings
@@ -287,7 +292,7 @@ class Player:
 
                 self.internalRating = counter_new
 
-    def updateMMR(self):
+    def updateMMR(self, mode="SR"):
 
         if len(self.playerAccounts) == 0:
             return
@@ -300,8 +305,8 @@ class Player:
             'platinum': 1600,
             'diamond': 2000,
             'master': 2400,
-            'grandmaster': 2800,
-            'challenger': 3200
+            'grandmaster': 2400,
+            'challenger': 2400
         }
 
         # Div Mappings
@@ -331,8 +336,11 @@ class Player:
                 maxMMR = counter_new
 
         ratings = self.cursor.execute(
-            f"SELECT ratingChange FROM PlayerMatch WHERE playerID = {self.playerID}").fetchall()
+            f"SELECT ratingChange FROM PlayerMatch WHERE playerID = {self.playerID} AND mode = '{mode}'").fetchall()
         totalRatingChange = 0
         for rating, in ratings:
             totalRatingChange += rating
-        self.internalRating = maxMMR + totalRatingChange
+        if mode == "ARAM":
+            self.ARAM_rating = maxMMR/2 + totalRatingChange
+        else:
+            self.internalRating = maxMMR + totalRatingChange
