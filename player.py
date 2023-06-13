@@ -1,6 +1,5 @@
 class Player:
-
-    def __init__(self, playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGameCount, signUpCount, LP, ARAM_rating, ARAM_wins, ARAM_losses, cursor, con, discordUser):
+    def __init__(self, playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGameCount, signUpCount, LP, ARAM_rating, ARAM_LP, ARAM_wins, ARAM_losses, cursor, con, discordUser):
 
         self.playerID = playerID
         self.discordID = discordID
@@ -22,6 +21,7 @@ class Player:
         self.ARAM_rating = ARAM_rating
         self.ARAM_wins = ARAM_wins
         self.ARAM_losses = ARAM_losses
+        self.ARAM_LP = ARAM_LP
 
         self.cursor = cursor
         self.con = con
@@ -153,8 +153,8 @@ class Player:
     def update(self):
         self.cursor.execute(
             f"""UPDATE Player SET winCount = {self.winCount}, lossCount = {self.lossCount}, internalRating = {self.internalRating}, QP = {self.QP}, isAdmin = {self.isAdmin}, 
-            missedGames = {self.missedGameCount}, signupCount = {self.signUpCount}, leaderboardPoints = {self.LP}, aramRating = {self.ARAM_rating},
-            aramWins = {self.ARAM_wins}, aramLosses = {self.ARAM_losses}  WHERE playerID = {self.playerID}""")
+            missedGames = {self.missedGameCount}, signupCount = {self.signUpCount}, leaderboardPoints = {self.LP}, aram_internalRating = {self.ARAM_rating},
+            aram_winCount = {self.ARAM_wins}, aram_lossCount = {self.ARAM_losses}, aram_leaderboardPoints = {self.ARAM_LP}  WHERE playerID = {self.playerID}""")
         self.con.commit()
 
     def set_QP(self, QP):
@@ -172,7 +172,7 @@ class Player:
 
     def getMMRinRole(self, role=None):
         if role == None:
-            role = self.get_role
+            role = self.get_role()
         if self.get_pRole() == role or self.get_pRole() == 'FILL':
             return self.internalRating
         elif self.get_sRole() == role or self.get_sRole() == 'FILL':
@@ -336,7 +336,7 @@ class Player:
                 maxMMR = counter_new
 
         ratings = self.cursor.execute(
-            f"SELECT ratingChange FROM PlayerMatch WHERE playerID = {self.playerID} AND mode = '{mode}'").fetchall()
+            f"SELECT ratingChange FROM PlayerMatch JOIN Match ON Match.matchID = PlayerMatch.matchID WHERE playerID = {self.playerID} AND mode = '{mode}'").fetchall()
         totalRatingChange = 0
         for rating, in ratings:
             totalRatingChange += rating

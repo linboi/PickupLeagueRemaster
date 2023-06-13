@@ -74,7 +74,10 @@ class commands:
 
     # Make Admin Command
     async def leaderboard(message, inst, args):
-        await inst.displayLeaderboard(message.channel)
+        if len(args) == 0:
+            await inst.displayLeaderboard(message.channel)
+        else:
+            await inst.displayLeaderboard(message.channel, mode=args[0].lower())
 
     async def bettyboard(message, inst, args):
         await inst.displayBettyBoard(message.channel)
@@ -138,7 +141,10 @@ class commands:
         admin_check = await inst.checkAdmin(user_id)
         if not admin_check:
             return
-        await inst.mmTest()
+        if len(args) > 0 and args[0].lower() == "aram":
+            await inst.mmTest(mode="aram")
+        else:
+            await inst.mmTest()
 
     async def customMatch(message, inst, args):
         user_id = message.author.id
