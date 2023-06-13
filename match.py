@@ -386,7 +386,7 @@ class Match:
         # I know the comma looks weird here, python syntax for turning a single element tuple into that element is strange
         balance, = res.fetchone()
 
-        await user.send(f"How much do you want to bet on team {team} in match {self.matchID} (current balance: {balance:0f}):")
+        await user.send(f"How much do you want to bet on team {team} in match {self.matchID} (current balance: {balance:.0f}):")
 
         def check(message):
             return message.author.id == user.id and int(message.content) > 0
@@ -420,4 +420,4 @@ class Match:
                 self.redBets[user.id] += amount
             else:
                 self.redBets[user.id] = amount
-        await user.send(f"Successfully placed a bet of {amount:0f} on team {team} in match {self.matchID}!")
+        await user.send(f"Successfully placed a bet of {amount:.0f} on team {team} in match {self.matchID}!")

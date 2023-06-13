@@ -9,9 +9,7 @@ from bs4 import BeautifulSoup
 from player import Player
 from match import Match
 from team import Team
-import random
 import discord
-import csv
 import aramMatch
 
 
@@ -41,13 +39,12 @@ class serverInstance:
     # Send the user a DM with player database
     async def upload_db(self, file, user_id):
         member = self.client.guilds[0].get_member(
-                                user_id)
+            user_id)
         try:
             if member:
                 await member.send(file=file)
         except:
             await self.generalChannel.send("Member not found")
-
 
     # Import Tournament Codes
 
@@ -387,9 +384,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         if len(activePlayerMatches) == 0:
             await message.channel.send("Player not found in any active matches")
         if len(activePlayerMatches) == 1:
-            ratingChange = activePlayerMatches[0][0].resolve(activePlayerMatches[0][1], gameID)
+            ratingChange = activePlayerMatches[0][0].resolve(
+                activePlayerMatches[0][1], gameID)
             self.currentMatches.remove(activePlayerMatches[0][0])
-            await message.channel.send(f"🎊 WPGG, remember to upload a post-game screenshot! ({ratingChange}LP)")
+            await message.channel.send(f"🎊 WPGG, remember to upload a post-game screenshot! (+{ratingChange:.0f}LP)")
         if len(activePlayerMatches) > 1:
             await message.channel.send("Player found in more than one match, uh oh")
 
@@ -407,7 +405,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             if len(correct_match) == 0:
                 await message.channel.send("Resolve Error, no match found.")
             if len(correct_match) == 1:
-                ratingChange = correct_match[0][0].resolve(correct_match[0][1], 0)
+                ratingChange = correct_match[0][0].resolve(
+                    correct_match[0][1], 0)
                 self.currentMatches.remove(correct_match[0][0])
                 await message.channel.send(f"🎊 Match *{match_id}* resolved, **{side}** side won! ({int(ratingChange)}LP)")
             if len(correct_match) > 1:
@@ -585,7 +584,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             success = False
 
         return rank_str.upper(), summoner_name, success
-    
+
     def updateAccount(self, url):
 
         # Assign Headers, so scraping is not BLOCKED
@@ -631,7 +630,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             summoner_name = summoner_name[0].decode_contents().strip()
 
             # Check if player exists in Player DB, returns a boolean
-            #doesPlayerExist = await self.checkPlayerExsits(discordID)
+            # doesPlayerExist = await self.checkPlayerExsits(discordID)
 
             # Player already exists, add account
             self.updateAccountRank(op_url, rank)
@@ -1320,11 +1319,11 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         pIDs = self.cursor.execute(f"SELECT playerID FROM Player").fetchall()
         for p, in pIDs:
             print(p)
-            accounts = self.cursor.execute(f"SELECT opgg FROM Account WHERE playerID = {p}").fetchall()
+            accounts = self.cursor.execute(
+                f"SELECT opgg FROM Account WHERE playerID = {p}").fetchall()
             for account, in accounts:
                 result = self.updateAccount(account)
                 await msg.channel.send(f"updated rank for {result[1]}")
-
 
     async def matchmake_aram(self, playerIDList):
         if self.client.user.id in playerIDList:
