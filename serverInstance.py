@@ -9,8 +9,8 @@ from bs4 import BeautifulSoup
 from player import Player
 from match import Match
 from team import Team
-import random
 import discord
+import aramMatch
 
 
 class serverInstance:
@@ -106,6 +106,22 @@ class serverInstance:
                             f"{player.get_username()} not found as a member of the discord server.")
                 except:
                     pass
+                
+    async def publish_aram_matches(self, matches, channel):
+        for match in matches:
+            match_string = match.get_details_string()
+            match_msg = await channel.send(match_string)
+            match_players = match.listOfUsers()
+            for player in match_players:
+                try:
+                    member = self.client.guilds[0].get_member(player)
+                    if member:
+                        await member.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!\n")
+                    else:
+                        print(
+                            f"{player.get_username()} not found as a member of the discord server.")
+                except:
+                    pass
 
     async def removeFromQueue(self, player, channel):
         if player in self.queue:
@@ -160,81 +176,6 @@ class serverInstance:
         await message.channel.send(f"{pu_role.mention}")
         await self.gameChannel.send("Working!")
 
-    # Mehtod which creates Matches based on available Players
-    async def matchmake(self, playerIDList):
-        # List of all players in Queue
-        listypoo = []
-        for player in playerIDList:
-            listypoo.append(player)
-        # WHERE discordID in ({seq})".format(seq=','.join(['?']*len(playerIDList))))
-        res = self.cursor.execute("SELECT * FROM Player")
-        listOfPlayers = res.fetchall()
-        shorterlist = []
-        for player in listOfPlayers:
-            if player[1] in playerIDList:
-                shorterlist.append(player)
-        listOfPlayers = shorterlist
-        # Create a Player obj for each Player in Queue
-        playerObjList = []
-        for player_details in listOfPlayers:
-            discordUser = None
-            try:
-                discordUser = await self.client.fetch_user(player_details[1])
-            except:
-                discordUser = None
-            player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
-                            player_details[9], player_details[10], player_details[11], self.cursor, self.con, discordUser)
-            # Add player to list
-            playerObjList.append(player)
-
-        players_in_queue = len(playerObjList)
-
-        # Number of macthes to create
-        match_count = players_in_queue // 10
-
-        # Number of players required
-        required_players = match_count * 10
-
-        # Shuffle players
-        tempMatch = Match(self.cursor, self.con, self.client)
-        # Ordered QP List & add PQP for players who were left out
-        ordered_pq_list = tempMatch.shuffle_orderPQ(
-            playerObjList, required_players)
-
-        for player in ordered_pq_list:
-            # Reset QP of selected players
-            print(f"[{player.get_pID()}], [{player.get_QP()}]")
-        # Ordered Rank List
-        ordered_mmr_list = tempMatch.orderBasedOnMMR(ordered_pq_list)
-
-        # Init Match(s)
-        # For each match, set roles and find fairest comobination of players
-
-        while len(self.currentMatches) < match_count:
-            # Get top 10 players
-            mCount = len(self.currentMatches) + 1
-            # Init a Match
-            initMatch = Match(self.cursor, self.con, self.client)
-            # Shuffle Selected Players
-            ordered_player_list = ordered_mmr_list[((mCount-1)*10):(mCount*10)]
-            shuffled_list = sorted(ordered_player_list,
-                                   key=lambda k: random.random())
-            # Assign roles for players & set roleMMR
-            assigned_roles = initMatch.fitRoles(shuffled_list)
-
-            # Set roles for each team in match
-            initMatch.setInitTeams(assigned_roles)
-            # Find fairest combination of players
-            initMatch.findFairestTeams()
-            # Add Match to Match Table & Give it an ID
-            initMatch.insert()
-            # Add match to list of current games
-            print("please run " + str(initMatch))
-            self.currentMatches.append(initMatch)
-            print("please run " + str(self.currentMatches))
-
-        await self.displayMatch()
-
     # Display current matches on discord channel
     async def displayMatch(self):
         # await self.testChannel.send(f"**__Current Matches__**:\n")
@@ -279,7 +220,7 @@ class serverInstance:
         def check(message):
             if message.author.id == initMsg.author.id and len(message.mentions) == 1 and message.channel.id == initMsg.channel.id:
                 res = self.cursor.execute(
-                    f"SELECT * FROM Player WHERE discordID = {message.mentions[0].id}").fetchone()
+                    f"SELECT playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGames, signupCount, leaderboardPoints, aram_internalRating, aram_leaderboardPoints, aram_winCount, aram_lossCount FROM Player WHERE discordID = {message.mentions[0].id}").fetchone()
                 if res == None:
                     return False
             return True
@@ -288,7 +229,7 @@ class serverInstance:
                 await initMsg.channel.send(f"Mention player for {team} : {role}:")
                 msg = await self.client.wait_for('message', check=check)
                 player_details = self.cursor.execute(
-                    f"SELECT * FROM Player WHERE discordID = {msg.mentions[0].id}").fetchone()
+                    f"SELECT playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGames, signupCount, leaderboardPoints, aram_internalRating, aram_leaderboardPoints, aram_winCount, aram_lossCount FROM Player WHERE discordID = {msg.mentions[0].id}").fetchone()
 
                 discordUser = None
                 try:
@@ -296,7 +237,7 @@ class serverInstance:
                 except:
                     discordUser = None
                 player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
-                                player_details[9], player_details[10], player_details[11], self.cursor, self.con, discordUser)
+                            player_details[9], player_details[10], player_details[11], player_details[12], player_details[13], player_details[14], player_details[15], self.cursor, self.con, discordUser)
                 playerObjs.append(player)
 
         if (len(playerObjs) != 10):
@@ -337,7 +278,7 @@ class serverInstance:
 
         await self.createGamesOnSchedule(schedule, channel)
 
-    async def triggerGamesAtGivenTimes(self, timeObjs, channel):
+    async def triggerGamesAtGivenTimes(self, timeObjs, channel, mode=None):
         relativeTimeString = ""
         pu_role = discord.utils.get(
             self.client.guilds[0].roles, id=self.roleID)
@@ -346,7 +287,14 @@ class serverInstance:
             relativeTimeString += (f"Game {idx+1}: <t:" +
                                    str(int(time.mktime(times.timetuple()))) + ":R>\n")
 
-        checkinMessage = await channel.send(f"Check in for registered players {pu_role.mention}\n \
+        if mode == "aram":
+            checkinMessage = await channel.send(f"ARAM Check in for registered players {pu_role.mention}\n \
+React with the corresponding number to check in for a game\n\
+{relativeTimeString}\n\
+After a win, post a screenshot of the victory and type !win (only one player on the winning team must do this).\n\
+")
+        else:
+            checkinMessage = await channel.send(f"Check in for registered players {pu_role.mention}\n \
 React with the corresponding number to check in for a game\n\
 {relativeTimeString}\n\
 After a win, post a screenshot of the victory and type !win (only one player on the winning team must do this).\n\
@@ -362,18 +310,18 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         gamesList = []
         for idx, timeAndEmoji in enumerate(waitSecondsAndEmoji):
             gamesList.append(self.createGames(
-                timeAndEmoji[0], timeAndEmoji[1], channel, checkinMessage.id))
+                timeAndEmoji[0], timeAndEmoji[1], channel, checkinMessage.id, mode=mode))
 
         await asyncio.gather(*gamesList)
 
-    async def unscheduledGames(self, minutesUntil):
+    async def unscheduledGames(self, minutesUntil, mode=None):
         timeObjs = []
         for minutes in minutesUntil:
             timeObjs.append(datetime.datetime.now() +
                             datetime.timedelta(minutes=int(minutes)))
-        await self.triggerGamesAtGivenTimes(timeObjs, self.announcementChannel)
+        await self.triggerGamesAtGivenTimes(timeObjs, self.announcementChannel, mode=mode)
 
-    async def createGames(self, numSeconds, emoji, channel, messageID):
+    async def createGames(self, numSeconds, emoji, channel, messageID, mode=None):
         await asyncio.sleep(numSeconds)
         message = await channel.fetch_message(messageID)
         msg = f"Users who reacted for game {emoji}:"
@@ -384,20 +332,30 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 async for user in reaction.users():
                     playerIDs.append(user.id)
 
-        matches = await self.matchmakeV2(playerIDs)
+        if mode == "aram":
+            matches = await self.matchmake_aram(playerIDs)
+        else:
+            matches = await self.matchmakeV2(playerIDs)
         leftout = (len(playerIDs)) % 10
         await self.gameChannel.send(f"GAME {emoji}:\nEnough players signed up for {len(matches)} games! {leftout} players were left out " + (":)" if leftout == 0 else ":("))
         self.currentMatches.extend(matches)
-        await self.publish_matches(matches, self.gameChannel)
-        await self.update_tournament_file()
+        if mode == "aram":
+            await self.publish_matches(matches, self.gameChannel)
+        else:
+            await self.publish_matches(matches, self.gameChannel)
+            await self.update_tournament_file()
 
     # Test function for MM troubleshooting
-    async def mmTest(self):
+    async def mmTest(self, mode="SR"):
         discord_id_list = [165186656863780865, 343490464948813824, 413783321844383767, 197053913269010432, 187302526935105536, 574206308803412037, 197058147167371265, 127796716408799232, 180398163620790279,
                            225650967058710529, 618520923204485121, 160471312517562368, 188370105413926912, 694560846814117999, 266644132825530389, 132288462563966977, 355707373500760065, 259820776608235520, 182965319969669120]
-        matches = await self.matchmakeV2(discord_id_list)
+        if(mode == "aram"):
+            matches = await self.matchmake_aram(discord_id_list)
+            await self.publish_aram_matches(matches, self.testChannel)
+        else:
+            matches = await self.matchmakeV2(discord_id_list)
+            await self.publish_matches(matches, self.testChannel)
         self.currentMatches.extend(matches)
-        await self.publish_matches(matches, self.testChannel)
         await self.update_tournament_file()
 
     async def runSQL(self, message, args):
@@ -894,9 +852,12 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         await message_obj.channel.send(f"*Current Rank* **#{test.index(discordID) + 1}**\t{message_obj.author.mention}\t{round(mmr[0])}**LP**\t({round(mmr[1])}**W**/{round(mmr[2])}**L**)")
 
     # Method to display Leaderboard
-    async def displayLeaderboard(self, channelToSendIn, pageNum=0, message=None):
+    async def displayLeaderboard(self, channelToSendIn, pageNum=0, message=None, mode="SR"):
+        fieldPrefix = ""
+        if mode == "aram":
+            fieldPrefix = "aram_"
         res = self.cursor.execute(
-            f"SELECT discordID, winCount, lossCount, leaderboardPoints, ROW_NUMBER() OVER (ORDER BY leaderboardPoints DESC), primaryRole, secondaryRole, playerID FROM Player WHERE winCount > 0 OR lossCount > 0 ORDER BY leaderboardPoints DESC")
+            f"SELECT discordID, {fieldPrefix}winCount, {fieldPrefix}lossCount, {fieldPrefix}leaderboardPoints, ROW_NUMBER() OVER (ORDER BY {fieldPrefix}leaderboardPoints DESC), primaryRole, secondaryRole, playerID FROM Player WHERE {fieldPrefix}winCount > 0 OR {fieldPrefix}lossCount > 0 ORDER BY {fieldPrefix}leaderboardPoints DESC")
         output = res.fetchall()
         all_players = ""
         pageNum = min(pageNum, len(output)//20)
@@ -905,8 +866,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         fromPosition = pageNum*20
 
         for player in output[fromPosition:toPosition:]:
-            recentGames = self.cursor.execute(
-                f"SELECT ratingChange FROM PlayerMatch WHERE playerID = {player[7]} ORDER BY PlayerMatchID desc LIMIT 3").fetchall()
+            recentGames = self.cursor.execute(f"SELECT ratingChange FROM PlayerMatch join Match on Match.matchID = PlayerMatch.matchID WHERE playerID = {player[7]} and mode = '{mode.upper()}' ORDER BY PlayerMatchID desc LIMIT 3").fetchall()
             hotstreak = "  "
             if len(recentGames) >= 3:
                 hotstreak = "🔥"
@@ -933,15 +893,15 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             sRole = player[6]
 
             all_players += f"{pos}" + f"{id}" + f"{leaderboardPoints}{hotstreak}" + \
-                f"{winloss} ({pRole}/{sRole})\n"
+                f"{winloss} " + (f"({pRole}/{sRole})" if mode=="SR" else "") + "\n"
 
         now = date.today()
         if message == None:
-            message = await channelToSendIn.send(f"**__Updated Leaderboard__***\t\tLast Updated: {now}*```{all_players}```")
+            message = await channelToSendIn.send(f"**__Updated {fieldPrefix.upper()}Leaderboard__***\t\tLast Updated: {now}*```{all_players}```")
             await message.add_reaction('⬅')
             await message.add_reaction('➡')
         else:
-            await message.edit(content=f"**__Updated Leaderboard__***\t\tLast Updated: {now}*```{all_players}```")
+            await message.edit(content=f"**__Updated {fieldPrefix.upper()}Leaderboard__***\t\tLast Updated: {now}*```{all_players}```")
 
         def check(reaction, user):
             return reaction.message.id == message.id and reaction.emoji in ['⬅', '➡']
@@ -954,9 +914,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             return
 
         if emoji.emoji == '⬅':
-            await self.displayLeaderboard(channelToSendIn, pageNum=pageNum-1, message=message)
+            await self.displayLeaderboard(channelToSendIn, pageNum=pageNum-1, message=message, mode=mode)
         elif emoji.emoji == '➡':
-            await self.displayLeaderboard(channelToSendIn, pageNum=pageNum+1, message=message)
+            await self.displayLeaderboard(channelToSendIn, pageNum=pageNum+1, message=message, mode=mode)
 
     async def displayBettyBoard(self, channelToSendIn, pageNum=0, message=None):
         res = self.cursor.execute(
@@ -1088,7 +1048,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                         red_oplink, blue_oplink = match.getOPGGLink()
                         await self.embedOPGGLink(red_oplink, blue_oplink, self.gameChannel)
                         await msg_obj.channel.send(f"✌️Replacement Successful")
-                except:
+                except Exception as e:
+                    print(e)
                     await msg_obj.channel.send(f"Replacement Error")
         else:
             pass
@@ -1117,7 +1078,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         if self.client.user.id in playerIDList:
             playerIDList.remove(self.client.user.id)
         # WHERE discordID in ({seq})".format(seq=','.join(['?']*len(playerIDList))))
-        res = self.cursor.execute("SELECT * FROM Player")
+        res = self.cursor.execute("SELECT playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGames, signupCount, leaderboardPoints, aram_internalRating, aram_leaderboardPoints, aram_winCount, aram_lossCount FROM Player")
         listOfPlayers = res.fetchall()
         shorterlist = []
         for player in listOfPlayers:
@@ -1135,7 +1096,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             except:
                 discordUser = None
             player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
-                            player_details[9], player_details[10], player_details[11], self.cursor, self.con, discordUser)
+                            player_details[9], player_details[10], player_details[11], player_details[12], player_details[13], player_details[14], player_details[15], self.cursor, self.con, discordUser)
             player.updateMMR()
             # Add player to list
             playerObjList.append(player)
@@ -1347,7 +1308,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             f"After comparing {team_count**5} possibities across {(team_count**5)*team_count} teams, lowest max mmr diff found was {bestMaxMMRdiff}")
         for match in bestMatches:
             self.cursor.execute(
-                f"INSERT INTO Match (matchTime) VALUES ('{match.startTime}')")
+                f"INSERT INTO Match (matchTime, mode) VALUES ('{match.startTime}', 'SR')")
             self.con.commit()
             match.matchID = self.cursor.lastrowid
 
@@ -1363,3 +1324,89 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             for account, in accounts:
                 result = self.updateAccount(account)
                 await msg.channel.send(f"updated rank for {result[1]}")
+
+    async def matchmake_aram(self, playerIDList):
+        if self.client.user.id in playerIDList:
+            playerIDList.remove(self.client.user.id)
+        # WHERE discordID in ({seq})".format(seq=','.join(['?']*len(playerIDList))))
+        res = self.cursor.execute("SELECT playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGames, signupCount, leaderboardPoints, aram_internalRating, aram_leaderboardPoints, aram_winCount, aram_lossCount FROM Player")
+        listOfPlayers = res.fetchall()
+        shorterlist = []
+        for player in listOfPlayers:
+            if player[1] in playerIDList:
+                shorterlist.append(player)
+                self.cursor.execute(
+                    f"UPDATE Player SET bettingPoints = bettingPoints + 100, pointsFromSignup = pointsFromSignup + 100 WHERE discordID = {player[1]}")
+        listOfPlayers = shorterlist
+        print("Shorter List Compiled:" + str(len(shorterlist)))
+        playerObjList = []
+        for player_details in listOfPlayers:
+            discordUser = None
+            try:
+                discordUser = await self.client.fetch_user(player_details[1])
+            except:
+                discordUser = None
+            player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
+                            player_details[9], player_details[10], player_details[11], player_details[12], player_details[13], player_details[14], player_details[15], self.cursor, self.con, discordUser)
+            player.updateMMR(mode="ARAM")
+            # Add player to list
+            player.addSignUpCount()
+            player.addSignUpCount()
+            playerObjList.append(player)
+
+        players_in_queue = len(playerObjList)
+
+        # Number of macthes to create
+        match_count = players_in_queue // 10
+
+        if match_count < 1:
+            return []
+
+        team_count = match_count * 2
+
+        # Number of players required
+        required_players = match_count * 10
+
+        def getRatioOfMissedGames(player):
+            if player.get_signUpCount() == 0:
+                return 1
+            return (player.get_missedGameCount()/player.get_signUpCount()) + player.get_QP()
+
+        playerObjList.sort(key=getRatioOfMissedGames, reverse=True)
+        for player in playerObjList:
+            print(getRatioOfMissedGames(player))
+            player.addSignUpCount()
+            player.addSignUpCount()
+            player.set_QP(player.get_QP() + 1)
+
+        playersInGames = playerObjList[:required_players]
+        for player in playerObjList[required_players:]:
+            player.addGameMissed()
+            player.addGameMissed()
+        playersInGames.sort(key=lambda p: p.ARAM_rating)
+        for player in playersInGames:
+            player.set_QP(min(player.get_QP() + 1, 0))
+        matches = []
+        for x in range(match_count):
+            blueTeam = []
+            redTeam = []
+            offset = x*10
+            for y in range(10):
+                if y%2 == 0:
+                    blueTeam.append(playersInGames[offset+y])
+                else:
+                    redTeam.append(playersInGames[offset+y])
+            blueTeam = aramMatch.ARAM_Team(blueTeam)
+            redTeam = aramMatch.ARAM_Team(redTeam)
+            matches.append(aramMatch.ARAM_Match(self.cursor, self.con, self.client, matchID=None,
+                                       blueTeam=blueTeam, redTeam=redTeam, startTime=str(datetime.datetime.now())))
+            
+        for match in matches:
+            self.cursor.execute(
+                f"INSERT INTO Match (matchTime, mode) VALUES ('{match.startTime}', 'ARAM')")
+            self.con.commit()
+            match.matchID = self.cursor.lastrowid
+
+        return matches
+
+        
