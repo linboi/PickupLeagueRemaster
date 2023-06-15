@@ -11,6 +11,7 @@ from match import Match
 from team import Team
 import discord
 import aramMatch
+import random
 
 
 class serverInstance:
@@ -340,7 +341,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         await self.gameChannel.send(f"GAME {emoji}:\nEnough players signed up for {len(matches)} games! {leftout} players were left out " + (":)" if leftout == 0 else ":("))
         self.currentMatches.extend(matches)
         if mode == "aram":
-            await self.publish_matches(matches, self.gameChannel)
+            await self.publish_aram_matches(matches, self.gameChannel)
         else:
             await self.publish_matches(matches, self.gameChannel)
             await self.update_tournament_file()
@@ -348,7 +349,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
     # Test function for MM troubleshooting
     async def mmTest(self, mode="SR"):
         discord_id_list = [165186656863780865, 343490464948813824, 413783321844383767, 197053913269010432, 187302526935105536, 574206308803412037, 197058147167371265, 127796716408799232, 180398163620790279,
-                           225650967058710529, 618520923204485121, 160471312517562368, 188370105413926912, 694560846814117999, 266644132825530389, 132288462563966977, 355707373500760065, 259820776608235520, 182965319969669120]
+                           225650967058710529, 618520923204485121, 160471312517562368, 188370105413926912, 694560846814117999, 266644132825530389, 132288462563966977, 355707373500760065, 259820776608235520, 182965319969669120,
+                           240994422488170496]
         if(mode == "aram"):
             matches = await self.matchmake_aram(discord_id_list)
             await self.publish_aram_matches(matches, self.testChannel)
@@ -1383,30 +1385,38 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         for player in playerObjList[required_players:]:
             player.addGameMissed()
             player.addGameMissed()
-        playersInGames.sort(key=lambda p: p.ARAM_rating)
+        random.shuffle(playersInGames)
         for player in playersInGames:
             player.set_QP(min(player.get_QP() + 1, 0))
-        matches = []
-        for x in range(match_count):
-            blueTeam = []
-            redTeam = []
-            offset = x*10
-            for y in range(10):
-                if y%2 == 0:
-                    blueTeam.append(playersInGames[offset+y])
-                else:
-                    redTeam.append(playersInGames[offset+y])
-            blueTeam = aramMatch.ARAM_Team(blueTeam)
-            redTeam = aramMatch.ARAM_Team(redTeam)
-            matches.append(aramMatch.ARAM_Match(self.cursor, self.con, self.client, matchID=None,
-                                       blueTeam=blueTeam, redTeam=redTeam, startTime=str(datetime.datetime.now())))
+        bestMatches = []
+        bestMaxMMRdiff = 9999999
+        for x in range(500):
+            random.shuffle(playersInGames)
+            maxDiffBetweenTeams = 0
+            for y in range(match_count):
+                offset = y*10
+                blueTeam = aramMatch.ARAM_Team(playersInGames[offset:offset+5])
+                redTeam = aramMatch.ARAM_Team(playersInGames[offset+5:offset+10])
+                mmrdiff = abs(redTeam.get_avg_MMR() - blueTeam.get_avg_MMR())
+                if mmrdiff > maxDiffBetweenTeams:
+                    maxDiffBetweenTeams = mmrdiff
+
+            if maxDiffBetweenTeams < bestMaxMMRdiff:
+                bestMaxMMRdiff = maxDiffBetweenTeams
+                bestMatches = []
+                for y in range(match_count):
+                    offset = y*10
+                    blueTeam = aramMatch.ARAM_Team(playersInGames[offset:offset+5])
+                    redTeam = aramMatch.ARAM_Team(playersInGames[offset+5:offset+10])
+                    bestMatches.append(aramMatch.ARAM_Match(self.cursor, self.con, self.client, matchID=None,
+                                        blueTeam=blueTeam, redTeam=redTeam, startTime=str(datetime.datetime.now())))
             
-        for match in matches:
+        for match in bestMatches:
             self.cursor.execute(
                 f"INSERT INTO Match (matchTime, mode) VALUES ('{match.startTime}', 'ARAM')")
             self.con.commit()
             match.matchID = self.cursor.lastrowid
 
-        return matches
+        return bestMatches
 
         
