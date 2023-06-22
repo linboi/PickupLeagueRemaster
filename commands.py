@@ -212,6 +212,12 @@ class commands:
         else:
             await inst.displayHistory(message.author, message)
 
+    async def history_with(message, inst, args):
+        if len(message.mentions) > 0:
+            await inst.displayHistoryWith(message.mentions[0], message)
+        else:
+            await message.channel.send("Please choose a player to check your history with")
+
     userCommands = {
         'hello': hello,
         'queue': queue,
@@ -244,7 +250,8 @@ class commands:
         'fetch-db': rasp_upload,
         'git-pull': rasp_update,
         'restart-pi': rasp_reboot,
-        'history': history
+        'history': history,
+        'history-with': history_with
     }
 
     async def parseReaction(reaction, inst):

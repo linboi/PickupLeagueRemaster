@@ -721,6 +721,44 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         result += "```"
         await message.channel.send(result)
 
+    async def displayHistoryWith(self, player, message):
+        result = f"Match history for {player.display_name}\n```{'ID':^5} {'DATE':^15} {'TEAM':^8} {'LP':^5}\n"
+        rows = self.cursor.execute(f"""
+                                   SELECT PlayerMatch.matchID, Match.matchTime, PlayerMatch.ratingChange, PlayerMatch.team, pmb.team
+                                   FROM PlayerMatch 
+                                   JOIN Match on PlayerMatch.matchID = Match.matchID 
+                                   JOIN Player on PlayerMatch.playerID = Player.playerID
+                                   JOIN Player pb on pb.discordID = {player.id}
+                                   JOIN PlayerMatch pmb on pmb.matchID = Match.matchID and pmb.playerID = pb.playerID
+                                   WHERE Player.discordID = {message.author.id}
+                                   ORDER BY Match.matchID desc
+                                   """).fetchall()
+        together = {"wins":0, "losses":0, "change":0}
+        against = {"wins":0, "losses":0, "change":0}
+        
+        for row in rows:
+            if row[3].upper() == row[4].upper():
+                together["change"] += row[2]
+                if row[2] > 0:
+                    together["wins"] += 1
+                else: 
+                    together["losses"] += 1
+            if row[3].upper() != row[4].upper():
+                against["change"] += row[2]
+                if row[2] > 0:
+                    against["wins"] += 1
+                else: 
+                    against["losses"] += 1
+        
+        for id, time, change, ateam, bteam in rows[0:max(10, len(rows))]:
+            change_str = ("+" if change > 0 else "") + f"{change:.0f}"
+            team_str = "WITH" if ateam == bteam else "AGAINST"
+            result += f"{id:^5} {time.split()[0]:^15} {team_str.upper():^8} {change_str:^5}\n"
+        result += f"WITH ({together['wins']}W/{together['losses']}L) " + ("+" if together['change'] > 0 else "") + f"{together['change']:.0f}"\
+                    + f"\tAGAINST ({against['wins']}W/{against['losses']}L) " + ("+" if against['change'] > 0 else "") + f"""{against['change']:.0f}
+                    ```"""
+        await message.channel.send(result)
+
     # Update roles of player
     async def updatePlayerRole(self, discordID, roleType, position):
 
