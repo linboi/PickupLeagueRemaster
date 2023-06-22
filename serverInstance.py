@@ -703,6 +703,24 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             f"UPDATE Account SET rankTier = '{rank[0]}', rankDivision = {rank[1]} WHERE [opgg] = '{op_url}'")
         self.con.commit()
 
+    async def displayHistory(self, player, message):
+        
+        result = f"Match history for {player.display_name}\n```{'ID':^5} {'DATE':^15} {'ROLE':^5} {'TEAM':^5} {'LP':^5}\n"
+        rows = self.cursor.execute(f"""
+                                   SELECT PlayerMatch.matchID, Match.matchTime, PlayerMatch.ratingChange, PlayerMatch.role, PlayerMatch.team
+                                   FROM PlayerMatch 
+                                   JOIN Match on PlayerMatch.matchID = Match.matchID 
+                                   JOIN Player on PlayerMatch.playerID = Player.playerID
+                                   WHERE Player.discordID = {player.id}
+                                   ORDER BY Match.matchID desc
+                                   LIMIT 10
+                                   """).fetchall()
+        for id, time, change, role, team in rows:
+            change_str = ("+" if change > 0 else "") + f"{change:.0f}"
+            result += f"{id:^5} {time.split()[0]:^15} {role.upper():^5} {team.upper():^5} {change_str:^5}\n"
+        result += "```"
+        await message.channel.send(result)
+
     # Update roles of player
     async def updatePlayerRole(self, discordID, roleType, position):
 

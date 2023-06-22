@@ -205,6 +205,12 @@ class commands:
         if not admin_check:
             return
         await inst.upload_db(file, user_id)
+    
+    async def history(message, inst, args):
+        if len(message.mentions) > 0:
+            await inst.displayHistory(message.mentions[0], message)
+        else:
+            await inst.displayHistory(message.author, message)
 
     userCommands = {
         'hello': hello,
@@ -237,7 +243,8 @@ class commands:
         'update': update,
         'fetch-db': rasp_upload,
         'git-pull': rasp_update,
-        'restart-pi': rasp_reboot
+        'restart-pi': rasp_reboot,
+        'history': history
     }
 
     async def parseReaction(reaction, inst):
