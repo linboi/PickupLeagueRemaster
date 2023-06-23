@@ -953,13 +953,12 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             all_players += f"{pos}" + f"{id}" + f"{leaderboardPoints}{hotstreak}" + \
                 f"{winloss} " + (f"({pRole}/{sRole})" if mode=="SR" else "") + "\n"
 
-        now = date.today()
         if message == None:
-            message = await channelToSendIn.send(f"**__Updated {fieldPrefix.upper()}Leaderboard__***\t\tLast Updated: {now}*```{all_players}```")
+            message = await channelToSendIn.send(f"**__{fieldPrefix.upper()}Leaderboard__**```{all_players}```")
             await message.add_reaction('⬅')
             await message.add_reaction('➡')
         else:
-            await message.edit(content=f"**__Updated {fieldPrefix.upper()}Leaderboard__***\t\tLast Updated: {now}*```{all_players}```")
+            await message.edit(content=f"**__{fieldPrefix.upper()}Leaderboard__**```{all_players}```")
 
         def check(reaction, user):
             return reaction.message.id == message.id and reaction.emoji in ['⬅', '➡']
