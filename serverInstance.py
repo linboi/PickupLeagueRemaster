@@ -1001,7 +1001,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             bettingPoints = f"{int(player[1])} Betties"
             bettingPoints = bettingPoints.ljust(8)
 
-            all_players += f"{pos}" + f"{id}" + f"{bettingPoints}\n"
+            all_players += f"{pos}{id}{bettingPoints}\n"
 
         now = date.today()
         if message == None:
