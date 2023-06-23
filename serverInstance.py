@@ -943,7 +943,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             pos = pos.ljust(5)
             id = f"{discord_name}"
             id = id.ljust(23)
-            winloss = f" ({player[1]}W/{player[2]}L)"
+            winloss = f"{player[1]}W/{player[2]}L"
             winloss = winloss.ljust(12)
             leaderboardPoints = f"{int(player[3])}LP"
             leaderboardPoints = leaderboardPoints.ljust(7)
@@ -951,7 +951,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             sRole = player[6]
 
             all_players += f"{pos}" + f"{id}" + f"{leaderboardPoints}{hotstreak}" + \
-                f"{winloss} " + (f"({pRole}/{sRole})" if mode=="SR" else "") + "\n"
+                f"{winloss} " + (f"{pRole}/{sRole}" if mode=="SR" else "") + "\n"
 
         if message == None:
             message = await channelToSendIn.send(f"**__{fieldPrefix.upper()}Leaderboard__**```{all_players}```")
