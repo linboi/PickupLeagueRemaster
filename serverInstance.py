@@ -1005,11 +1005,11 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         now = date.today()
         if message == None:
-            message = await channelToSendIn.send(f"**__Updated Bettyboard__***\t\tLast Updated: {now}*```{all_players}```")
+            message = await channelToSendIn.send(f"**__Bettyboard__**```{all_players}```")
             await message.add_reaction('⬅')
             await message.add_reaction('➡')
         else:
-            await message.edit(content=f"**__Updated Bettyboard__***\t\tLast Updated: {now}*```{all_players}```")
+            await message.edit(content=f"**__Bettyboard__**```{all_players}```")
 
         def check(reaction, user):
             return reaction.message.id == message.id and reaction.emoji in ['⬅', '➡']
