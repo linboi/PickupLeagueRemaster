@@ -943,7 +943,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             pos = pos.ljust(5)
             id = f"{discord_name}"
             id = id.ljust(23)
-            winloss = f" ({player[1]}W/{player[2]}L)"
+            winloss = f"{player[1]}W/{player[2]}L"
             winloss = winloss.ljust(12)
             leaderboardPoints = f"{int(player[3])}LP"
             leaderboardPoints = leaderboardPoints.ljust(7)
@@ -951,15 +951,14 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             sRole = player[6]
 
             all_players += f"{pos}" + f"{id}" + f"{leaderboardPoints}{hotstreak}" + \
-                f"{winloss} " + (f"({pRole}/{sRole})" if mode=="SR" else "") + "\n"
+                f"{winloss} " + (f"{pRole}/{sRole}" if mode=="SR" else "") + "\n"
 
-        now = date.today()
         if message == None:
-            message = await channelToSendIn.send(f"**__Updated {fieldPrefix.upper()}Leaderboard__***\t\tLast Updated: {now}*```{all_players}```")
+            message = await channelToSendIn.send(f"**__{fieldPrefix.upper()}Leaderboard__**```{all_players}```")
             await message.add_reaction('⬅')
             await message.add_reaction('➡')
         else:
-            await message.edit(content=f"**__Updated {fieldPrefix.upper()}Leaderboard__***\t\tLast Updated: {now}*```{all_players}```")
+            await message.edit(content=f"**__{fieldPrefix.upper()}Leaderboard__**```{all_players}```")
 
         def check(reaction, user):
             return reaction.message.id == message.id and reaction.emoji in ['⬅', '➡']
@@ -1002,15 +1001,15 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             bettingPoints = f"{int(player[1])} Betties"
             bettingPoints = bettingPoints.ljust(8)
 
-            all_players += f"{pos}" + f"{id}" + f"{bettingPoints}\n"
+            all_players += f"{pos}{id}{bettingPoints}\n"
 
         now = date.today()
         if message == None:
-            message = await channelToSendIn.send(f"**__Updated Bettyboard__***\t\tLast Updated: {now}*```{all_players}```")
+            message = await channelToSendIn.send(f"**__Bettyboard__**```{all_players}```")
             await message.add_reaction('⬅')
             await message.add_reaction('➡')
         else:
-            await message.edit(content=f"**__Updated Bettyboard__***\t\tLast Updated: {now}*```{all_players}```")
+            await message.edit(content=f"**__Bettyboard__**```{all_players}```")
 
         def check(reaction, user):
             return reaction.message.id == message.id and reaction.emoji in ['⬅', '➡']
