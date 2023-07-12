@@ -1,6 +1,7 @@
 from rasp import rasp
 import discord
 import re
+import os
 
 
 class commands:
@@ -199,13 +200,10 @@ class commands:
         rasp.restart_pi()
 
     async def rasp_upload(message, inst, args):
-        file = discord.File("copy.db")
-        user_id = message.author.id
-        admin_check = await inst.checkAdmin(user_id)
-        if not admin_check:
+        if not await inst.checkAdmin(message.author.id):
             return
-        await inst.upload_db(file, user_id)
-    
+        await inst.upload_db(message.author)
+
     async def history(message, inst, args):
         if len(message.mentions) > 0:
             await inst.displayHistory(message.mentions[0], message)
@@ -217,6 +215,24 @@ class commands:
             await inst.displayHistoryWith(message.mentions[0], message)
         else:
             await message.channel.send("Please choose a player to check your history with")
+
+    async def profile(message, inst, args):
+        if len(message.mentions) > 0:
+            await inst.showProfile(message.mentions[0], message)
+        else:
+            await inst.showProfile(message.author, message)
+
+    async def updatePUUIDs(message, inst, args):
+        await inst.updatePUUIDs(message.channel)
+
+    async def getGameDetails(message, inst, args):
+        await inst.getGameDetails(message.channel)
+
+    async def updatePlayerMatchDetails(message, inst, args):
+        await inst.updatePlayerMatchDetails(message.channel, args[0])
+
+    async def updateAPIKey(message, inst, args):
+        await inst.updateAPIKey(message, args[0])
 
     userCommands = {
         'hello': hello,
@@ -251,7 +267,12 @@ class commands:
         'git-pull': rasp_update,
         'restart-pi': rasp_reboot,
         'history': history,
-        'history-with': history_with
+        'history-with': history_with,
+        'update-puuids': updatePUUIDs,
+        'get-game-details': getGameDetails,
+        'update-player-match-details': updatePlayerMatchDetails,
+        'profile': profile,
+        'update-api-key': updateAPIKey
     }
 
     async def parseReaction(reaction, inst):
