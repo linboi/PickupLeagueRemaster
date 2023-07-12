@@ -12,6 +12,10 @@ from team import Team
 import discord
 import aramMatch
 import random
+import os
+import shutil
+import sqlite3
+import json
 
 
 class serverInstance:
@@ -36,16 +40,31 @@ class serverInstance:
         self.playerIDNameMapping = {}
         self.gameChannel = gameChannel
         self.roleID = roleID
+        self.apiKey = None
 
     # Send the user a DM with player database
-    async def upload_db(self, file, user_id):
-        member = self.client.guilds[0].get_member(
-            user_id)
+    async def upload_db(self, member):
+        shutil.copy(os.getenv('DATABASE'), './temp.db')
+
+        tempcon = sqlite3.connect('./temp.db')
+        try:
+            tempcon.cursor().execute('DROP TABLE MatchDetails;')
+        except:
+            pass  # table didn't exist, do nothing
+        try:
+            tempcon.cursor().execute('DROP TABLE PlayerMatchDetails;')
+        except:
+            pass  # table didn't exist, do nothing
+        tempcon.cursor().execute('VACUUM')
+        tempcon.commit()
+        tempcon.close()
+        file = discord.File('./temp.db')
         try:
             if member:
                 await member.send(file=file)
         except:
             await self.generalChannel.send("Member not found")
+        os.remove("./temp.db")
 
     # Import Tournament Codes
 
@@ -107,7 +126,7 @@ class serverInstance:
                             f"{player.get_username()} not found as a member of the discord server.")
                 except:
                     pass
-                
+
     async def publish_aram_matches(self, matches, channel):
         for match in matches:
             match_string = match.get_details_string()
@@ -238,7 +257,7 @@ class serverInstance:
                 except:
                     discordUser = None
                 player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
-                            player_details[9], player_details[10], player_details[11], player_details[12], player_details[13], player_details[14], player_details[15], self.cursor, self.con, discordUser)
+                                player_details[9], player_details[10], player_details[11], player_details[12], player_details[13], player_details[14], player_details[15], self.cursor, self.con, discordUser)
                 playerObjs.append(player)
 
         if (len(playerObjs) != 10):
@@ -351,7 +370,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         discord_id_list = [165186656863780865, 343490464948813824, 413783321844383767, 197053913269010432, 187302526935105536, 574206308803412037, 197058147167371265, 127796716408799232, 180398163620790279,
                            225650967058710529, 618520923204485121, 160471312517562368, 188370105413926912, 694560846814117999, 266644132825530389, 132288462563966977, 355707373500760065, 259820776608235520, 182965319969669120,
                            240994422488170496]
-        if(mode == "aram"):
+        if (mode == "aram"):
             matches = await self.matchmake_aram(discord_id_list)
             await self.publish_aram_matches(matches, self.testChannel)
         else:
@@ -704,7 +723,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         self.con.commit()
 
     async def displayHistory(self, player, message):
-        
+
         result = f"Match history for {player.display_name}\n```{'ID':^5} {'DATE':^15} {'ROLE':^5} {'TEAM':^5} {'LP':^5}\n"
         rows = self.cursor.execute(f"""
                                    SELECT PlayerMatch.matchID, Match.matchTime, PlayerMatch.ratingChange, PlayerMatch.role, PlayerMatch.team
@@ -733,31 +752,150 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                                    WHERE Player.discordID = {message.author.id}
                                    ORDER BY Match.matchID desc
                                    """).fetchall()
-        together = {"wins":0, "losses":0, "change":0}
-        against = {"wins":0, "losses":0, "change":0}
-        
+        together = {"wins": 0, "losses": 0, "change": 0}
+        against = {"wins": 0, "losses": 0, "change": 0}
+
         for row in rows:
             if row[3].upper() == row[4].upper():
                 together["change"] += row[2]
                 if row[2] > 0:
                     together["wins"] += 1
-                else: 
+                else:
                     together["losses"] += 1
             if row[3].upper() != row[4].upper():
                 against["change"] += row[2]
                 if row[2] > 0:
                     against["wins"] += 1
-                else: 
+                else:
                     against["losses"] += 1
-        
+
         for id, time, change, ateam, bteam in rows[0:max(10, len(rows))]:
             change_str = ("+" if change > 0 else "") + f"{change:.0f}"
             team_str = "WITH" if ateam == bteam else "AGAINST"
             result += f"{id:^5} {time.split()[0]:^15} {team_str.upper():^8} {change_str:^5}\n"
         result += f"WITH ({together['wins']}W/{together['losses']}L) " + ("+" if together['change'] > 0 else "") + f"{together['change']:.0f}"\
-                    + f"\tAGAINST ({against['wins']}W/{against['losses']}L) " + ("+" if against['change'] > 0 else "") + f"""{against['change']:.0f}
+            + f"\tAGAINST ({against['wins']}W/{against['losses']}L) " + ("+" if against['change'] > 0 else "") + f"""{against['change']:.0f}
                     ```"""
         await message.channel.send(result)
+
+    async def updatePUUIDs(self, channel):
+        names = self.cursor.execute("SELECT name FROM Account").fetchall()
+        for name, in names:
+            try:
+                url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{name}/EUW"
+                headers = {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+                    "Accept-Language": "en-GB,en-US;q=0.9,en;q=0.8",
+                    "Accept-Charset": "application/x-www-form-urlencoded; charset=UTF-8",
+                    "Origin": "https://developer.riotgames.com",
+                    "X-Riot-Token": self.apiKey
+                }
+                status_code = 429
+                while status_code == 429:
+                    r = requests.get(url=url, headers=headers)
+                    status_code = r.status_code
+                    if status_code == 429:
+                        await asyncio.sleep(5)
+                    else:
+                        data = r.json()
+                        if status_code == 200:
+                            print(data['puuid'])
+                            self.cursor.execute(
+                                f"UPDATE Account SET puuid = '{data['puuid']}' WHERE [name] = '{name}'")
+                            self.con.commit()
+                        else:
+                            print(r.status_code)
+                            await channel.send(data)
+
+            except Exception as e:
+                await channel.send(e)
+
+    async def getGameDetails(self, channel):
+        games = self.cursor.execute("""SELECT Match.matchID, gameID FROM Match 
+                                    LEFT OUTER JOIN MatchDetails ON Match.matchID = MatchDetails.matchID 
+                                    WHERE gameID is not null and gameID <> 0 and json is null"""
+                                    ).fetchall()
+        for matchID, gameID in games:
+            try:
+                url = f"https://europe.api.riotgames.com/lol/match/v5/matches/EUW1_{gameID}"
+                headers = {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+                    "Accept-Language": "en-GB,en-US;q=0.9,en;q=0.8",
+                    "Accept-Charset": "application/x-www-form-urlencoded; charset=UTF-8",
+                    "Origin": "https://developer.riotgames.com",
+                    "X-Riot-Token": self.apiKey
+                }
+                status_code = 429
+                while status_code == 429:
+                    r = requests.get(url=url, headers=headers)
+                    status_code = r.status_code
+                    if status_code == 429:
+                        await asyncio.sleep(5)
+                    else:
+                        data = r.json()
+                        if status_code == 200:
+                            to_insert = (matchID, json.dumps(data))
+                            self.cursor.execute(
+                                f"INSERT INTO MatchDetails (matchID, json) VALUES (?, ?)", to_insert)
+                            self.con.commit()
+                            await self.updatePlayerMatchDetails(channel, matchID)
+                        else:
+                            print(status_code)
+                            await channel.send(data)
+
+            except Exception as e:
+                print(e)
+                await channel.send(e)
+
+    async def updatePlayerMatchDetails(self, channel, matchID):
+        jsonString, = self.cursor.execute(
+            f"SELECT json FROM MatchDetails WHERE matchID = {matchID}").fetchall()[0]
+        matchData = json.loads(jsonString)
+        for participant in matchData["info"]["participants"]:
+            result = self.cursor.execute(
+                f"""SELECT playerMatchID, Account.playerID FROM Account 
+                JOIN PlayerMatch ON Account.playerID = PlayerMatch.playerID and PlayerMatch.matchID = {matchID} 
+                WHERE puuid = '{participant['puuid']}'""").fetchall()
+            if len(result) < 1:
+                await channel.send(
+                    f"Player '{participant['summonerName']}' not found in player list")
+            else:
+                to_insert = (result[0][0], json.dumps(participant))
+                self.cursor.execute(
+                    f"INSERT INTO PlayerMatchDetails (playerMatchID, json) VALUES (?, ?)", to_insert)
+                self.con.commit()
+                to_insert = (participant["championName"], participant["kills"],
+                             participant["deaths"], participant["assists"], result[0][0])
+                self.cursor.execute(
+                    f"UPDATE PlayerMatch SET champion = ?, kills = ?, deaths = ?, assists = ? WHERE playerMatchID = ?", to_insert)
+                self.con.commit()
+
+    async def showProfile(self, player, message):
+        res = self.cursor.execute(f"""
+                                  SELECT champion, SUM(kills), SUM(deaths), SUM(assists), count(champion), 
+                                  SUM(CASE WHEN ratingChange > 0 THEN 1
+								  ELSE 0
+								  END) AS winCount,
+								  SUM(CASE WHEN ratingChange < 0 THEN 1
+								  ELSE 0
+								  END) AS lossCount
+                                  FROM PlayerMatch
+                                  JOIN Player on Player.playerID = PlayerMatch.playerID
+                                  WHERE Player.discordID = '{player.id}' and champion is not null
+                                  GROUP BY champion
+                                  ORDER BY winCount DESC
+                                  LIMIT 20
+                                  """).fetchall()
+        msg = f"```{'Champion':<11} Kills Deaths Assists | KDA  | W/L    %\n\n"
+        for champion, kills, deaths, assists, games, winCount, lossCount in res:
+            winrate = winCount/games
+            msg += f"{champion + ':':<12}{kills/games:>4.1f} / {deaths/games:^4.1f} / {assists/games:<5.1f} | {((kills+assists)/max(deaths, 1)):>5.2f} | {str(winCount)+'/'+str(lossCount):<5} {winrate:>6.1%}\n"
+        msg += "```"
+        await message.channel.send(msg)
+
+    async def updateAPIKey(self, message, key):
+        self.apiKey = key
+        await message.channel.send("Success")
 
     # Update roles of player
     async def updatePlayerRole(self, discordID, roleType, position):
@@ -924,7 +1062,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         fromPosition = pageNum*20
 
         for player in output[fromPosition:toPosition:]:
-            recentGames = self.cursor.execute(f"SELECT ratingChange FROM PlayerMatch join Match on Match.matchID = PlayerMatch.matchID WHERE playerID = {player[7]} and mode = '{mode.upper()}' ORDER BY PlayerMatchID desc LIMIT 3").fetchall()
+            recentGames = self.cursor.execute(
+                f"SELECT ratingChange FROM PlayerMatch join Match on Match.matchID = PlayerMatch.matchID WHERE playerID = {player[7]} and mode = '{mode.upper()}' ORDER BY PlayerMatchID desc LIMIT 3").fetchall()
             hotstreak = "  "
             if len(recentGames) >= 3:
                 hotstreak = "🔥"
@@ -951,7 +1090,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             sRole = player[6]
 
             all_players += f"{pos}" + f"{id}" + f"{leaderboardPoints}{hotstreak}" + \
-                f"{winloss} " + (f"{pRole}/{sRole}" if mode=="SR" else "") + "\n"
+                f"{winloss} " + (f"{pRole}/{sRole}" if mode ==
+                                 "SR" else "") + "\n"
 
         if message == None:
             message = await channelToSendIn.send(f"**__{fieldPrefix.upper()}Leaderboard__**```{all_players}```")
@@ -1135,7 +1275,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         if self.client.user.id in playerIDList:
             playerIDList.remove(self.client.user.id)
         # WHERE discordID in ({seq})".format(seq=','.join(['?']*len(playerIDList))))
-        res = self.cursor.execute("SELECT playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGames, signupCount, leaderboardPoints, aram_internalRating, aram_leaderboardPoints, aram_winCount, aram_lossCount FROM Player")
+        res = self.cursor.execute(
+            "SELECT playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGames, signupCount, leaderboardPoints, aram_internalRating, aram_leaderboardPoints, aram_winCount, aram_lossCount FROM Player")
         listOfPlayers = res.fetchall()
         shorterlist = []
         for player in listOfPlayers:
@@ -1386,7 +1527,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         if self.client.user.id in playerIDList:
             playerIDList.remove(self.client.user.id)
         # WHERE discordID in ({seq})".format(seq=','.join(['?']*len(playerIDList))))
-        res = self.cursor.execute("SELECT playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGames, signupCount, leaderboardPoints, aram_internalRating, aram_leaderboardPoints, aram_winCount, aram_lossCount FROM Player")
+        res = self.cursor.execute(
+            "SELECT playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGames, signupCount, leaderboardPoints, aram_internalRating, aram_leaderboardPoints, aram_winCount, aram_lossCount FROM Player")
         listOfPlayers = res.fetchall()
         shorterlist = []
         for player in listOfPlayers:
@@ -1451,7 +1593,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             for y in range(match_count):
                 offset = y*10
                 blueTeam = aramMatch.ARAM_Team(playersInGames[offset:offset+5])
-                redTeam = aramMatch.ARAM_Team(playersInGames[offset+5:offset+10])
+                redTeam = aramMatch.ARAM_Team(
+                    playersInGames[offset+5:offset+10])
                 mmrdiff = abs(redTeam.get_avg_MMR() - blueTeam.get_avg_MMR())
                 if mmrdiff > maxDiffBetweenTeams:
                     maxDiffBetweenTeams = mmrdiff
@@ -1461,11 +1604,13 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 bestMatches = []
                 for y in range(match_count):
                     offset = y*10
-                    blueTeam = aramMatch.ARAM_Team(playersInGames[offset:offset+5])
-                    redTeam = aramMatch.ARAM_Team(playersInGames[offset+5:offset+10])
+                    blueTeam = aramMatch.ARAM_Team(
+                        playersInGames[offset:offset+5])
+                    redTeam = aramMatch.ARAM_Team(
+                        playersInGames[offset+5:offset+10])
                     bestMatches.append(aramMatch.ARAM_Match(self.cursor, self.con, self.client, matchID=None,
-                                        blueTeam=blueTeam, redTeam=redTeam, startTime=str(datetime.datetime.now())))
-            
+                                                            blueTeam=blueTeam, redTeam=redTeam, startTime=str(datetime.datetime.now())))
+
         for match in bestMatches:
             self.cursor.execute(
                 f"INSERT INTO Match (matchTime, mode) VALUES ('{match.startTime}', 'ARAM')")
@@ -1473,5 +1618,3 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             match.matchID = self.cursor.lastrowid
 
         return bestMatches
-
-        
