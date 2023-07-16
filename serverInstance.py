@@ -91,7 +91,7 @@ class serverInstance:
         if player not in self.queue:
             self.queue.append(player)
         await channel.send(f"{len(self.queue)} players in queue.\nEstimated wait time: Literally forever")
-        if len(self.queue) % 30 == 0:
+        if len(self.queue) % 10 == 0:
             # Once 30 is reachead add delay
             timeObjs = datetime.datetime.now().replace(
                 minute=int(datetime.datetime.now().minute) + 1)
