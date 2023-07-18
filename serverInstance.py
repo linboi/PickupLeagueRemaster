@@ -664,6 +664,63 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         return rank_str.upper(), summoner_name, success
 
+    async def updateMainAccount(self,message):
+
+        #get playerID from discordID
+        res = self.cursor.execute(
+            f"SELECT playerID from Player where discordID = '{message.author.id}'")
+        fetchedPlayerID = res.fetchone()[0]
+
+        #get all accounts from playerID
+        self.cursor.execute(f'SELECT name FROM Account WHERE playerID = {fetchedPlayerID}')
+        
+        #transform into list then combine with emojis in to dict
+        fetchedAccountNames = [_[0] for _ in self.cursor.fetchall()]
+        emojiList = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣']
+        emojiAccountDict = dict(zip(emojiList, fetchedAccountNames))
+
+        #create pretty string for embed
+        emojiAccountDictString = ""
+        for idx in emojiAccountDict:
+            emojiAccountDictString += f"{idx} {emojiAccountDict[idx]}\n"
+
+        #create embed
+        embed = discord.Embed(title="Select your main account", description="React with the corresponding number to set your main account",  color=0x3498db)
+
+        #add fields to embed
+        embed.add_field(name="Accounts", value=emojiAccountDictString, inline=True)
+    
+        #send embed and add reactions
+        mainAccountMessage = await message.channel.send(embed=embed)
+        for idx, account in enumerate(fetchedAccountNames):
+            await mainAccountMessage.add_reaction(emojiList[idx])
+        
+        #check for reaction
+        def check(reaction, user):
+            return user == message.author and str(reaction.emoji) in emojiList and reaction.message.id == mainAccountMessage.id
+        
+        try:
+            reaction, user = await self.client.wait_for('reaction_add', timeout=60.0, check=check)
+
+            #reset main account before set new main account
+            self.cursor.execute(f"UPDATE Account SET Main = 0 WHERE playerID = '{fetchedPlayerID}'")
+            self.con.commit()
+
+            self.cursor.execute(f"UPDATE Account SET Main = 1 WHERE name = '{emojiAccountDict[reaction.emoji]}';")
+            self.con.commit()
+
+            await message.channel.send(f"Main account set to {emojiAccountDict[reaction.emoji]}!")
+            await mainAccountMessage.delete()
+
+        except asyncio.TimeoutError:
+            await message.channel.send("MainAccount command Timeout")
+            await mainAccountMessage.delete()
+
+            
+
+
+
+
     # Check if player exists in Table DB, returns a boolean
     async def checkPlayerExsits(self, discordID):
 
