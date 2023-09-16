@@ -674,8 +674,14 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         #get all accounts from playerID
         self.cursor.execute(f'SELECT name FROM Account WHERE playerID = {fetchedPlayerID}')
         
+
         #transform into list then combine with emojis in to dict
         fetchedAccountNames = [_[0] for _ in self.cursor.fetchall()]
+
+        if len(fetchedAccountNames) < 2:
+            await message.channel.send("You only have one account, please add another account first!")
+            return
+        
         emojiList = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣']
         emojiAccountDict = dict(zip(emojiList, fetchedAccountNames))
 
@@ -750,9 +756,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         # Add information into Account Table
 
-        # Name, OPGG, PID, Rank, Rank DIV
+        # Name, OPGG, PID, Rank, Rank DIV, Main Account set to 1 for first account
         self.cursor.execute(
-            f"INSERT INTO Account (name, opgg, playerID, rankTier, rankDivision) VALUES ('{summoner_name}', '{op_url}', {fetchedPlayerID[0]}, '{rank[0]}', {rank[1]})")
+            f"INSERT INTO Account (name, opgg, playerID, rankTier, rankDivision, Main) VALUES ('{summoner_name}', '{op_url}', {fetchedPlayerID[0]}, '{rank[0]}', {rank[1]}, 1)")
         self.con.commit()
 
     # Adds another Account to Account DB

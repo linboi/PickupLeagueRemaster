@@ -187,6 +187,15 @@ class Player:
             listOfNames.append(account[1])
         return listOfNames
 
+
+    def getMainAccountName(self):
+        for account in self.playerAccounts:
+            if account[3] == 1:
+                return account[1]
+        return None
+
+
+
     # Returns the Players highest account name
     def getHighestAccountName(self):
 
