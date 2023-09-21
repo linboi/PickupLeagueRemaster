@@ -72,11 +72,11 @@ class Match:
             idx += 10
         string = f"   \n✨ MatchID ({self.matchID})\t\t🏅 MMR Difference ({round(self.calculateMMRDifference(self.blueTeam, self.redTeam))})"
         string += f"\n```{'[Blue Team]': ^15}{'':^5}{'[Red Team]':^15}\n\n"
-        string += f"{self.blueTeam.get_top().get_username():^15}{'(top)':^5}{self.redTeam.get_top().get_username():^15}\n"
-        string += f"{self.blueTeam.get_jg().get_username():^15}{'(jng)':^5}{self.redTeam.get_jg().get_username():^15}\n"
-        string += f"{self.blueTeam.get_mid().get_username():^15}{'(mid)':^5}{self.redTeam.get_mid().get_username():^15}\n"
-        string += f"{self.blueTeam.get_adc().get_username():^15}{'(adc)':^5}{self.redTeam.get_adc().get_username():^15}\n"
-        string += f"{self.blueTeam.get_sup().get_username():^15}{'(sup)':^5}{self.redTeam.get_sup().get_username():^15}\n```"
+        string += f"{self.blueTeam.get_top().getMainAccountName():^15}{'(top)':^5}{self.redTeam.get_top().getMainAccountName():^15}\n"
+        string += f"{self.blueTeam.get_jg().getMainAccountName():^15}{'(jng)':^5}{self.redTeam.get_jg().getMainAccountName():^15}\n"
+        string += f"{self.blueTeam.get_mid().getMainAccountName():^15}{'(mid)':^5}{self.redTeam.get_mid().getMainAccountName():^15}\n"
+        string += f"{self.blueTeam.get_adc().getMainAccountName():^15}{'(adc)':^5}{self.redTeam.get_adc().getMainAccountName():^15}\n"
+        string += f"{self.blueTeam.get_sup().getMainAccountName():^15}{'(sup)':^5}{self.redTeam.get_sup().getMainAccountName():^15}\n```"
         string += f"{self.tournament_code}"
         for i, invite_string in enumerate(invite_strings):
             string += f"\nInvite list{i}: {invite_string}"
