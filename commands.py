@@ -234,6 +234,11 @@ class commands:
     async def updateAPIKey(message, inst, args):
         await inst.updateAPIKey(message, args[0])
 
+    async def mainAccount(message, inst, args):
+        await inst.updateMainAccount(message)
+
+
+
     userCommands = {
         'hello': hello,
         'queue': queue,
@@ -272,7 +277,8 @@ class commands:
         'get-game-details': getGameDetails,
         'update-player-match-details': updatePlayerMatchDetails,
         'profile': profile,
-        'update-api-key': updateAPIKey
+        'update-api-key': updateAPIKey,
+        'mainaccount': mainAccount
     }
 
     async def parseReaction(reaction, inst):
