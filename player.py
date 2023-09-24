@@ -187,16 +187,14 @@ class Player:
             listOfNames.append(account[1])
         return listOfNames
 
-
     def getMainAccountName(self):
         for account in self.playerAccounts:
             if account[3] == 1:
                 return account[1]
-        return None
-
-
+        return self.playerAccounts[0][1]
 
     # Returns the Players highest account name
+
     def getHighestAccountName(self):
 
         # Tier Mappings
@@ -206,10 +204,11 @@ class Player:
             'silver': 800,
             'gold': 1200,
             'platinum': 1600,
-            'diamond': 2000,
-            'master': 2400,
-            'grandmaster': 2400,
-            'challenger': 2400
+            'emerald': 2000,
+            'diamond': 2400,
+            'master': 2800,
+            'grandmaster': 2800,
+            'challenger': 2800
         }
 
         # Div Mappings
@@ -229,7 +228,7 @@ class Player:
             counter_new = 0
             counter_new = mappingTiers[account[4]]
 
-            if counter_new >= 2400:
+            if counter_new >= 2800:
                 counter_new += int(account[5])
             else:
                 counter_new += mappingDivs[account[5]]
@@ -269,10 +268,11 @@ class Player:
             'silver': 800,
             'gold': 1200,
             'platinum': 1600,
-            'diamond': 2000,
-            'master': 2400,
-            'grandmaster': 2400,
-            'challenger': 2400
+            'emerald': 2000,
+            'diamond': 2400,
+            'master': 2800,
+            'grandmaster': 2800,
+            'challenger': 2800
         }
 
         # Div Mappings
@@ -291,7 +291,7 @@ class Player:
             counter_new = 0
             counter_new = mappingTiers[account[4]]
 
-            if counter_new >= 2400:
+            if counter_new >= 2800:
                 counter_new += int(account[5])
             else:
                 counter_new += mappingDivs[account[5]]
@@ -312,10 +312,11 @@ class Player:
             'silver': 800,
             'gold': 1200,
             'platinum': 1600,
-            'diamond': 2000,
-            'master': 2400,
-            'grandmaster': 2400,
-            'challenger': 2400
+            'emerald': 2000,
+            'diamond': 2400,
+            'master': 2800,
+            'grandmaster': 2800,
+            'challenger': 2800
         }
 
         # Div Mappings
@@ -334,7 +335,7 @@ class Player:
             counter_new = 0
             counter_new = mappingTiers[account[4]]
 
-            if counter_new >= 2400:
+            if counter_new >= 2800:
                 counter_new += int(account[5])
             else:
                 counter_new += mappingDivs[account[5]]
@@ -345,7 +346,7 @@ class Player:
                 maxMMR = counter_new
 
         ratings = self.cursor.execute(
-            f"SELECT ratingChange FROM PlayerMatch JOIN Match ON Match.matchID = PlayerMatch.matchID WHERE playerID = {self.playerID} AND mode = '{mode}'").fetchall()
+            f"SELECT ratingChange FROM PlayerMatch JOIN Match ON Match.matchID = PlayerMatch.matchID WHERE playerID = {self.playerID} AND mode = '{mode}' AND season = 2").fetchall()
         totalRatingChange = 0
         for rating, in ratings:
             totalRatingChange += rating
