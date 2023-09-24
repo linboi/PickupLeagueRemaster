@@ -270,7 +270,7 @@ class serverInstance:
                        playerObjs[7], playerObjs[8], playerObjs[9])
         startTime = datetime.datetime.now()
         self.cursor.execute(
-            f"INSERT INTO Match (matchTime) VALUES ('{startTime}')")
+            f"INSERT INTO Match (matchTime, mode, season) VALUES ('{startTime}', 'SR', 2)")
         self.con.commit()
         match = Match(self.cursor, self.con, self.client, self.cursor.lastrowid,
                       blueTeam=blueTeam, redTeam=redTeam, startTime=startTime)
@@ -526,11 +526,12 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                                 # for channel in self.voiceChannels:
                                 # voip = int(channel)
                                 # await voip.set_permissions(member, overwrite=overwrite_voice)
-                                await message_obj.channel.send(f"🥳 Success {member.mention} head over to {self.roleChannel.mention} to assign your **Primary** and **Secondary** role!")
                 except discord.Forbidden:
                     print("Forbidden")
                 except:
                     print("other")
+                finally:
+                    await message_obj.channel.send(f"🥳 Success {member.mention} head over to {self.roleChannel.mention} to assign your **Primary** and **Secondary** role!")
             success = True
 
         except:
@@ -628,6 +629,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         # Try scraping valid OP.GG URL - Rank, Summoner Name.
         try:
             rank = doc.find_all(class_="tier")
+            if len(rank) < 1:
+                print("didn't find it!")
+                pastrank = doc.find_all(class_="tier-list")
+                print(pastrank)
             rank = rank[0].decode_contents().strip()
             rank = rank.replace("<!-- -->", "")
             rank = rank.split()
@@ -664,55 +669,59 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         return rank_str.upper(), summoner_name, success
 
-    async def updateMainAccount(self,message):
+    async def updateMainAccount(self, message):
 
-        #get playerID from discordID
+        # get playerID from discordID
         res = self.cursor.execute(
             f"SELECT playerID from Player where discordID = '{message.author.id}'")
         fetchedPlayerID = res.fetchone()[0]
 
-        #get all accounts from playerID
-        self.cursor.execute(f'SELECT name FROM Account WHERE playerID = {fetchedPlayerID}')
-        
+        # get all accounts from playerID
+        self.cursor.execute(
+            f'SELECT name FROM Account WHERE playerID = {fetchedPlayerID}')
 
-        #transform into list then combine with emojis in to dict
+        # transform into list then combine with emojis in to dict
         fetchedAccountNames = [_[0] for _ in self.cursor.fetchall()]
 
         if len(fetchedAccountNames) < 2:
             await message.channel.send("You only have one account, please add another account first!")
             return
-        
+
         emojiList = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣']
         emojiAccountDict = dict(zip(emojiList, fetchedAccountNames))
 
-        #create pretty string for embed
+        # create pretty string for embed
         emojiAccountDictString = ""
         for idx in emojiAccountDict:
             emojiAccountDictString += f"{idx} {emojiAccountDict[idx]}\n"
 
-        #create embed
-        embed = discord.Embed(title="Select your main account", description="React with the corresponding number to set your main account",  color=0x3498db)
+        # create embed
+        embed = discord.Embed(title="Select your main account",
+                              description="React with the corresponding number to set your main account",  color=0x3498db)
 
-        #add fields to embed
-        embed.add_field(name="Accounts", value=emojiAccountDictString, inline=True)
-    
-        #send embed and add reactions
+        # add fields to embed
+        embed.add_field(name="Accounts",
+                        value=emojiAccountDictString, inline=True)
+
+        # send embed and add reactions
         mainAccountMessage = await message.channel.send(embed=embed)
         for idx, account in enumerate(fetchedAccountNames):
             await mainAccountMessage.add_reaction(emojiList[idx])
-        
-        #check for reaction
+
+        # check for reaction
         def check(reaction, user):
             return user == message.author and str(reaction.emoji) in emojiList and reaction.message.id == mainAccountMessage.id
-        
+
         try:
             reaction, user = await self.client.wait_for('reaction_add', timeout=60.0, check=check)
 
-            #reset main account before set new main account
-            self.cursor.execute(f"UPDATE Account SET Main = 0 WHERE playerID = '{fetchedPlayerID}'")
+            # reset main account before set new main account
+            self.cursor.execute(
+                f"UPDATE Account SET Main = 0 WHERE playerID = '{fetchedPlayerID}'")
             self.con.commit()
 
-            self.cursor.execute(f"UPDATE Account SET Main = 1 WHERE name = '{emojiAccountDict[reaction.emoji]}';")
+            self.cursor.execute(
+                f"UPDATE Account SET Main = 1 WHERE name = '{emojiAccountDict[reaction.emoji]}';")
             self.con.commit()
 
             await message.channel.send(f"Main account set to {emojiAccountDict[reaction.emoji]}!")
@@ -722,12 +731,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             await message.channel.send("MainAccount command Timeout")
             await mainAccountMessage.delete()
 
-            
-
-
-
-
     # Check if player exists in Table DB, returns a boolean
+
     async def checkPlayerExsits(self, discordID):
 
         # Check if the discordID already exists in DB
@@ -858,7 +863,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                     r = requests.get(url=url, headers=headers)
                     status_code = r.status_code
                     if status_code == 429:
-                        await asyncio.sleep(5)
+                        print((r.headers['Retry-After']))
+                        print(r.json())
+                        await asyncio.sleep(int(r.headers['Retry-After']))
                     else:
                         data = r.json()
                         if status_code == 200:
@@ -893,7 +900,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                     r = requests.get(url=url, headers=headers)
                     status_code = r.status_code
                     if status_code == 429:
-                        await asyncio.sleep(5)
+                        print(r.retry_after + 'ahh')
+                        await asyncio.sleep(int(r.headers['Retry-After']))
                     else:
                         data = r.json()
                         if status_code == 200:
@@ -1569,7 +1577,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             f"After comparing {team_count**5} possibities across {(team_count**5)*team_count} teams, lowest max mmr diff found was {bestMaxMMRdiff}")
         for match in bestMatches:
             self.cursor.execute(
-                f"INSERT INTO Match (matchTime, mode) VALUES ('{match.startTime}', 'SR')")
+                f"INSERT INTO Match (matchTime, mode, season) VALUES ('{match.startTime}', 'SR', 2)")
             self.con.commit()
             match.matchID = self.cursor.lastrowid
 
@@ -1580,11 +1588,36 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         pIDs = self.cursor.execute(f"SELECT playerID FROM Player").fetchall()
         for p, in pIDs:
             print(p)
-            accounts = self.cursor.execute(
-                f"SELECT opgg FROM Account WHERE playerID = {p}").fetchall()
-            for account, in accounts:
-                result = self.updateAccount(account)
-                await msg.channel.send(f"updated rank for {result[1]}")
+            puuids = self.cursor.execute(
+                f"SELECT puuid FROM Account WHERE playerID = {p}").fetchall()
+            for puuid, in puuids:
+                try:
+                    url = f"https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{puuid}"
+                    headers = {
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+                        "Accept-Language": "en-GB,en-US;q=0.9,en;q=0.8",
+                        "Accept-Charset": "application/x-www-form-urlencoded; charset=UTF-8",
+                        "Origin": "https://developer.riotgames.com",
+                        "X-Riot-Token": self.apiKey
+                    }
+                    status_code = 429
+                    while status_code == 429:
+                        r = requests.get(url=url, headers=headers)
+                        status_code = r.status_code
+                        if status_code == 429:
+                            await asyncio.sleep(int(r.headers['Retry-After']))
+                        else:
+                            if status_code == 200:
+                                data = r.json()
+                                name = data['name']
+                                opgg = f"https://www.op.gg/summoners/euw/{name}"
+                                self.cursor.execute(
+                                    f"UPDATE Account SET name = ?, opgg = ? WHERE [puuid] = '{puuid}'", (name, opgg))
+                                self.con.commit()
+                                result = self.updateAccount(opgg)
+                                await msg.channel.send(f"updated rank for {result[1]}")
+                except Exception as e:
+                    await msg.channel.send(e)
 
     async def matchmake_aram(self, playerIDList):
         if self.client.user.id in playerIDList:
@@ -1676,7 +1709,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         for match in bestMatches:
             self.cursor.execute(
-                f"INSERT INTO Match (matchTime, mode) VALUES ('{match.startTime}', 'ARAM')")
+                f"INSERT INTO Match (matchTime, mode, season) VALUES ('{match.startTime}', 'ARAM', 2)")
             self.con.commit()
             match.matchID = self.cursor.lastrowid
 

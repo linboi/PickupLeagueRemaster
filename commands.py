@@ -32,13 +32,16 @@ class commands:
             await message.channel.send("Queue is enabled")
 
     async def signup(message, inst, args):
-        pRank, pName, signUpSuccess = await inst.signUpPlayer(args[0], message)
-        print(pRank)
-        print(pName)
-        # Give access to '#select-roles' channel
-        if (signUpSuccess == False):
-            await message.channel.send("Failed 😔 please try again!")
-        if (signUpSuccess == True):
+        try:
+            pRank, pName, signUpSuccess = await inst.signUpPlayer(args[0], message)
+        except Exception as e:
+            await message.channel.send(e)
+        finally:
+            print(pRank)
+            print(pName)
+            # Give access to '#select-roles' channel
+            if (signUpSuccess == False):
+                await message.channel.send("Failed 😔 please try again!")
             await inst.applyRole(message)
 
     async def addAccount(message, inst, args):
@@ -236,8 +239,6 @@ class commands:
 
     async def mainAccount(message, inst, args):
         await inst.updateMainAccount(message)
-
-
 
     userCommands = {
         'hello': hello,
