@@ -314,7 +314,7 @@ React with the corresponding number to check in for a game\n\
 After a win, post a screenshot of the victory and type !win (only one player on the winning team must do this).\n\
 ")
         else:
-            checkinMessage = await channel.send(f"Check in for registered players {pu_role.mention}\n \
+            checkinMessage = await channel.send(f"Check in for registered players NO TAG TODAY\n \
 React with the corresponding number to check in for a game\n\
 {relativeTimeString}\n\
 After a win, post a screenshot of the victory and type !win (only one player on the winning team must do this).\n\
