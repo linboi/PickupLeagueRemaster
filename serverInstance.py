@@ -1342,6 +1342,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
     # discordUser is None, isn't used either. Should maybe fix this idk
     async def matchmakeV2(self, playerIDList):
+        mmTime = str(datetime.datetime.now())
         # List of all players in Queue
         if self.client.user.id in playerIDList:
             playerIDList.remove(self.client.user.id)
@@ -1357,6 +1358,17 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                     f"UPDATE Player SET bettingPoints = bettingPoints + 100, pointsFromSignup = pointsFromSignup + 100 WHERE discordID = {player[1]}")
         listOfPlayers = shorterlist
         print("Shorter List Compiled:" + str(len(shorterlist)))
+        try:
+            self.cursor.execute(f"""INSERT INTO Gametime (time, count)
+                                    VALUES ('{mmTime}', {len(listOfPlayers)})""")
+            self.con.commit()
+            gametimeID = self.cursor.lastrowid
+            for playerID, _, _, _, _, pRole, sRole, _, _, _, _, _, _, _, _, _ in listOfPlayers:
+                self.cursor.execute(f"""INSERT INTO PlayerGametime (playerID, primaryRole, secondaryRole)
+                                    VALUES ({playerID}, '{pRole}', '{sRole}')""")
+            self.con.commit()
+        except:
+            pass
         playerObjList = []
         for player_details in listOfPlayers:
             discordUser = None
@@ -1571,7 +1583,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                     redTeam = Team(teamList[idx+1][0][0][0], teamList[idx+1][0][1][0], teamList[idx+1]
                                    [0][2][0], teamList[idx+1][0][3][0], teamList[idx+1][0][4][0])
                     bestMatches.append(Match(self.cursor, self.con, self.client, matchID=None,
-                                       blueTeam=blueTeam, redTeam=redTeam, startTime=str(datetime.datetime.now())))
+                                       blueTeam=blueTeam, redTeam=redTeam, startTime=mmTime))
                     idx += 2
         print(
             f"After comparing {team_count**5} possibities across {(team_count**5)*team_count} teams, lowest max mmr diff found was {bestMaxMMRdiff}")
