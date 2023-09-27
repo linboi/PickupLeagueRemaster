@@ -53,6 +53,7 @@ class commands:
         try:
             pRank, pName, signUpSuccess = await inst.signUpPlayer(args[0], message)
         except Exception as e:
+            signUpSuccess = False
             logger.error(e)
         finally:
             #print(pRank)
@@ -136,6 +137,7 @@ class commands:
 
     # Check if admin
     async def isAdmin(message, inst, args):
+        logger.info(f"User: {message.author.id} | Command: {message.content}")
         await inst.checkAdmin(message.author.id)
 
     # Replaces One player for another
