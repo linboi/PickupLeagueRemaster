@@ -16,7 +16,7 @@ import os
 import shutil
 import sqlite3
 import json
-
+from table2ascii import table2ascii as t2a, PresetStyle
 
 class serverInstance:
     def __init__(self):
@@ -943,7 +943,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
     async def showProfile(self, player, message):
         res = self.cursor.execute(f"""
-                                  SELECT champion, SUM(kills), SUM(deaths), SUM(assists), count(champion), 
+                                  SELECT champion, SUM(kills), SUM(deaths), SUM(assists), count(champion) as Games, 
                                   SUM(CASE WHEN ratingChange > 0 THEN 1
 								  ELSE 0
 								  END) AS winCount,
@@ -954,15 +954,14 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                                   JOIN Player on Player.playerID = PlayerMatch.playerID
                                   WHERE Player.discordID = '{player.id}' and champion is not null
                                   GROUP BY champion
-                                  ORDER BY winCount DESC
+                                  ORDER BY Games DESC
                                   LIMIT 20
                                   """).fetchall()
-        msg = f"```{'Champion':<11} Kills Deaths Assists | KDA  | W/L    %\n\n"
-        for champion, kills, deaths, assists, games, winCount, lossCount in res:
-            winrate = winCount/games
-            msg += f"{champion + ':':<12}{kills/games:>4.1f} / {deaths/games:^4.1f} / {assists/games:<5.1f} | {((kills+assists)/max(deaths, 1)):>5.2f} | {str(winCount)+'/'+str(lossCount):<5} {winrate:>6.1%}\n"
-        msg += "```"
-        await message.channel.send(msg)
+        output = t2a(header= ["Champion", "Kills", "Deaths", "Assists", "KDA", "Games", "W/L", "Win Rate"],
+                     body = [[x[0], x[1], x[2], x[3], f"{(x[1] + x[3]) / x[2]:.2f}", x[4], f"{x[5]}/{x[6]}", f"{x[5] / (x[4]) * 100:.0f}%"] for x in res],
+                     style=PresetStyle.thin_compact,
+                     first_col_heading=True)
+        await message.channel.send(f"```\n{output}\n```")
 
     async def updateAPIKey(self, message, key):
         self.apiKey = key
@@ -1126,7 +1125,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         res = self.cursor.execute(
             f"SELECT discordID, {fieldPrefix}winCount, {fieldPrefix}lossCount, {fieldPrefix}leaderboardPoints, ROW_NUMBER() OVER (ORDER BY {fieldPrefix}leaderboardPoints DESC), primaryRole, secondaryRole, playerID FROM Player WHERE {fieldPrefix}winCount > 0 OR {fieldPrefix}lossCount > 0 ORDER BY {fieldPrefix}leaderboardPoints DESC")
         output = res.fetchall()
-        all_players = ""
+        all_players = []
         pageNum = min(pageNum, len(output)//20)
         pageNum = max(pageNum, 0)
         toPosition = min((pageNum+1)*20, len(output))
@@ -1135,12 +1134,12 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         for player in output[fromPosition:toPosition:]:
             recentGames = self.cursor.execute(
                 f"SELECT ratingChange FROM PlayerMatch join Match on Match.matchID = PlayerMatch.matchID WHERE playerID = {player[7]} and mode = '{mode.upper()}' ORDER BY PlayerMatchID desc LIMIT 3").fetchall()
-            hotstreak = "  "
+            hotstreak = ""
             if len(recentGames) >= 3:
                 hotstreak = "🔥"
                 for game, in recentGames:
                     if game <= 0:
-                        hotstreak = "  "
+                        hotstreak = ""
             if player[0] not in self.playerIDNameMapping:
                 try:
                     discord_name = (await self.client.fetch_user(player[0])).display_name
@@ -1154,23 +1153,24 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             id = f"{discord_name}"
             id = id.ljust(23)
             winloss = f"{player[1]}W/{player[2]}L"
-            winloss = winloss.ljust(12)
+            winloss = winloss.ljust(8)
             leaderboardPoints = f"{int(player[3])}LP"
             leaderboardPoints = leaderboardPoints.ljust(7)
             pRole = player[5]
             sRole = player[6]
-
-            all_players += f"{pos}" + f"{id}" + f"{leaderboardPoints}{hotstreak}" + \
-                f"{winloss} " + (f"{pRole}/{sRole}" if mode ==
-                                 "SR" else "") + "\n"
-
+            all_players.append([pos, id, leaderboardPoints,f"{hotstreak}{winloss}",pRole,sRole])
         if message == None:
-            message = await channelToSendIn.send(f"**__{fieldPrefix.upper()}Leaderboard__**```{all_players}```")
+            output = t2a(header= ["Rank", "Name", "LP", "W/L", "Primary", "Secondary"],
+                     body = all_players,
+                     first_col_heading=True)
+            message = await channelToSendIn.send(f"**__{fieldPrefix.upper()}Leaderboard__**```{output}```")
             await message.add_reaction('⬅')
             await message.add_reaction('➡')
         else:
-            await message.edit(content=f"**__{fieldPrefix.upper()}Leaderboard__**```{all_players}```")
-
+            output = t2a(header= ["Rank", "Name", "LP", "W/L", "Primary", "Secondary"],
+                     body = all_players,
+                     first_col_heading=True)
+            message = await message.edit(content = f"**__{fieldPrefix.upper()}Leaderboard__**```{output}```")
         def check(reaction, user):
             return reaction.message.id == message.id and reaction.emoji in ['⬅', '➡']
 
