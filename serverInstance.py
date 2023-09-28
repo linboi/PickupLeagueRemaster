@@ -952,7 +952,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 								  END) AS lossCount
                                   FROM PlayerMatch
                                   JOIN Player on Player.playerID = PlayerMatch.playerID
-                                  WHERE Player.discordID = '{message.author.id}' and champion is not null
+                                  WHERE Player.discordID = '{player.id}' and champion is not null
                                   GROUP BY champion
                                   ORDER BY Games DESC
                                   LIMIT 20
