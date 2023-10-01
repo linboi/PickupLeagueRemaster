@@ -124,9 +124,6 @@ class Tournament:
         if(self.winner != None):
             await self.announcementChannel.send(f"Winner:{self.winner}")
         
-            
-    
-
 class TTeam(Team):
    def __init__(self, top, jungle, mid, adc, support, t_Name, t_Id):
        super().__init__(top, jungle, mid, adc, support)
