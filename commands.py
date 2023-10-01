@@ -239,6 +239,13 @@ class commands:
 
     async def mainAccount(message, inst, args):
         await inst.updateMainAccount(message)
+        
+    async def startTournament(message, inst, args):
+        user_id = message.author.id
+        admin_check = await inst.checkAdmin(user_id)
+        if not admin_check:
+            return
+        await inst.startTournament(message, args[0])
 
     userCommands = {
         'hello': hello,
@@ -279,7 +286,8 @@ class commands:
         'update-player-match-details': updatePlayerMatchDetails,
         'profile': profile,
         'update-api-key': updateAPIKey,
-        'mainaccount': mainAccount
+        'mainaccount': mainAccount,
+        'start-tournament': startTournament
     }
 
     async def parseReaction(reaction, inst):

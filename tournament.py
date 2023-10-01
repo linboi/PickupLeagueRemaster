@@ -14,13 +14,13 @@ class Tournament:
         self.announcementChannel = announcementChannel
         
         
-        # List of tournament teams
-        self.teams = [TTeam(1), TTeam(2), TTeam(3), TTeam(4), TTeam(5), TTeam(6), TTeam(7), TTeam(8)]
+        # List of tournament teams TTeam()
+        self.teams = []
         
-        # List of t_matches per round
-        self.round_1 = [TMatch(), TMatch(), TMatch(), TMatch()]
-        self.round_2 = [TMatch(), TMatch()]
-        self.round_3 = [TMatch()]
+        # List of t_matches per round TMatch()
+        self.round_1 = [TMatch(self.cursor, self.con, self.client), TMatch(self.cursor, self.con, self.client), TMatch(self.cursor, self.con, self.client), TMatch(self.cursor, self.con, self.client)]
+        self.round_2 = [TMatch(self.cursor, self.con, self.client), TMatch(self.cursor, self.con, self.client)]
+        self.round_3 = [TMatch(self.cursor, self.con, self.client)]
         
         self.bracket = [self.round_1, self.round_2, self.round_3]
         
@@ -43,7 +43,7 @@ class Tournament:
         for i in range(0, len(self.teams), 2):
             team1 = self.teams[i]
             team2 = self.teams[i+1]
-            match = TMatch(None, None, None, 123+i, team1, team2, 'TODAY', 1)
+            match = TMatch(None, None, None, 202310+i, team1, team2, 'TODAY', 1)
             self.round_1.append(match)
             self.currentTMatches.append(match)
         await self.updateBracket()
@@ -116,11 +116,15 @@ class Tournament:
             
     async def displayBracket(self):
         for idx, round in enumerate(self.bracket):
-            await self.announcementChannel(f"Round({idx})")
+            await self.announcementChannel.send(f"Round({idx})")
             for match in round:
                 await self.announcementChannel.send(f"{match.getBlueTeam().getTeamName()} vs. {match.getRedTeam().getTeamName()} ~ {match.getCompleted()}")
         if(self.winner != None):
             await self.announcementChannel.send(f"Winner:{self.winner}")
+            
+    async def displayAllTeams(self, message):
+        # Display op.ggs of teams
+        pass
         
 class TTeam(Team):
    def __init__(self, top, jungle, mid, adc, support, t_Name, t_Id):

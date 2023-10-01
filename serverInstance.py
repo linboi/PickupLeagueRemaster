@@ -10,6 +10,8 @@ from player import Player
 from match import Match
 from team import Team
 from tournament import Tournament
+from tournament import TMatch
+from tournament import TTeam
 import discord
 import aramMatch
 import random
@@ -44,7 +46,6 @@ class serverInstance:
         self.apiKey = None
         self.tournament = None
         
-
     # Send the user a DM with player database
     async def upload_db(self, member):
         shutil.copy(os.getenv('DATABASE'), './temp.db')
@@ -1729,3 +1730,27 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             match.matchID = self.cursor.lastrowid
 
         return bestMatches
+    
+    async def startTournament(self, message, timeUntil):
+        self.tournament = Tournament(self.cursor, self.con, self.client, self.gameChannel, self.announcementChannel)
+        # Send annoucnement out, with a sleep of timeuntil
+        await self.tournament.start()
+        
+    async def winTournament(self, message, gameId):
+        if(self.tournament != None):
+            self.tournament.resolveMatch(message, gameId)
+        else:
+            await message.channel.send("No Tournament in Progress")
+    
+    async def displayTournament(self, message):
+        if(self.tournament != None):
+            self.tournament.displayBracket()
+        else:
+            await message.channel.send("No Tournament in Progress")
+    
+    async def getTeamListTournament(self, message):
+        if(self.tournament != None):
+            self.tournament.displayAllTeams(message)
+        else:
+            await message.channel.send("No Tournament in Progress")
+        
