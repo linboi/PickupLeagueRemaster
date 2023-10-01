@@ -30,8 +30,6 @@ class Tournament:
         # Winner
         self.winner = None
         
-        
-    
     async def generateTeams(self, playerList):
         # Generate a list of balanced teams
         # Add to teams[] TournamentTeam
@@ -181,9 +179,4 @@ class TMatch(Match):
         self.gameLength = gameLength
     
     def getGameLength(self):
-        return self.gameLength
-            
-
-        
-
-    
+        return self.gameLength    
