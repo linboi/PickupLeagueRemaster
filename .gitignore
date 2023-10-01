@@ -133,3 +133,4 @@ secret.json
 copy.db
 tournament_codes.csv
 parsed_tournament_codes.csv
+test.db
