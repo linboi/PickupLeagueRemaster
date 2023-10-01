@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from player import Player
 from match import Match
 from team import Team
+from tournament import Tournament
 import discord
 import aramMatch
 import random
@@ -41,6 +42,8 @@ class serverInstance:
         self.gameChannel = gameChannel
         self.roleID = roleID
         self.apiKey = None
+        self.tournament = None
+        
 
     # Send the user a DM with player database
     async def upload_db(self, member):
