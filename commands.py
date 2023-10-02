@@ -246,6 +246,9 @@ class commands:
         if not admin_check:
             return
         await inst.startTournament(message, args[0])
+    
+    async def winTournament(message, inst, args):
+        await inst.winTournament(message, args[0])
 
     userCommands = {
         'hello': hello,
@@ -287,7 +290,8 @@ class commands:
         'profile': profile,
         'update-api-key': updateAPIKey,
         'mainaccount': mainAccount,
-        'start-tournament': startTournament
+        'start-tournament': startTournament,
+        'twin': winTournament
     }
 
     async def parseReaction(reaction, inst):

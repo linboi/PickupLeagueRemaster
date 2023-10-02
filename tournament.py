@@ -17,15 +17,18 @@ class Tournament:
         # List of tournament teams TTeam()
         self.teams = []
         
-        # List of t_matches per round TMatch()
-        self.round_1 = [TMatch(self.cursor, self.con, self.client), TMatch(self.cursor, self.con, self.client), TMatch(self.cursor, self.con, self.client), TMatch(self.cursor, self.con, self.client)]
-        self.round_2 = [TMatch(self.cursor, self.con, self.client), TMatch(self.cursor, self.con, self.client)]
-        self.round_3 = [TMatch(self.cursor, self.con, self.client)]
-        
-        self.bracket = [self.round_1, self.round_2, self.round_3]
+        self.bracket = [[TMatch(self.cursor, self.con, self.client), TMatch(self.cursor, self.con, self.client), TMatch(self.cursor, self.con, self.client), TMatch(self.cursor, self.con, self.client)], 
+                        [TMatch(self.cursor, self.con, self.client), TMatch(self.cursor, self.con, self.client)], 
+                        [TMatch(self.cursor, self.con, self.client)]]
         
         # List of current t_matches
         self.currentTMatches = []
+        
+        self.playerList = []
+        
+        self.discord_id_list = [165186656863780865, 343490464948813824, 413783321844383767, 197053913269010432, 187302526935105536, 574206308803412037, 197058147167371265, 127796716408799232, 180398163620790279,
+                           225650967058710529, 618520923204485121, 160471312517562368, 188370105413926912, 694560846814117999, 266644132825530389, 132288462563966977, 355707373500760065, 259820776608235520, 182965319969669120,
+                           240994422488170496]
         
         # Winner
         self.winner = None
@@ -36,16 +39,54 @@ class Tournament:
         # Assign number between 1-8
         # Set current round to 0
         # Generate Random Name (?)
+        
         pass
+    
+    async def testTeam(self):
+        for idx, id in enumerate(self.discord_id_list):
+            # Create player
+            player_details = self.cursor.execute(
+                    f"SELECT playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGames, signupCount, leaderboardPoints, aram_internalRating, aram_leaderboardPoints, aram_winCount, aram_lossCount FROM Player WHERE discordID = {id}").fetchone()
+
+            discordUser = None
+            try:
+                discordUser = await self.client.fetch_user(player_details[1])
+            except:
+                discordUser = None
+            player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
+                            player_details[9], player_details[10], player_details[11], player_details[12], player_details[13], player_details[14], player_details[15], self.cursor, self.con, discordUser)
+            self.playerList.append(player)
+        
+        pid = self.playerList.copy()
+        for i in range(8):
+            team = TTeam(pid[0], pid[1], pid[2], pid[3], pid[4], f"TestName{i}", i)
+            self.teams.append(team)
+            
+        player_details = self.cursor.execute(
+                    f"SELECT playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGames, signupCount, leaderboardPoints, aram_internalRating, aram_leaderboardPoints, aram_winCount, aram_lossCount FROM Player WHERE discordID = {197058147167371265}").fetchone()
+
+        discordUser = None
+        try:
+            discordUser = await self.client.fetch_user(player_details[1])
+        except:
+            discordUser = None
+        player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
+                        player_details[9], player_details[10], player_details[11], player_details[12], player_details[13], player_details[14], player_details[15], self.cursor, self.con, discordUser)
+        self.playerList.append(player)
+        
+        self.teams[0].set_top(self.playerList[-1])
     
     async def start(self):
         # Create 4 matches based on t_id
+        await self.testTeam()
+        counter = 0
         for i in range(0, len(self.teams), 2):
             team1 = self.teams[i]
             team2 = self.teams[i+1]
-            match = TMatch(None, None, None, 202310+i, team1, team2, 'TODAY', 1)
-            self.round_1.append(match)
-            self.currentTMatches.append(match)
+            match = TMatch(self.con, self.cursor, self.client, 202310+i, team1, team2, 'TODAY', 1)
+            self.bracket[0][counter] = match
+            counter += 1
+        
         await self.updateBracket()
         await self.displayBracket()
     
@@ -74,53 +115,75 @@ class Tournament:
             round = activePlayerMatches[0][0].getRound()
             
             if(winningTeam.getTeamId() <= 4 and round == 1):
-                if(self.round_2[0].getBlueTeam() != None):
-                    self.round_2[0].setBlueTeam(winningTeam)
+                if(self.bracket[1][0].getBlueTeam() != None):
+                    self.bracket[1][0].setBlueTeam(winningTeam)
                 else:
-                    self.round_2[0].setRedTeam(winningTeam)
+                    self.bracket[1][0].setRedTeam(winningTeam)
             if(winningTeam.getTeamId() >= 4 and round == 1):
-                if(self.round_2[1].getBlueTeam() != None):
-                    self.round_2[1].setBlueTeam(winningTeam)
+                if(self.bracket[1][1].getBlueTeam() != None):
+                    self.bracket[1][1].setBlueTeam(winningTeam)
                 else:
-                    self.round_2[1].setRedTeam(winningTeam)
+                    self.bracket[1][1].setRedTeam(winningTeam)
             if(round == 2):
-                if(self.round_3[0].getBlueTeam() != None):
-                    self.round_3[0].setBlueTeam(winningTeam)
+                if(self.bracket[2][0].getBlueTeam() != None):
+                    self.bracket[2][0].setBlueTeam(winningTeam)
                 else:
-                    self.round_3[0].setRedTeam(winningTeam)
+                    self.bracket[2][0].setRedTeam(winningTeam)
             if(round == 3):
                 # winner
                 self.winner = winningTeam
-                
+            
+            
             self.currentTMatches.remove(activePlayerMatches[0][0])
             await message.channel.send(f'🎊 WPGG, remember to upload a post-game screenshot - You have advanced to the next round!')
+            await message.channel.send(f'__*Updated Leaderbord: Time*__')
+            await self.updateBracket()
+            await self.displayBracket()
             
         if len(activePlayerMatches) > 1:
             await message.channel.send("Player found in more than one tournament match, uh oh")
             
-        await self.updateBracket()
-        await self.displayBracket()
+        
     
     async def updateBracket(self):
         # Check each bracket to see if each match has 2 team
+        print(len(self.currentTMatches))
         for round in self.bracket:
             for match in round:
                 if(match.getCompleted() is False and match.getRedTeam() != None and match.getBlueTeam() != None):
                     # Side selection based on fastest win?
+                    
                     self.currentTMatches.append(match)
                     # Send to game announcement channel
         
         if(self.winner != None):
-            # If winner found, announce, and end tournament.
+            # If winner found, announce.
             await self.announcementChannel.send(f"The winner is {self.winner.getTeamName()}")
+        
+        print(len(self.currentTMatches))
             
     async def displayBracket(self):
         for idx, round in enumerate(self.bracket):
-            await self.announcementChannel.send(f"Round({idx})")
+            await self.announcementChannel.send(f"__Round({idx + 1})__")
             for match in round:
-                await self.announcementChannel.send(f"{match.getBlueTeam().getTeamName()} vs. {match.getRedTeam().getTeamName()} ~ {match.getCompleted()}")
+                try:
+                    n_bTeam = match.getBlueTeam().getTeamName()
+                except:
+                    n_bTeam = "T.B.D"
+                
+                try:
+                    n_rTeam = match.getRedTeam().getTeamName()
+                except:
+                    n_rTeam = "T.B.D"
+                
+                try:
+                    await self.announcementChannel.send(f"**{n_bTeam}** *vs.* **{n_rTeam}** : *Finished:{match.getCompleted()}*")
+                except:
+                    await self.announcementChannel.send(f"Error")
         if(self.winner != None):
+            pass
             await self.announcementChannel.send(f"Winner:{self.winner}")
+            #End tournament
             
     async def displayAllTeams(self, message):
         # Display op.ggs of teams

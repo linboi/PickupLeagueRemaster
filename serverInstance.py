@@ -1732,25 +1732,26 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         return bestMatches
     
     async def startTournament(self, message, timeUntil):
-        self.tournament = Tournament(self.cursor, self.con, self.client, self.gameChannel, self.announcementChannel)
+        self.tournament = Tournament(self.cursor, self.con, self.client, self.testChannel, self.testChannel)
+    
         # Send annoucnement out, with a sleep of timeuntil
         await self.tournament.start()
         
     async def winTournament(self, message, gameId):
         if(self.tournament != None):
-            self.tournament.resolveMatch(message, gameId)
+            await self.tournament.resolveMatch(message, gameId)
         else:
             await message.channel.send("No Tournament in Progress")
     
     async def displayTournament(self, message):
         if(self.tournament != None):
-            self.tournament.displayBracket()
+            await self.tournament.displayBracket()
         else:
             await message.channel.send("No Tournament in Progress")
     
     async def getTeamListTournament(self, message):
         if(self.tournament != None):
-            self.tournament.displayAllTeams(message)
+            await self.tournament.displayAllTeams(message)
         else:
             await message.channel.send("No Tournament in Progress")
         
