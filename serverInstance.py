@@ -1737,7 +1737,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         # Send annoucnement out, with a sleep of timeuntil
         match_list = await self.tournament.start()
         # Returns a list of current matches, and announces them
-        await self.publish_matches(match_list, self.testChannel)
+        #await self.publish_matches(match_list, self.testChannel)
         
     async def winTournament(self, message, gameId):
         if(self.tournament != None):

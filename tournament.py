@@ -2,6 +2,7 @@ from player import Player
 from team import Team
 from match import Match
 import discord
+from wonderwords import RandomWord
 
 class Tournament:
     def __init__(self, cursor, con, client, gameChannel, announcementChannel):
@@ -17,8 +18,8 @@ class Tournament:
         self.teams = []
         
         self.bracket = [[TMatch(self.cursor, self.con, self.client), TMatch(self.cursor, self.con, self.client), TMatch(self.cursor, self.con, self.client), TMatch(self.cursor, self.con, self.client)], 
-                        [TMatch(self.cursor, self.con, self.client), TMatch(self.cursor, self.con, self.client)], 
-                        [TMatch(self.cursor, self.con, self.client)]]
+                        [TMatch(self.cursor, self.con, self.client, t_Round=2), TMatch(self.cursor, self.con, self.client, t_Round=2)], 
+                        [TMatch(self.cursor, self.con, self.client, t_Round=3)]]
         
         # List of current t_matches
         self.currentTMatches = []
@@ -74,6 +75,20 @@ class Tournament:
         self.playerList.append(player)
         
         self.teams[0].set_top(self.playerList[-1])
+        
+        player_details = self.cursor.execute(
+                    f"SELECT playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGames, signupCount, leaderboardPoints, aram_internalRating, aram_leaderboardPoints, aram_winCount, aram_lossCount FROM Player WHERE discordID = {225650967058710529}").fetchone()
+
+        discordUser = None
+        try:
+            discordUser = await self.client.fetch_user(player_details[1])
+        except:
+            discordUser = None
+        player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
+                        player_details[9], player_details[10], player_details[11], player_details[12], player_details[13], player_details[14], player_details[15], self.cursor, self.con, discordUser)
+        self.playerList.append(player)
+        
+        self.teams[2].set_top(player)
     
     async def start(self):
         # Create 4 matches based on t_id
@@ -82,7 +97,7 @@ class Tournament:
         for i in range(0, len(self.teams), 2):
             team1 = self.teams[i]
             team2 = self.teams[i+1]
-            match = TMatch(self.con, self.cursor, self.client, 202310+i, team1, team2, 'TODAY', 1)
+            match = TMatch(self.cursor, self.con, self.client, 202310+i, team1, team2, 'TODAY', 1)
             self.bracket[0][counter] = match
             counter += 1
         
@@ -90,15 +105,13 @@ class Tournament:
         await self.updateBracket()
         await self.displayBracket()
         
-        for match in self.currentTMatches:
-            match.setAnnouncement(True)
-        
         return self.currentTMatches
     
     async def getCurrentMatches(self):
         return self.currentTMatches
     
     async def resolveMatch(self, message, gameID):
+        print(f't{type(self.con)}')
         announcement_str = ''
         activePlayerMatches = []
         matchesToAnnounce = []
@@ -124,17 +137,17 @@ class Tournament:
             round = activePlayerMatches[0][0].getRound()
             
             if(winningTeam.getTeamId() <= 4 and round == 1):
-                if(self.bracket[1][0].getBlueTeam() != None):
+                if(self.bracket[1][0].getBlueTeam() is None):
                     self.bracket[1][0].setBlueTeam(winningTeam)
                 else:
                     self.bracket[1][0].setRedTeam(winningTeam)
             if(winningTeam.getTeamId() >= 4 and round == 1):
-                if(self.bracket[1][1].getBlueTeam() != None):
+                if(self.bracket[1][1].getBlueTeam() is None):
                     self.bracket[1][1].setBlueTeam(winningTeam)
                 else:
                     self.bracket[1][1].setRedTeam(winningTeam)
             if(round == 2):
-                if(self.bracket[2][0].getBlueTeam() != None):
+                if(self.bracket[2][0].getBlueTeam() is None):
                     self.bracket[2][0].setBlueTeam(winningTeam)
                 else:
                     self.bracket[2][0].setRedTeam(winningTeam)
@@ -142,9 +155,10 @@ class Tournament:
                 # winner
                 self.winner = winningTeam
             
-            
+            ratingChange = activePlayerMatches[0][0].resolve(
+                activePlayerMatches[0][1], gameID)
             self.currentTMatches.remove(activePlayerMatches[0][0])
-            announcement_str += f'🎊 WPGG, remember to upload a post-game screenshot - You have advanced to the next round!\n'
+            announcement_str += f'🎊 WPGG, remember to upload a post-game screenshot (+{ratingChange:.0f}LP) - You have advanced to the next round!\n'
             announcement_str += f'__*Updated Leaderbord: Time*__\n'
             
             await self.updateBracket()
@@ -166,9 +180,10 @@ class Tournament:
         print(len(self.currentTMatches))
         for round in self.bracket:
             for match in round:
-                if(match.getCompleted() is False and match.getRedTeam() != None and match.getBlueTeam() != None):
+                if(match.getCompleted() is False and match.getRedTeam() != None and match.getBlueTeam() != None
+                   and match.getAnnouncement() is False):
                     # Side selection based on fastest win?
-                    
+                    match.setAnnouncement(True)
                     self.currentTMatches.append(match)
                     # Send to game announcement channel
         
@@ -219,18 +234,21 @@ class Tournament:
     async def displayAllTeams(self, message):
         # Display op.ggs of teams
         embed_list = []
-        
+        print(len(self.teams))
         for team in self.teams:
             embed_list.append(discord.Embed(
             title =f"{team.getTeamName()} OPGG", url=team.get_multi_opgg(), color=discord.Colour.random()))
         
+        print(len(embed_list))
         for embed in embed_list:
-            await self.announcementChannel.send(embed=(embed))
+            await self.announcementChannel.send(embed=embed)
+        
            
 class TTeam(Team):
    def __init__(self, top, jungle, mid, adc, support, t_Name, t_Id):
        super().__init__(top, jungle, mid, adc, support)
-       self.t_name = t_Name
+       r = RandomWord()
+       self.t_name = r.word(word_min_length=2, word_max_length=6, include_parts_of_speech=["adjectives"]) + ' ' + r.word(word_min_length=2, word_max_length=6, include_parts_of_speech=["nouns"]+'s')
        self.t_Id = t_Id
        
    def getTeamId(self):
@@ -241,6 +259,7 @@ class TTeam(Team):
            return "N/A"
        else:
          return self.t_name
+       
     
 class TMatch(Match):
     def __init__(self, cursor, con, client, matchID=None, blueTeam=None, redTeam=None, startTime='TODAY', t_Round=None):
@@ -260,6 +279,39 @@ class TMatch(Match):
             losingTeam = self.blueTeam
 
         return winningTeam
+    
+    # Return the details of the current match in string
+    def get_details_string(self):
+        discordIDs = ", ".join(str(p.get_dID()) for p in self.blueTeam.get_player_list(
+        ) + self.redTeam.get_player_list())
+        res = self.cursor.execute(
+            f"SELECT [name] FROM Account JOIN Player ON Account.playerID = Player.playerID WHERE Player.discordID in ({discordIDs})").fetchall()
+        invite_strings = []
+        idx = 0
+        while idx < len(res):
+            invite_string = ",".join(
+                str(name[0]) for name in res[idx:min(len(res)-1, idx+10)])
+            invite_strings.append(invite_string)
+            idx += 10
+        round_str=''
+        if(self.round == 1):
+            round_str = 'QUATER FINALS MATCH'
+        if(self.round == 2):
+            round_str = 'SEMI FINALS MATCH'
+        if(self.round == 3):
+            round_str = 'GRAND FINALS MATCH'
+        string = f"   \n✨ MatchID ({self.matchID})\t\t🏅 MMR Difference ({round(self.calculateMMRDifference(self.blueTeam, self.redTeam))})\t\t **{round_str}**"
+        string += f"\n```{f'[{self.blueTeam.getTeamName()}]': ^15}{'':^5}{f'[{self.redTeam.getTeamName()}]':^15}\n\n"
+        string += f"{self.blueTeam.get_top().getMainAccountName():^15}{'(top)':^5}{self.redTeam.get_top().getMainAccountName():^15}\n"
+        string += f"{self.blueTeam.get_jg().getMainAccountName():^15}{'(jng)':^5}{self.redTeam.get_jg().getMainAccountName():^15}\n"
+        string += f"{self.blueTeam.get_mid().getMainAccountName():^15}{'(mid)':^5}{self.redTeam.get_mid().getMainAccountName():^15}\n"
+        string += f"{self.blueTeam.get_adc().getMainAccountName():^15}{'(adc)':^5}{self.redTeam.get_adc().getMainAccountName():^15}\n"
+        string += f"{self.blueTeam.get_sup().getMainAccountName():^15}{'(sup)':^5}{self.redTeam.get_sup().getMainAccountName():^15}\n```"
+        string += f"{self.tournament_code}"
+        for i, invite_string in enumerate(invite_strings):
+            string += f"\nInvite list{i}: {invite_string}"
+
+        return string
     
     def setWinningSide(self, side):
         self.winningSide = side
