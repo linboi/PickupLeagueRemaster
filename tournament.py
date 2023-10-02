@@ -1,8 +1,7 @@
 from player import Player
 from team import Team
 from match import Match
-import random
-
+import discord
 
 class Tournament:
     def __init__(self, cursor, con, client, gameChannel, announcementChannel):
@@ -87,23 +86,33 @@ class Tournament:
             self.bracket[0][counter] = match
             counter += 1
         
+        
         await self.updateBracket()
         await self.displayBracket()
+        
+        for match in self.currentTMatches:
+            match.setAnnouncement(True)
+        
+        return self.currentTMatches
     
     async def getCurrentMatches(self):
         return self.currentTMatches
     
     async def resolveMatch(self, message, gameID):
+        announcement_str = ''
         activePlayerMatches = []
+        matchesToAnnounce = []
         activePlayer = message.author.id
         for match in self.currentTMatches:
             for player in match.blueTeam.get_player_list():
                 if player.get_dID() == activePlayer:
                     match.setCompleted()
+                    match.setWinningSide('BLUE')
                     activePlayerMatches.append((match, 'BLUE'))
             for player in match.redTeam.get_player_list():
                 if player.get_dID() == activePlayer:
                     match.setCompleted()
+                    match.setWinningSide('RED')
                     activePlayerMatches.append((match, 'RED'))
 
         if len(activePlayerMatches) == 0:
@@ -135,16 +144,23 @@ class Tournament:
             
             
             self.currentTMatches.remove(activePlayerMatches[0][0])
-            await message.channel.send(f'🎊 WPGG, remember to upload a post-game screenshot - You have advanced to the next round!')
-            await message.channel.send(f'__*Updated Leaderbord: Time*__')
+            announcement_str += f'🎊 WPGG, remember to upload a post-game screenshot - You have advanced to the next round!\n'
+            announcement_str += f'__*Updated Leaderbord: Time*__\n'
+            
             await self.updateBracket()
-            await self.displayBracket()
+            await self.displayBracket(announcement_str)
+            
+            for match in self.currentTMatches:
+                if(match.getAnnouncement() is False and match.getRedTeam() is not None and match.getBlueTeam() is not None):
+                    matchesToAnnounce.append(match)
+                    
+            
             
         if len(activePlayerMatches) > 1:
             await message.channel.send("Player found in more than one tournament match, uh oh")
             
+        return matchesToAnnounce
         
-    
     async def updateBracket(self):
         # Check each bracket to see if each match has 2 team
         print(len(self.currentTMatches))
@@ -159,12 +175,20 @@ class Tournament:
         if(self.winner != None):
             # If winner found, announce.
             await self.announcementChannel.send(f"The winner is {self.winner.getTeamName()}")
-        
-        print(len(self.currentTMatches))
             
-    async def displayBracket(self):
+    async def displayBracket(self, anc_str=''):
+        announcement_str = anc_str
+        round_str = ''
         for idx, round in enumerate(self.bracket):
-            await self.announcementChannel.send(f"__Round({idx + 1})__")
+            
+            if(idx == 0):
+                round_str = f"__Quaters__\n"
+            if(idx == 1):
+                round_str = f"__Semis__\n"
+            if(idx == 2):
+                round_str = f"__Finals__\n"
+                
+            announcement_str += round_str
             for match in round:
                 try:
                     n_bTeam = match.getBlueTeam().getTeamName()
@@ -177,18 +201,32 @@ class Tournament:
                     n_rTeam = "T.B.D"
                 
                 try:
-                    await self.announcementChannel.send(f"**{n_bTeam}** *vs.* **{n_rTeam}** : *Finished:{match.getCompleted()}*")
+                    if(match.completed is False):
+                         announcement_str += f"**{n_bTeam}** *vs.* **{n_rTeam}** : *Finished:{match.getCompleted()}* : *Ann:{match.getAnnouncement()}* \n"
+                    else:
+                        if(match.getWinningSide() == 'RED'):
+                            announcement_str += f"~~**{n_bTeam}**~~ (L) *vs.* **{n_rTeam}** (W) : *Finished:{match.getCompleted()}* : *Ann:{match.getAnnouncement()}* \n"
+                        else:
+                            announcement_str += f"**{n_bTeam}** (W) *vs.* ~~**{n_rTeam}**~~ (L) : *Finished:{match.getCompleted()}* : *Ann:{match.getAnnouncement()}* \n"
                 except:
                     await self.announcementChannel.send(f"Error")
-        if(self.winner != None):
-            pass
-            await self.announcementChannel.send(f"Winner:{self.winner}")
-            #End tournament
             
+        if(self.winner != None):
+            announcement_str += f"Winner:{self.winner}"
+            #End tournament
+        await self.announcementChannel.send(announcement_str)
+              
     async def displayAllTeams(self, message):
         # Display op.ggs of teams
-        pass
+        embed_list = []
         
+        for team in self.teams:
+            embed_list.append(discord.Embed(
+            title =f"{team.getTeamName()} OPGG", url=team.get_multi_opgg(), color=discord.Colour.random()))
+        
+        for embed in embed_list:
+            await self.announcementChannel.send(embed=(embed))
+           
 class TTeam(Team):
    def __init__(self, top, jungle, mid, adc, support, t_Name, t_Id):
        super().__init__(top, jungle, mid, adc, support)
@@ -210,6 +248,8 @@ class TMatch(Match):
         self.round = t_Round
         self.gameLength = None
         self.completed = False
+        self.announced = False
+        self.winningSide = None
     
     def tResolve(self, winner, gameID):
         if winner == 'BLUE':
@@ -220,6 +260,18 @@ class TMatch(Match):
             losingTeam = self.blueTeam
 
         return winningTeam
+    
+    def setWinningSide(self, side):
+        self.winningSide = side
+        
+    def getWinningSide(self):
+        return self.winningSide
+    
+    def getAnnouncement(self):
+        return self.announced
+    
+    def setAnnouncement(self, ann):
+        self.announced = ann
     
     def getRedTeam(self):
         return self.redTeam

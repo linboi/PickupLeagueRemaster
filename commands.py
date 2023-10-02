@@ -249,6 +249,9 @@ class commands:
     
     async def winTournament(message, inst, args):
         await inst.winTournament(message, args[0])
+    
+    async def getTeamsTournament(message, inst, args):
+        await inst.getTeamListTournament(message)
 
     userCommands = {
         'hello': hello,
@@ -291,7 +294,8 @@ class commands:
         'update-api-key': updateAPIKey,
         'mainaccount': mainAccount,
         'start-tournament': startTournament,
-        'twin': winTournament
+        'twin': winTournament,
+        'get-teams': getTeamsTournament
     }
 
     async def parseReaction(reaction, inst):
