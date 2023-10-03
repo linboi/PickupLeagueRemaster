@@ -278,7 +278,7 @@ class serverInstance:
                       blueTeam=blueTeam, redTeam=redTeam, startTime=startTime)
         self.currentMatches.append(match)
         tournament_code = await self.fetch_tournament_code()
-        match_string = match.get_details_string(tournament_code)
+        match_string = match.get_details_string()
         match_msg = await self.gameChannel.send(match_string)
         red_oplink, blue_oplink = match.getOPGGLink()
         await self.embedOPGGLink(red_oplink, blue_oplink, self.gameChannel)
