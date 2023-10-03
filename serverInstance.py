@@ -18,6 +18,7 @@ import sqlite3
 import json
 from table2ascii import table2ascii as t2a, PresetStyle
 
+
 class serverInstance:
     def __init__(self):
         self.queue = []
@@ -243,7 +244,8 @@ class serverInstance:
                     f"SELECT playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGames, signupCount, leaderboardPoints, aram_internalRating, aram_leaderboardPoints, aram_winCount, aram_lossCount FROM Player WHERE discordID = {message.mentions[0].id}").fetchone()
                 if res == None:
                     return False
-            return True
+                return True
+            return False
         for team in teams:
             for role in roles:
                 await initMsg.channel.send(f"Mention player for {team} : {role}:")
@@ -900,7 +902,6 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                     r = requests.get(url=url, headers=headers)
                     status_code = r.status_code
                     if status_code == 429:
-                        print(r.retry_after + 'ahh')
                         await asyncio.sleep(int(r.headers['Retry-After']))
                     else:
                         data = r.json()
@@ -957,8 +958,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                                   ORDER BY Games DESC
                                   LIMIT 20
                                   """).fetchall()
-        output = t2a(header= ["Champion", "Kills", "Deaths", "Assists", "KDA", "Games", "W/L", "Win Rate"],
-                     body = [[x[0], x[1], x[2], x[3], f"{(x[1] + x[3]) / x[2]:.2f}", x[4], f"{x[5]}/{x[6]}", f"{x[5] / (x[4]) * 100:.0f}%"] for x in res],
+        output = t2a(header=["Champion", "Kills", "Deaths", "Assists", "KDA", "Games", "W/L", "Win Rate"],
+                     body=[[x[0], x[1], x[2], x[3], f"{(x[1] + x[3]) / x[2]:.2f}", x[4],
+                            f"{x[5]}/{x[6]}", f"{x[5] / (x[4]) * 100:.0f}%"] for x in res],
                      style=PresetStyle.thin_compact,
                      first_col_heading=True)
         await message.channel.send(f"```\n{output}\n```")
@@ -1158,19 +1160,21 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             leaderboardPoints = leaderboardPoints.ljust(7)
             pRole = player[5]
             sRole = player[6]
-            all_players.append([pos, id, leaderboardPoints,f"{hotstreak}{winloss}",pRole,sRole])
+            all_players.append([pos, id, leaderboardPoints,
+                               f"{hotstreak}{winloss}", pRole, sRole])
         if message == None:
-            output = t2a(header= ["Rank", "Name", "LP", "W/L", "Primary", "Secondary"],
-                     body = all_players,
-                     first_col_heading=True)
+            output = t2a(header=["Rank", "Name", "LP", "W/L", "Primary", "Secondary"],
+                         body=all_players,
+                         first_col_heading=True)
             message = await channelToSendIn.send(f"**__{fieldPrefix.upper()}Leaderboard__**```{output}```")
             await message.add_reaction('⬅')
             await message.add_reaction('➡')
         else:
-            output = t2a(header= ["Rank", "Name", "LP", "W/L", "Primary", "Secondary"],
-                     body = all_players,
-                     first_col_heading=True)
-            message = await message.edit(content = f"**__{fieldPrefix.upper()}Leaderboard__**```{output}```")
+            output = t2a(header=["Rank", "Name", "LP", "W/L", "Primary", "Secondary"],
+                         body=all_players,
+                         first_col_heading=True)
+            message = await message.edit(content=f"**__{fieldPrefix.upper()}Leaderboard__**```{output}```")
+
         def check(reaction, user):
             return reaction.message.id == message.id and reaction.emoji in ['⬅', '➡']
 
