@@ -242,13 +242,37 @@ class Tournament:
         print(len(embed_list))
         for embed in embed_list:
             await self.announcementChannel.send(embed=embed)
+            
+    async def reduceName(self, input_str):
+            # Split the input string by whitespace
+        words = input_str.split()
+
+        # Check if there are at least two words
+        if len(words) >= 2:
+            # Concatenate the first word with the starting character of the next word
+            result = words[0] + " " + words[1][0]
+        else:
+            # If there are not enough words, return the input string as is
+            result = input_str
+
+        # Calculate the number of hyphens needed on both sides
+        hyphen_count = 10 - len(result)
+        if hyphen_count > 0:
+            
+            left_hyphens = hyphen_count // 2
+            right_hyphens = hyphen_count - left_hyphens
+            if hyphen_count % 2 == 0:
+                result = "-" * left_hyphens + result + "-" * right_hyphens
+            else:
+                result = "-" * left_hyphens + result + "-" * (right_hyphens-1)
+        return result
         
            
 class TTeam(Team):
    def __init__(self, top, jungle, mid, adc, support, t_Name, t_Id):
        super().__init__(top, jungle, mid, adc, support)
        r = RandomWord()
-       self.t_name = r.word(word_min_length=2, word_max_length=6, include_parts_of_speech=["adjectives"]) + ' ' + r.word(word_min_length=2, word_max_length=6, include_parts_of_speech=["nouns"]+'s')
+       self.t_name = r.word(word_min_length=2, word_max_length=6, include_parts_of_speech=["adjectives"]) + ' ' + r.word(word_min_length=2, word_max_length=6, include_parts_of_speech=["nouns"])
        self.t_Id = t_Id
        
    def getTeamId(self):
