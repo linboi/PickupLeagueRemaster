@@ -17,6 +17,7 @@ import shutil
 import sqlite3
 import json
 from table2ascii import table2ascii as t2a, PresetStyle
+import regex as re
 
 
 class serverInstance:
@@ -233,26 +234,15 @@ class serverInstance:
         await self.update_tournament_file()
 
     async def setMatch(self, initMsg):
-        roles = ['TOP', 'JNG', 'MID', 'ADC', 'SUP']
-        teams = ['BLUE', 'RED']
 
         playerObjs = []
-
-        def check(message):
-            if message.author.id == initMsg.author.id and len(message.mentions) == 1 and message.channel.id == initMsg.channel.id:
-                res = self.cursor.execute(
-                    f"SELECT playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGames, signupCount, leaderboardPoints, aram_internalRating, aram_leaderboardPoints, aram_winCount, aram_lossCount FROM Player WHERE discordID = {message.mentions[0].id}").fetchone()
-                if res == None:
-                    return False
-                return True
-            return False
-        for team in teams:
-            for role in roles:
-                await initMsg.channel.send(f"Mention player for {team} : {role}:")
-                msg = await self.client.wait_for('message', check=check)
+        ids = re.findall(r'(?<=<@)\d*(?=>)', initMsg.content)
+        if len(ids) != 10:
+            await initMsg.channel.send("Invalid number of players")
+            return
+        for id in ids:
                 player_details = self.cursor.execute(
-                    f"SELECT playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGames, signupCount, leaderboardPoints, aram_internalRating, aram_leaderboardPoints, aram_winCount, aram_lossCount FROM Player WHERE discordID = {msg.mentions[0].id}").fetchone()
-
+                    f"SELECT playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGames, signupCount, leaderboardPoints, aram_internalRating, aram_leaderboardPoints, aram_winCount, aram_lossCount FROM Player WHERE discordID = {id}").fetchone()
                 discordUser = None
                 try:
                     discordUser = await self.client.fetch_user(player_details[1])
@@ -261,10 +251,6 @@ class serverInstance:
                 player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
                                 player_details[9], player_details[10], player_details[11], player_details[12], player_details[13], player_details[14], player_details[15], self.cursor, self.con, discordUser)
                 playerObjs.append(player)
-
-        if (len(playerObjs) != 10):
-            initMsg.channel.send("Failed to create match")
-            return
 
         blueTeam = Team(playerObjs[0], playerObjs[1],
                         playerObjs[2], playerObjs[3], playerObjs[4])
