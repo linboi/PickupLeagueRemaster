@@ -237,7 +237,6 @@ class serverInstance:
 
         playerObjs = []
         ids = re.findall(r'(?<=<@)\d*(?=>)', initMsg.content)
-        print(ids)
         if len(ids) != 10:
             await initMsg.channel.send("Invalid number of players")
             return
