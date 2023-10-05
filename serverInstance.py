@@ -17,7 +17,7 @@ import shutil
 import sqlite3
 import json
 from table2ascii import table2ascii as t2a, PresetStyle
-import regex as re
+import re
 
 
 class serverInstance:
@@ -237,6 +237,7 @@ class serverInstance:
 
         playerObjs = []
         ids = re.findall(r'(?<=<@)\d*(?=>)', initMsg.content)
+        print(ids)
         if len(ids) != 10:
             await initMsg.channel.send("Invalid number of players")
             return
