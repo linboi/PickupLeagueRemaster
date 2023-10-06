@@ -248,7 +248,7 @@ class Tournament:
         test += f"\n\u001b[0;41m\u001b[1;37m{f'-----{bracket_list[7]}-----':^20}\u001b[0m```"
         await self.announcementChannel.send(test)
               
-    async def displayAllTeams(self, message):
+    async def displayAllTeams(self):
         # Display op.ggs of teams
         embed_list = []
         for team in self.teams:
@@ -310,10 +310,8 @@ class TMatch(Match):
     def tResolve(self, winner, gameID):
         if winner == 'BLUE':
             winningTeam = self.blueTeam
-            losingTeam = self.redTeam
         elif winner == 'RED':
             winningTeam = self.redTeam
-            losingTeam = self.blueTeam
 
         return winningTeam
     
