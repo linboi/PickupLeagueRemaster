@@ -1737,7 +1737,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         # Send annoucnement out, with a sleep of timeuntil
         match_list = await self.tournament.start()
         # Returns a list of current matches, and announces them
-        await self.publish_matches(match_list, self.testChannel)
+        # await self.publish_matches(match_list, self.testChannel)
         
     async def winTournament(self, message, gameId):
         if(self.tournament != None):
@@ -1788,4 +1788,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         test +=f"\n{'':^15}/"
         test += f"\n\u001b[0;41m\u001b[1;37m{'-----Team2-----':^10}\u001b[0m```"
         await message.channel.send(test)
+        
+    async def testString(self, word1, word2):
+        word = word1 + " " + word2
+        test = await self.tournament.reduceName(word)
+        print(test)
         

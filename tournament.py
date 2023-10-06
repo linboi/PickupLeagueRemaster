@@ -13,10 +13,10 @@ class Tournament:
         self.gameChannel = gameChannel
         self.announcementChannel = announcementChannel
         
-        
         # List of tournament teams TTeam()
         self.teams = []
         
+        # Bracket Array
         self.bracket = [[TMatch(self.cursor, self.con, self.client), TMatch(self.cursor, self.con, self.client), TMatch(self.cursor, self.con, self.client), TMatch(self.cursor, self.con, self.client)], 
                         [TMatch(self.cursor, self.con, self.client, t_Round=2), TMatch(self.cursor, self.con, self.client, t_Round=2)], 
                         [TMatch(self.cursor, self.con, self.client, t_Round=3)]]
@@ -24,11 +24,8 @@ class Tournament:
         # List of current t_matches
         self.currentTMatches = []
         
+        # List of players
         self.playerList = []
-        
-        self.discord_id_list = [165186656863780865, 343490464948813824, 413783321844383767, 197053913269010432, 187302526935105536, 574206308803412037, 197058147167371265, 127796716408799232, 180398163620790279,
-                           225650967058710529, 618520923204485121, 160471312517562368, 188370105413926912, 694560846814117999, 266644132825530389, 132288462563966977, 355707373500760065, 259820776608235520, 182965319969669120,
-                           240994422488170496]
         
         # Winner
         self.winner = None
@@ -43,7 +40,11 @@ class Tournament:
         pass
     
     async def testTeam(self):
-        for idx, id in enumerate(self.discord_id_list):
+        # For testing, random id's from db
+        discord_id_list = [165186656863780865, 343490464948813824, 413783321844383767, 197053913269010432, 187302526935105536, 574206308803412037, 197058147167371265, 127796716408799232, 180398163620790279,
+                           225650967058710529, 618520923204485121, 160471312517562368, 188370105413926912, 694560846814117999, 266644132825530389, 132288462563966977, 355707373500760065, 259820776608235520, 182965319969669120,
+                           240994422488170496]
+        for idx, id in enumerate(discord_id_list):
             # Create player
             player_details = self.cursor.execute(
                     f"SELECT playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGames, signupCount, leaderboardPoints, aram_internalRating, aram_leaderboardPoints, aram_winCount, aram_lossCount FROM Player WHERE discordID = {id}").fetchone()
@@ -111,7 +112,6 @@ class Tournament:
         return self.currentTMatches
     
     async def resolveMatch(self, message, gameID):
-        print(f't{type(self.con)}')
         announcement_str = ''
         activePlayerMatches = []
         matchesToAnnounce = []
@@ -159,8 +159,7 @@ class Tournament:
                 activePlayerMatches[0][1], gameID)
             self.currentTMatches.remove(activePlayerMatches[0][0])
             announcement_str += f'🎊 WPGG, remember to upload a post-game screenshot (+{ratingChange:.0f}LP) - You have advanced to the next round!\n'
-            announcement_str += f'__*Updated Leaderbord: Time*__\n'
-            
+        
             await self.updateBracket()
             await self.displayBracket(announcement_str)
             
@@ -168,8 +167,6 @@ class Tournament:
                 if(match.getAnnouncement() is False and match.getRedTeam() is not None and match.getBlueTeam() is not None):
                     matchesToAnnounce.append(match)
                     
-            
-            
         if len(activePlayerMatches) > 1:
             await message.channel.send("Player found in more than one tournament match, uh oh")
             
@@ -190,20 +187,10 @@ class Tournament:
         if(self.winner != None):
             # If winner found, announce.
             await self.announcementChannel.send(f"The winner is {self.winner.getTeamName()}")
-            
+    
     async def displayBracket(self, anc_str=''):
-        announcement_str = anc_str
-        round_str = ''
+        bracket_list = []
         for idx, round in enumerate(self.bracket):
-            
-            if(idx == 0):
-                round_str = f"__Quaters__\n"
-            if(idx == 1):
-                round_str = f"__Semis__\n"
-            if(idx == 2):
-                round_str = f"__Finals__\n"
-                
-            announcement_str += round_str
             for match in round:
                 try:
                     n_bTeam = match.getBlueTeam().getTeamName()
@@ -215,21 +202,52 @@ class Tournament:
                 except:
                     n_rTeam = "T.B.D"
                 
-                try:
-                    if(match.completed is False):
-                         announcement_str += f"**{n_bTeam}** *vs.* **{n_rTeam}** : *Finished:{match.getCompleted()}* : *Ann:{match.getAnnouncement()}* \n"
-                    else:
-                        if(match.getWinningSide() == 'RED'):
-                            announcement_str += f"~~**{n_bTeam}**~~ (L) *vs.* **{n_rTeam}** (W) : *Finished:{match.getCompleted()}* : *Ann:{match.getAnnouncement()}* \n"
-                        else:
-                            announcement_str += f"**{n_bTeam}** (W) *vs.* ~~**{n_rTeam}**~~ (L) : *Finished:{match.getCompleted()}* : *Ann:{match.getAnnouncement()}* \n"
-                except:
-                    await self.announcementChannel.send(f"Error")
-            
+                bracket_list.append(n_bTeam)
+                bracket_list.append(n_rTeam)
+                
         if(self.winner != None):
-            announcement_str += f"Winner:{self.winner}"
-            #End tournament
-        await self.announcementChannel.send(announcement_str)
+            bracket_list.append(self.winner.getTeamName())
+            # End tournament
+        else:
+            bracket_list.append("WINNER")
+        
+        await self.ascii(bracket_list, anc_str)
+                
+    async def ascii(self, bracket_list, anc_str):
+        new_list = []
+        for name in bracket_list:
+            new_list.append(await self.reduceName(name))
+        
+        bracket_list = ''
+        bracket_list = new_list.copy()
+        
+        test = anc_str
+        test += f"\n⚔️ PUL Tournament Bracket"
+        test += f"\n```ansi\n\u001b[0;33m\u001b[1;33m\n\u001b[0m"
+        test += f"\n\u001b[0;41m\u001b[1;37m{f'-----{bracket_list[0]}-----':^15}\u001b[0m"
+        test +=f"\n{'':^20}\\"
+        test +=f"\n{'':^21}\u001b[0;47m\u001b[1;31m-----{bracket_list[8]}-----\u001b[0m"
+        test +=f"\n{'':^20}/{'':^20}\\"
+        test += f"\n\u001b[0;41m\u001b[1;37m{f'-----{bracket_list[1]}-----':^15}\u001b[0m{'':^22}\\"
+        test +=f"\n{'':^43}\u001b[0;40m\u001b[1;36m-----{bracket_list[12]}-----\u001b[0m"
+        test += f"\n\u001b[0;41m\u001b[1;37m{f'-----{bracket_list[2]}-----':^15}\u001b[0m{'':^22}/{'':^19}\\"
+        test +=f"\n{'':^20}\\{'':^20}/{'':^21}\\"
+        test +=f"\n{'':^21}\u001b[0;47m\u001b[1;31m-----{bracket_list[9]}-----\u001b[0m{'':^23}\\"
+        test +=f"\n{'':^20}/"
+        test += f"\n\u001b[0;41m\u001b[1;37m{f'-----{bracket_list[3]}-----':^15}\u001b[0m"
+        test += f"\n{'':^65}(🏆)\u001b[0;40m\u001b[4;32m{bracket_list[14]}\u001b[0m"
+        test += f"\n\u001b[0;41m\u001b[1;37m{f'-----{bracket_list[4]}-----':^15}\u001b[0m"
+        test +=f"\n{'':^20}\\"
+        test +=f"\n{'':^21}\u001b[0;47m\u001b[1;31m-----{bracket_list[10]}-----\u001b[0m{'':^23}/"
+        test +=f"\n{'':^20}/{'':^20}\\{'':^21}/"
+        test += f"\n\u001b[0;41m\u001b[1;37m{f'-----{bracket_list[5]}-----':^15}\u001b[0m{'':^22}\\{'':^19}/"
+        test +=f"\n{'':^43}\u001b[0;40m\u001b[1;36m-----{bracket_list[13]}-----\u001b[0m"
+        test += f"\n\u001b[0;41m\u001b[1;37m{f'-----{bracket_list[6]}-----':^15}\u001b[0m{'':^22}/"
+        test +=f"\n{'':^20}\\{'':^20}/"
+        test +=f"\n{'':^21}\u001b[0;47m\u001b[1;31m-----{bracket_list[11]}-----\u001b[0m"
+        test +=f"\n{'':^20}/"
+        test += f"\n\u001b[0;41m\u001b[1;37m{f'-----{bracket_list[7]}-----':^20}\u001b[0m```"
+        await self.announcementChannel.send(test)
               
     async def displayAllTeams(self, message):
         # Display op.ggs of teams
@@ -264,10 +282,9 @@ class Tournament:
             if hyphen_count % 2 == 0:
                 result = "-" * left_hyphens + result + "-" * right_hyphens
             else:
-                result = "-" * left_hyphens + result + "-" * (right_hyphens-1)
+                result = "-" * left_hyphens + result + "-" * right_hyphens
         return result
-        
-           
+                 
 class TTeam(Team):
    def __init__(self, top, jungle, mid, adc, support, t_Name, t_Id):
        super().__init__(top, jungle, mid, adc, support)
@@ -283,8 +300,7 @@ class TTeam(Team):
            return "N/A"
        else:
          return self.t_name
-       
-    
+           
 class TMatch(Match):
     def __init__(self, cursor, con, client, matchID=None, blueTeam=None, redTeam=None, startTime='TODAY', t_Round=None):
         super().__init__(cursor, con, client, matchID, blueTeam, redTeam, startTime)

@@ -257,7 +257,8 @@ class commands:
         await inst.displayTournament(message)
         
     async def asciiBracket(message, inst, args):
-        await inst.ascii(message)
+        # await inst.ascii(message)
+        await inst.testString(args[0], args[1])
 
     userCommands = {
         'hello': hello,
