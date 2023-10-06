@@ -174,7 +174,6 @@ class Tournament:
         
     async def updateBracket(self):
         # Check each bracket to see if each match has 2 team
-        print(len(self.currentTMatches))
         for round in self.bracket:
             for match in round:
                 if(match.getCompleted() is False and match.getRedTeam() != None and match.getBlueTeam() != None
@@ -223,8 +222,8 @@ class Tournament:
         
         test = anc_str
         test += f"\n⚔️ PUL Tournament Bracket"
-        test += f"\n```ansi\n\u001b[0;33m\u001b[1;33m\n\u001b[0m"
-        test += f"\n\u001b[0;41m\u001b[1;37m{f'-----{bracket_list[0]}-----':^15}\u001b[0m"
+        test += f"```ansi\n"
+        test += f"\u001b[0;41m\u001b[1;37m{f'-----{bracket_list[0]}-----':^15}\u001b[0m"
         test +=f"\n{'':^20}\\"
         test +=f"\n{'':^21}\u001b[0;47m\u001b[1;31m-----{bracket_list[8]}-----\u001b[0m"
         test +=f"\n{'':^20}/{'':^20}\\"
@@ -252,12 +251,10 @@ class Tournament:
     async def displayAllTeams(self, message):
         # Display op.ggs of teams
         embed_list = []
-        print(len(self.teams))
         for team in self.teams:
             embed_list.append(discord.Embed(
             title =f"{team.getTeamName()} OPGG", url=team.get_multi_opgg(), color=discord.Colour.random()))
         
-        print(len(embed_list))
         for embed in embed_list:
             await self.announcementChannel.send(embed=embed)
             
@@ -289,7 +286,7 @@ class TTeam(Team):
    def __init__(self, top, jungle, mid, adc, support, t_Name, t_Id):
        super().__init__(top, jungle, mid, adc, support)
        r = RandomWord()
-       self.t_name = r.word(word_min_length=2, word_max_length=6, include_parts_of_speech=["adjectives"]) + ' ' + r.word(word_min_length=2, word_max_length=6, include_parts_of_speech=["nouns"])
+       self.t_name = r.word(word_min_length=2, word_max_length=6, include_parts_of_speech=["adjectives"]).title() + ' ' + r.word(word_min_length=2, word_max_length=6, include_parts_of_speech=["nouns"]).title() + "s"
        self.t_Id = t_Id
        
    def getTeamId(self):
