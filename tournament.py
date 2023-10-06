@@ -116,15 +116,18 @@ class Tournament:
         activePlayerMatches = []
         matchesToAnnounce = []
         activePlayer = message.author.id
+        game_length = 0
         for match in self.currentTMatches:
             for player in match.blueTeam.get_player_list():
                 if player.get_dID() == activePlayer:
                     match.setCompleted()
+                    game_length = match.getGameLength()
                     match.setWinningSide('BLUE')
                     activePlayerMatches.append((match, 'BLUE'))
             for player in match.redTeam.get_player_list():
                 if player.get_dID() == activePlayer:
                     match.setCompleted()
+                    game_length = match.getGameLength()
                     match.setWinningSide('RED')
                     activePlayerMatches.append((match, 'RED'))
 
@@ -136,6 +139,8 @@ class Tournament:
             winningTeam = activePlayerMatches[0][0].tResolve(activePlayerMatches[0][1], gameID)
             round = activePlayerMatches[0][0].getRound()
             
+            # Set team's past time (gamelength)
+            winningTeam.setPastGameLength(game_length)
             if(winningTeam.getTeamId() <= 4 and round == 1):
                 if(self.bracket[1][0].getBlueTeam() is None):
                     self.bracket[1][0].setBlueTeam(winningTeam)
@@ -159,12 +164,13 @@ class Tournament:
                 activePlayerMatches[0][1], gameID)
             self.currentTMatches.remove(activePlayerMatches[0][0])
             announcement_str += f'🎊 WPGG, remember to upload a post-game screenshot (+{ratingChange:.0f}LP) - You have advanced to the next round!\n'
-        
+            # Set Game Length
             await self.updateBracket()
             await self.displayBracket(announcement_str)
             
             for match in self.currentTMatches:
                 if(match.getAnnouncement() is False and match.getRedTeam() is not None and match.getBlueTeam() is not None):
+                    # Place code to swap team's side based on game length here with gameId
                     matchesToAnnounce.append(match)
                     
         if len(activePlayerMatches) > 1:
@@ -179,6 +185,11 @@ class Tournament:
                 if(match.getCompleted() is False and match.getRedTeam() != None and match.getBlueTeam() != None
                    and match.getAnnouncement() is False):
                     # Side selection based on fastest win?
+                    if(match.getRedTeam.getPastGameLength() < match.getBlueTeam().getPastGameLength()):
+                        temp_blue = match.getBlueTeam()
+                        match.setBlueTeam(match.getRedTeam())
+                        match.setRedTeam(temp_blue)
+                        
                     match.setAnnouncement(True)
                     self.currentTMatches.append(match)
                     # Send to game announcement channel
@@ -288,6 +299,7 @@ class TTeam(Team):
        r = RandomWord()
        self.t_name = r.word(word_min_length=2, word_max_length=6, include_parts_of_speech=["adjectives"]).title() + ' ' + r.word(word_min_length=2, word_max_length=6, include_parts_of_speech=["nouns"]).title() + "s"
        self.t_Id = t_Id
+       self.pastGameLength = None
        
    def getTeamId(self):
         return self.t_Id
@@ -297,6 +309,12 @@ class TTeam(Team):
            return "N/A"
        else:
          return self.t_name
+    
+   def setPastGameLength(self, gl):
+       self.pastGameLength = gl
+       
+   def getPastGameLength(self):
+       return self.pastGameLength
            
 class TMatch(Match):
     def __init__(self, cursor, con, client, matchID=None, blueTeam=None, redTeam=None, startTime='TODAY', t_Round=None):
