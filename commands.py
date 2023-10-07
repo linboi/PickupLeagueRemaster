@@ -252,13 +252,6 @@ class commands:
     
     async def getTeamsTournament(message, inst, args):
         await inst.getTeamListTournament(message)
-        
-    async def displayBracket(message, inst, args):
-        await inst.displayTournament(message)
-        
-    async def asciiBracket(message, inst, args):
-        # await inst.ascii(message)
-        await inst.testString(args[0], args[1])
 
     userCommands = {
         'hello': hello,
@@ -302,9 +295,7 @@ class commands:
         'mainaccount': mainAccount,
         'start-tournament': startTournament,
         'twin': winTournament,
-        'get-teams': getTeamsTournament,
-        'bracket': displayBracket,
-        'asc': asciiBracket
+        'get-teams': getTeamsTournament
     }
 
     async def parseReaction(reaction, inst):
