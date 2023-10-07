@@ -1732,7 +1732,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         return bestMatches
     
     async def startTournament(self, message, timeUntil):
-        self.tournament = Tournament(self.cursor, self.con, self.client, self.testChannel, self.testChannel)
+        self.tournament = Tournament(self.cursor, self.con, self.client, self.testChannel, self.testChannel, self.testChannel)
     
         # Send annoucnement out, with a sleep of timeuntil
         match_list = await self.tournament.start()

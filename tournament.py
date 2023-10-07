@@ -6,13 +6,14 @@ import random
 from wonderwords import RandomWord
 
 class Tournament:
-    def __init__(self, cursor, con, client, gameChannel, announcementChannel):
+    def __init__(self, cursor, con, client, gameChannel, announcementChannel, cmdChannel):
         
         self.cursor = cursor
         self.con = con
         self.client = client
         self.gameChannel = gameChannel
         self.announcementChannel = announcementChannel
+        self.cmdChannel = cmdChannel
         self.bracketMsg = None
         
         # List of tournament teams TTeam()
@@ -234,7 +235,7 @@ class Tournament:
         bracket_list = ''
         bracket_list = new_list.copy()
         if(anc_str != ''):
-            await self.announcementChannel.send(anc_str)
+            await self.cmdChannel.send(anc_str)
             
         test = f"\n⚔️ PUL Tournament Bracket"
         test += f"```ansi\n"
@@ -274,7 +275,7 @@ class Tournament:
             title =f"{team.getTeamName()} OPGG", url=team.get_multi_opgg(), color=discord.Colour.random()))
         
         for embed in embed_list:
-            await self.announcementChannel.send(embed=embed)
+            await self.cmdChannel.send(embed=embed)
             
     async def reduceName(self, input_str):
             # Split the input string by whitespace
