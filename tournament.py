@@ -231,9 +231,10 @@ class Tournament:
         
         bracket_list = ''
         bracket_list = new_list.copy()
-        
-        test = anc_str
-        test += f"\n⚔️ PUL Tournament Bracket"
+        if(anc_str != ''):
+            await self.announcementChannel.send(anc_str)
+            
+        test = f"\n⚔️ PUL Tournament Bracket"
         test += f"```ansi\n"
         test += f"\u001b[0;41m\u001b[1;37m{f'-----{bracket_list[0]}-----':^15}\u001b[0m"
         test +=f"\n{'':^20}\\"
