@@ -2,6 +2,7 @@ from player import Player
 from team import Team
 from match import Match
 import discord
+import random
 from wonderwords import RandomWord
 
 class Tournament:
@@ -62,6 +63,7 @@ class Tournament:
         pid = self.playerList.copy()
         for i in range(8):
             team = TTeam(pid[0], pid[1], pid[2], pid[3], pid[4], f"TestName{i}", i)
+            team.setTeamName()
             self.teams.append(team)
             
         player_details = self.cursor.execute(
@@ -314,6 +316,31 @@ class TTeam(Team):
            return "N/A"
        else:
          return self.t_name
+     
+   def setTeamName(self):
+       names = []
+       list = []
+       r = RandomWord()
+       try:
+           list = self.get_player_list()
+           for player in list:
+               name = player.get_username().split()
+               mod_name = name[0].replace('.', '')
+               mod_name = mod_name.replace('_', '')
+               # 1, 1 1, 1 1 1
+               names.append(mod_name)
+            
+           short_words = [word for word in names if len(word) < 8]
+           
+           t_name = random.choice(short_words).title()
+           t_name_end = r.word(word_min_length=2, word_max_length=6, include_parts_of_speech=["nouns"]).title()
+           
+           t_name = t_name + "'s " + t_name_end + "s"
+           self.t_name = t_name       
+       except:
+           self.t_name = r.word(word_min_length=2, word_max_length=6, include_parts_of_speech=["adjectives"]).title() 
+           + ' ' + r.word(word_min_length=2, word_max_length=6, include_parts_of_speech=["nouns"]).title() + "s"
+           print("Error, could not set custom TTeam Name")  
     
    def setPastGameLength(self, gl):
        self.pastGameLength = gl

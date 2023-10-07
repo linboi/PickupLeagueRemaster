@@ -314,7 +314,6 @@ class Match:
             loser = 'BLUE'
         else:
             loser = 'RED'
-        print(type(self.cursor))
         self.cursor.execute(
             f"UPDATE Match SET resolutionTime = '{datetime.datetime.now()}', gameID = {gameID} WHERE matchID = {self.matchID}")
         for p in winningTeam.get_player_list():
@@ -323,7 +322,6 @@ class Match:
         for p in losingTeam.get_player_list():
             self.cursor.execute(f"""INSERT INTO PlayerMatch (playerID, matchID, ratingChange, [role], team)
                                     VALUES ({p.get_pID()}, {self.matchID}, {-ratingchange}, '{p.get_role()}', '{loser}')""")
-        print(type(self.con))
         self.con.commit()
 
     def resolveBets(self, winners, losers):

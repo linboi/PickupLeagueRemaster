@@ -1757,40 +1757,6 @@ After a win, post a screenshot of the victory and type !win (only one player on 
     
     async def getTeamListTournament(self, message):
         if(self.tournament != None):
-            await self.tournament.displayAllTeams(message)
+            await self.tournament.displayAllTeams()
         else:
             await message.channel.send("No Tournament in Progress")
-            
-    async def ascii(self, message):
-        test = f"\n⚔️ PUL Tournament Bracket"
-        test += f"\n```ansi\n\u001b[0;33m\u001b[1;33m\n\u001b[0m"
-        test += f"\n\u001b[0;41m\u001b[1;37m{'-----Team2-----':^10}\u001b[0m"
-        test +=f"\n{'':^15}\\"
-        test +=f"\n{'':^16}\u001b[0;47m\u001b[1;31m-----T.B.D-----\u001b[0m"
-        test +=f"\n{'':^15}/{'':^15}\\"
-        test += f"\n\u001b[0;41m\u001b[1;37m{'-----Team2-----':^10}\u001b[0m{'':^17}\\"
-        test +=f"\n{'':^33}\u001b[0;40m\u001b[1;36m-----T.B.D-----\u001b[0m"
-        test += f"\n\u001b[0;41m\u001b[1;37m{'-----Team2-----':^10}\u001b[0m{'':^17}/{'':^14}\\"
-        test +=f"\n{'':^15}\\{'':^15}/{'':^16}\\"
-        test +=f"\n{'':^16}\u001b[0;47m\u001b[1;31m-----T.B.D-----\u001b[0m{'':^18}\\"
-        test +=f"\n{'':^15}/"
-        test += f"\n\u001b[0;41m\u001b[1;37m{'-----Team2-----':^10}\u001b[0m"
-        test += f"\n{'':^50}(🏆)\u001b[0;40m\u001b[4;32mWINNER\u001b[0m"
-        test += f"\n\u001b[0;41m\u001b[1;37m{'-----Team2-----':^10}\u001b[0m"
-        test +=f"\n{'':^15}\\"
-        test +=f"\n{'':^16}\u001b[0;47m\u001b[1;31m-----T.B.D-----\u001b[0m{'':^18}/"
-        test +=f"\n{'':^15}/{'':^15}\\{'':^16}/"
-        test += f"\n\u001b[0;41m\u001b[1;37m{'-----Team2-----':^10}\u001b[0m{'':^17}\\{'':^14}/"
-        test +=f"\n{'':^33}\u001b[0;40m\u001b[1;36m-----T.B.D-----\u001b[0m"
-        test += f"\n\u001b[0;41m\u001b[1;37m{'-----Team2-----':^10}\u001b[0m{'':^17}/"
-        test +=f"\n{'':^15}\\{'':^15}/"
-        test +=f"\n{'':^16}\u001b[0;47m\u001b[1;31m-----T.B.D-----\u001b[0m"
-        test +=f"\n{'':^15}/"
-        test += f"\n\u001b[0;41m\u001b[1;37m{'-----Team2-----':^10}\u001b[0m```"
-        await message.channel.send(test)
-        
-    async def testString(self, word1, word2):
-        word = word1 + " " + word2
-        test = await self.tournament.reduceName(word)
-        print(test)
-        
