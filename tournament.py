@@ -15,6 +15,7 @@ class Tournament:
         self.announcementChannel = announcementChannel
         self.cmdChannel = cmdChannel
         self.bracketMsg = None
+        self.finals_counter = 0
         
         # List of tournament teams TTeam()
         self.teams = []
@@ -22,7 +23,7 @@ class Tournament:
         # Bracket Array
         self.bracket = [[TMatch(self.cursor, self.con, self.client), TMatch(self.cursor, self.con, self.client), TMatch(self.cursor, self.con, self.client), TMatch(self.cursor, self.con, self.client)], 
                         [TMatch(self.cursor, self.con, self.client, t_Round=2), TMatch(self.cursor, self.con, self.client, t_Round=2)], 
-                        [TMatch(self.cursor, self.con, self.client, t_Round=3)]]
+                        [TMatch(self.cursor, self.con, self.client, t_Round=3), TMatch(self.cursor, self.con, self.client, t_Round=3), TMatch(self.cursor, self.con, self.client, t_Round=3)]]
         
         # List of current t_matches
         self.currentTMatches = []
@@ -161,9 +162,14 @@ class Tournament:
                 else:
                     self.bracket[2][0].setRedTeam(winningTeam)
             if(round == 3):
-                # winner
-                self.winner = winningTeam
-            
+                winningTeam.addFinalsWin()
+                self.finals_counter += 1
+                if(winningTeam.getFinalsWin() == 2):
+                    self.winner = winningTeam
+                else:
+                    self.bracket[2][self.finals_counter].setRedTeam(activePlayerMatches[0][0].getBlueTeam())
+                    self.bracket[2][self.finals_counter].setBlueTeam(activePlayerMatches[0][0].getRedTeam())
+                    
             ratingChange = activePlayerMatches[0][0].resolve(
                 activePlayerMatches[0][1], gameID)
             self.currentTMatches.remove(activePlayerMatches[0][0])
@@ -314,6 +320,7 @@ class TTeam(Team):
        self.t_name = r.word(word_min_length=2, word_max_length=6, include_parts_of_speech=["adjectives"]).title() + ' ' + r.word(word_min_length=2, word_max_length=6, include_parts_of_speech=["nouns"]).title() + "s"
        self.t_Id = t_Id
        self.pastGameLength = 0
+       self.finalsWin = 0
        
    def getTeamId(self):
         return self.t_Id
@@ -354,6 +361,12 @@ class TTeam(Team):
        
    def getPastGameLength(self):
        return self.pastGameLength
+   
+   def addFinalsWins(self):
+       self.finalsWin += 1
+
+   def getFinalsWin(self):
+       return self.finalsWin
            
 class TMatch(Match):
     def __init__(self, cursor, con, client, matchID=None, blueTeam=None, redTeam=None, startTime='TODAY', t_Round=None):
