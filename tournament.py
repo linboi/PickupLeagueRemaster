@@ -12,6 +12,7 @@ class Tournament:
         self.client = client
         self.gameChannel = gameChannel
         self.announcementChannel = announcementChannel
+        self.bracketMsg = None
         
         # List of tournament teams TTeam()
         self.teams = []
@@ -185,7 +186,7 @@ class Tournament:
                 if(match.getCompleted() is False and match.getRedTeam() != None and match.getBlueTeam() != None
                    and match.getAnnouncement() is False):
                     # Side selection based on fastest win?
-                    if(match.getRedTeam.getPastGameLength() < match.getBlueTeam().getPastGameLength()):
+                    if(match.getRedTeam().getPastGameLength() < match.getBlueTeam().getPastGameLength()):
                         temp_blue = match.getBlueTeam()
                         match.setBlueTeam(match.getRedTeam())
                         match.setRedTeam(temp_blue)
@@ -257,7 +258,10 @@ class Tournament:
         test +=f"\n{'':^21}\u001b[0;47m\u001b[1;31m-----{bracket_list[11]}-----\u001b[0m"
         test +=f"\n{'':^20}/"
         test += f"\n\u001b[0;41m\u001b[1;37m{f'-----{bracket_list[7]}-----':^20}\u001b[0m```"
-        await self.announcementChannel.send(test)
+        if(self.bracketMsg is None):
+            self.bracketMsg = await self.announcementChannel.send(test)
+        else:
+            await self.bracketMsg.edit(content=test)
               
     async def displayAllTeams(self):
         # Display op.ggs of teams
@@ -299,7 +303,7 @@ class TTeam(Team):
        r = RandomWord()
        self.t_name = r.word(word_min_length=2, word_max_length=6, include_parts_of_speech=["adjectives"]).title() + ' ' + r.word(word_min_length=2, word_max_length=6, include_parts_of_speech=["nouns"]).title() + "s"
        self.t_Id = t_Id
-       self.pastGameLength = None
+       self.pastGameLength = 0
        
    def getTeamId(self):
         return self.t_Id
