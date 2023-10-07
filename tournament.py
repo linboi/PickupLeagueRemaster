@@ -197,10 +197,16 @@ class Tournament:
                     match.setAnnouncement(True)
                     self.currentTMatches.append(match)
                     # Send to game announcement channel
-        
         if(self.winner != None):
             # If winner found, announce.
-            await self.announcementChannel.send(f"The winner is {self.winner.getTeamName()}")
+            winner_str = f"The Winner of the PUL Tournament is {self.winner.getTeamName()} ✨\nCongratulations "
+            player_list = self.winner.get_player_list()
+            for player in player_list:
+                try:
+                    winner_str += f"<@{player.get_discordUser()}>, "
+                except:
+                    winner_str += f"{player.get_username()}, "
+            await self.announcementChannel.send(winner_str)
     
     async def displayBracket(self, anc_str=''):
         bracket_list = []
