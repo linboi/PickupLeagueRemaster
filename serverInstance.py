@@ -1745,7 +1745,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             if(len(matches) > 0):
                 self.publish_matches(matches)
             else:
-                print('empty')
+                pass
         else:
             await message.channel.send("No Tournament in Progress")
     
