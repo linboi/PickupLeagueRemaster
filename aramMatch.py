@@ -1,6 +1,7 @@
 import datetime
 import random
 
+
 class ARAM_Team:
     def __init__(self, players):
         self.players = players
@@ -10,12 +11,14 @@ class ARAM_Team:
         for player in self.players:
             total += player.ARAM_rating
         return total/5
-    
+
     def get_player_list(self):
         return self.players
 
+
 class ARAM_Match:
     champsPerTeam = 10
+
     def __init__(self, cursor, con, client, matchID=None, blueTeam=None, redTeam=None, startTime='TODAY'):
 
         self.matchID = matchID
@@ -32,11 +35,12 @@ class ARAM_Match:
             champList = f.read().splitlines()
             random.shuffle(champList)
             self.blueChamps = champList[0:ARAM_Match.champsPerTeam]
-            self.redChamps = champList[ARAM_Match.champsPerTeam:2*ARAM_Match.champsPerTeam]
+            self.redChamps = champList[ARAM_Match.champsPerTeam:2 *
+                                       ARAM_Match.champsPerTeam]
 
     def __repr__(self):
         return self.get_details_string()
-    
+
     def get_details_string(self):
         discordIDs = ", ".join(str(x) for x in self.listOfUsers())
         res = self.cursor.execute(
@@ -70,16 +74,16 @@ class ARAM_Match:
             for user in player:
                 listOfUsers.append(user.get_dID())
         return listOfUsers
-    
+
     def resolve(self, winner, gameID):
         if winner == 'BLUE':
             winningTeam = self.blueTeam
             losingTeam = self.redTeam
-            #self.resolveBets(self.blueBets, self.redBets)
+            # self.resolveBets(self.blueBets, self.redBets)
         elif winner == 'RED':
             winningTeam = self.redTeam
             losingTeam = self.blueTeam
-            #self.resolveBets(self.redBets, self.blueBets)
+            # self.resolveBets(self.redBets, self.blueBets)
 
         MMRdiff = losingTeam.get_avg_MMR() - winningTeam.get_avg_MMR()
         expectedScore = 1/(1 + 10**(MMRdiff/500))
@@ -89,12 +93,14 @@ class ARAM_Match:
 
         for player in winningTeam.get_player_list():
             disc = player.get_dID()
-            self.cursor.execute(f"UPDATE Player SET aram_winCount = aram_winCount + 1, aram_internalRating = aram_internalRating + {ratingChange}, aram_leaderboardPoints = aram_leaderboardPoints + {ratingChange} WHERE discordID = {disc}")
+            self.cursor.execute(
+                f"UPDATE Player SET aram_winCount = aram_winCount + 1, aram_internalRating = aram_internalRating + {ratingChange}, aram_leaderboardPoints = aram_leaderboardPoints + {ratingChange} WHERE discordID = {disc}")
             self.con.commit()
 
         for player in losingTeam.get_player_list():
             disc = player.get_dID()
-            self.cursor.execute(f"UPDATE Player SET aram_lossCount = aram_lossCount + 1, aram_internalRating = aram_internalRating - {ratingChange}, aram_leaderboardPoints = aram_leaderboardPoints - {ratingChange} WHERE discordID = {disc}")
+            self.cursor.execute(
+                f"UPDATE Player SET aram_lossCount = aram_lossCount + 1, aram_internalRating = aram_internalRating - {ratingChange}, aram_leaderboardPoints = aram_leaderboardPoints - {ratingChange} WHERE discordID = {disc}")
             self.con.commit()
 
         self.update(ratingChange, winningTeam, losingTeam, winner, gameID)
@@ -116,13 +122,13 @@ class ARAM_Match:
         self.con.commit()
 
     # Use this code when we swap to using the DB instead of objects
-    #def calculateMMRDifference(self, blue, red):
+    # def calculateMMRDifference(self, blue, red):
     #    discIDs = ",".join(str(x) for x in self.blueTeam)
     #    blueMMR = self.cursor.execute(f"SELECT sum(aram_internalRating) FROM Player WHERE discordID in ({discIDs})").fetchall()
     #    discIDs = ",".join(str(x) for x in self.redTeam)
     #    redMMR = self.cursor.execute(f"SELECT sum(aram_internalRating) FROM Player WHERE discordID in ({discIDs})").fetchall()
     #    return (blueMMR + redMMR)/5
-    
+
     # MMR Difference Between Both Teams
     def calculateMMRDifference(self, teamR, teamB):
         # Get the AVG MMR of both teams
