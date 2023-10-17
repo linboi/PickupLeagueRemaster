@@ -72,6 +72,9 @@ class commands:
     async def rank(message, inst, args):
         await inst.displayRank(message)
 
+    async def roleDist(message, inst, _):
+        await inst.roleDist(message)
+
     # Make Admin Command
     async def leaderboard(message, inst, args):
         if len(args) == 0:
@@ -220,10 +223,15 @@ class commands:
             await message.channel.send("Please choose a player to check your history with")
 
     async def profile(message, inst, args):
+        season = 0
+        if len(args) > 0:
+            for arg in args:
+                if arg.isnumeric():
+                    season = int(arg)
         if len(message.mentions) > 0:
-            await inst.showProfile(message.mentions[0], message)
+            await inst.showProfile(message.mentions[0], message, season)
         else:
-            await inst.showProfile(message.author, message)
+            await inst.showProfile(message.author, message, season)
 
     async def updatePUUIDs(message, inst, args):
         await inst.updatePUUIDs(message.channel)
@@ -279,7 +287,8 @@ class commands:
         'update-player-match-details': updatePlayerMatchDetails,
         'profile': profile,
         'update-api-key': updateAPIKey,
-        'mainaccount': mainAccount
+        'mainaccount': mainAccount,
+        'role-distribution': roleDist
     }
 
     async def parseReaction(reaction, inst):

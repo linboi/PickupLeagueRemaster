@@ -5,6 +5,7 @@ import copy
 import datetime
 import asyncio
 import time
+import math
 
 
 class Match:
@@ -78,8 +79,8 @@ class Match:
         string += f"{self.blueTeam.get_adc().getMainAccountName():^15}{'(adc)':^5}{self.redTeam.get_adc().getMainAccountName():^15}\n"
         string += f"{self.blueTeam.get_sup().getMainAccountName():^15}{'(sup)':^5}{self.redTeam.get_sup().getMainAccountName():^15}\n```"
         string += f"{self.tournament_code}"
-        for i, invite_string in enumerate(invite_strings):
-            string += f"\nInvite list{i}: {invite_string}"
+        # for i, invite_string in enumerate(invite_strings):
+        #    string += f"\nInvite list{i}: {invite_string}"
 
         return string
 
@@ -105,7 +106,7 @@ class Match:
         except:
             discordUser = None
         replacement_player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
-                            player_details[9], player_details[10], player_details[11], player_details[12], player_details[13], player_details[14], player_details[15], self.cursor, self.con, discordUser)
+                                    player_details[9], player_details[10], player_details[11], player_details[12], player_details[13], player_details[14], player_details[15], self.cursor, self.con, discordUser)
 
         # Check if player exists in Game
         for player in listOfPlayers:
@@ -385,7 +386,7 @@ class Match:
             f"SELECT bettingPoints FROM Player WHERE discordID = {user.id}")
         # I know the comma looks weird here, python syntax for turning a single element tuple into that element is strange
         balance, = res.fetchone()
-
+        balance = math.floor(balance)
         await user.send(f"How much do you want to bet on team {team} in match {self.matchID} (current balance: {balance:.0f}):")
 
         def check(message):

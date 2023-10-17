@@ -26,7 +26,7 @@ class serverInstance:
         self.tournament_code_list = []
         self.fetch_tournament_file()
 
-    def ready(self, client, roleChannel, testChannel, announcementChannel, generalChannel, gameChannel, voiceChannels, roleID, primaryRoleMsg, secondaryRoleMsg, cursor, con):
+    def ready(self, client, roleChannel, testChannel, announcementChannel, generalChannel, gameChannel, voiceChannels, roleID, primaryRoleMsg, secondaryRoleMsg, cursor, con, apiKey):
         self.client = client
         self.announcementChannel = announcementChannel
         self.roleChannel = roleChannel
@@ -42,7 +42,7 @@ class serverInstance:
         self.playerIDNameMapping = {}
         self.gameChannel = gameChannel
         self.roleID = roleID
-        self.apiKey = None
+        self.apiKey = apiKey
 
     # Send the user a DM with player database
     async def upload_db(self, member):
@@ -180,11 +180,11 @@ class serverInstance:
                         pass
 
     async def applyRole(self, message):
-        pu_role = "Pickup Only"
+        # pu_role = "Pickup Only"
         # Fetch all roles
         for role in await self.client.guilds[0].fetch_roles():
             # If role found, fetch db for users discord id's
-            if role.name == pu_role:
+            if role.id == self.roleID:
                 try:
                     user = self.client.guilds[0].get_member(
                         int(message.author.id))
@@ -241,16 +241,16 @@ class serverInstance:
             await initMsg.channel.send("Invalid number of players")
             return
         for id in ids:
-                player_details = self.cursor.execute(
-                    f"SELECT playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGames, signupCount, leaderboardPoints, aram_internalRating, aram_leaderboardPoints, aram_winCount, aram_lossCount FROM Player WHERE discordID = {id}").fetchone()
+            player_details = self.cursor.execute(
+                f"SELECT playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGames, signupCount, leaderboardPoints, aram_internalRating, aram_leaderboardPoints, aram_winCount, aram_lossCount FROM Player WHERE discordID = {id}").fetchone()
+            discordUser = None
+            try:
+                discordUser = await self.client.fetch_user(player_details[1])
+            except:
                 discordUser = None
-                try:
-                    discordUser = await self.client.fetch_user(player_details[1])
-                except:
-                    discordUser = None
-                player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
-                                player_details[9], player_details[10], player_details[11], player_details[12], player_details[13], player_details[14], player_details[15], self.cursor, self.con, discordUser)
-                playerObjs.append(player)
+            player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
+                            player_details[9], player_details[10], player_details[11], player_details[12], player_details[13], player_details[14], player_details[15], self.cursor, self.con, discordUser)
+            playerObjs.append(player)
 
         blueTeam = Team(playerObjs[0], playerObjs[1],
                         playerObjs[2], playerObjs[3], playerObjs[4])
@@ -302,7 +302,7 @@ React with the corresponding number to check in for a game\n\
 After a win, post a screenshot of the victory and type !win (only one player on the winning team must do this).\n\
 ")
         else:
-            checkinMessage = await channel.send(f"Check in for registered players NO TAG TODAY\n \
+            checkinMessage = await channel.send(f"Check in for registered players {pu_role.mention}\n \
 React with the corresponding number to check in for a game\n\
 {relativeTimeString}\n\
 After a win, post a screenshot of the victory and type !win (only one player on the winning team must do this).\n\
@@ -425,7 +425,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
     # Scrape rank details from op.gg page
     async def signUpPlayer(self, msg_content, message_obj):
-
+        await self.applyRole(message_obj)
         # Assign Headers, so scraping is not BLOCKED
         headers = requests.utils.default_headers()
         headers.update({
@@ -778,21 +778,36 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             f"UPDATE Account SET rankTier = '{rank[0]}', rankDivision = {rank[1]} WHERE [opgg] = '{op_url}'")
         self.con.commit()
 
+    async def roleDist(self, message):
+        res = self.cursor.execute(
+            f"select count(*), primaryRole, 'primary' FROM Player GROUP BY primaryRole UNION ALL select count(*), secondaryRole, 'secondary' FROM Player GROUP BY secondaryRole").fetchall()
+        resultsDict = {}
+        for count, role, prio in res:
+            if role not in resultsDict:
+                resultsDict[role] = {}
+            resultsDict[role][prio] = count
+        prettyString = "```"
+        for key in resultsDict:
+            prettyString += f"{key:^4}: P: {resultsDict[key]['primary']:^3} S: {resultsDict[key]['secondary']}\n"
+        prettyString += "```"
+        await message.channel.send(prettyString)
+
     async def displayHistory(self, player, message):
 
-        result = f"Match history for {player.display_name}\n```{'ID':^5} {'DATE':^15} {'ROLE':^5} {'TEAM':^5} {'LP':^5}\n"
+        result = f"Match history for {player.display_name}\n```{'ID':^5} {'DATE':^15} {'ROLE':^5} {'TEAM':^5} {'LP':^5} {'CHAMPION':^14} K/D/A\n"
         rows = self.cursor.execute(f"""
-                                   SELECT PlayerMatch.matchID, Match.matchTime, PlayerMatch.ratingChange, PlayerMatch.role, PlayerMatch.team
+                                   SELECT   PlayerMatch.matchID, Match.matchTime, PlayerMatch.ratingChange, PlayerMatch.role,
+                                            PlayerMatch.team, ifnull(PlayerMatch.champion, 'NA'), ifnull(PlayerMatch.kills, 'NA'), ifnull(PlayerMatch.deaths, 'NA'), ifnull(PlayerMatch.assists, 'NA')
                                    FROM PlayerMatch 
                                    JOIN Match on PlayerMatch.matchID = Match.matchID 
                                    JOIN Player on PlayerMatch.playerID = Player.playerID
-                                   WHERE Player.discordID = {player.id}
+                                   WHERE Player.discordID = {player.id} AND season = 2
                                    ORDER BY Match.matchID desc
                                    LIMIT 10
                                    """).fetchall()
-        for id, time, change, role, team in rows:
+        for id, time, change, role, team, champ, kills, deaths, assists in rows:
             change_str = ("+" if change > 0 else "") + f"{change:.0f}"
-            result += f"{id:^5} {time.split()[0]:^15} {role.upper():^5} {team.upper():^5} {change_str:^5}\n"
+            result += f"{id:^5} {time.split()[0]:^15} {role.upper():^5} {team.upper():^5} {change_str:^5} {champ:^14} {kills}/{deaths}/{assists}\n"
         result += "```"
         await message.channel.send(result)
 
@@ -928,7 +943,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                     f"UPDATE PlayerMatch SET champion = ?, kills = ?, deaths = ?, assists = ? WHERE playerMatchID = ?", to_insert)
                 self.con.commit()
 
-    async def showProfile(self, player, message):
+    async def showProfile(self, player, message, season):
         res = self.cursor.execute(f"""
                                   SELECT champion, SUM(kills), SUM(deaths), SUM(assists), count(champion) as Games, 
                                   SUM(CASE WHEN ratingChange > 0 THEN 1
@@ -939,13 +954,14 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 								  END) AS lossCount
                                   FROM PlayerMatch
                                   JOIN Player on Player.playerID = PlayerMatch.playerID
-                                  WHERE Player.discordID = '{player.id}' and champion is not null
+                                  JOIN Match on Match.matchID = PlayerMatch.matchID
+                                  WHERE Player.discordID = '{player.id}' and champion is not null AND (season = {season} OR {season} = 0)
                                   GROUP BY champion
-                                  ORDER BY Games DESC
+                                  ORDER BY Games DESC, winCount DESC
                                   LIMIT 20
                                   """).fetchall()
         output = t2a(header=["Champion", "Kills", "Deaths", "Assists", "KDA", "Games", "W/L", "Win Rate"],
-                     body=[[x[0], x[1], x[2], x[3], f"{(x[1] + x[3]) / x[2]:.2f}", x[4],
+                     body=[[x[0], x[1], x[2], x[3], f"{(x[1] + x[3]) / (x[2] if x[2] != 0 else 1):.2f}", x[4],
                             f"{x[5]}/{x[6]}", f"{x[5] / (x[4]) * 100:.0f}%"] for x in res],
                      style=PresetStyle.thin_compact,
                      first_col_heading=True)

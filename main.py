@@ -26,6 +26,7 @@ inst = serverInstance()
 main_channel_id = os.getenv('MAIN_CHANNEL')
 role_channel_id = os.getenv('ROLE_CHANNEL')
 game_channel_id = os.getenv('GAME_CHANNEL')
+API_KEY = os.getenv('API_KEY')
 announcement_channel_id = os.getenv('ANNOUNCEMENT_CHANNEL')
 general_channel_id = os.getenv('GENERAL_CHANNEL')
 watched_channels = os.getenv('WATCHED_CHANNELS').split(" ")
@@ -52,7 +53,7 @@ async def on_ready():
     role_id = int(puRoleID)
 
     inst.ready(client, role_channel, main_channel, announcement_channel, general_channel,
-               game_channel, voice_channels, role_id, primary_role_msg, secondary_role_msg, cursor, con)
+               game_channel, voice_channels, role_id, primary_role_msg, secondary_role_msg, cursor, con, API_KEY)
 
     with open('./settings.json') as f:
         settings = json.load(f)
