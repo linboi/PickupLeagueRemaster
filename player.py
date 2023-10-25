@@ -189,7 +189,7 @@ class Player:
 
     def getMainAccountName(self):
         for account in self.playerAccounts:
-            if account[3] == 1:
+            if account[7] == 1:
                 return account[1]
         return self.playerAccounts[0][1]
 

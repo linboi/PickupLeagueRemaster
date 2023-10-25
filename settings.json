@@ -3,35 +3,35 @@
 	[
 		{
 		"Day": 1,
-		"AnnouncementTime":"18:30",
+		"AnnouncementTime":"19:30",
 		"Times":
 			[
-				"19:30",
 				"20:30",
 				"21:30",
-				"22:30"
+				"22:30",
+				"23:30"
 			]
 		},
 		{
 		"Day": 4,
-		"AnnouncementTime":"18:30",
+		"AnnouncementTime":"19:30",
 		"Times":
 			[
-				"19:30",
 				"20:30",
 				"21:30",
-				"22:30"
+				"22:30",
+				"23:30"
 			]
 		},
 		{
 		"Day": 6,
-		"AnnouncementTime":"18:30",
+		"AnnouncementTime":"19:30",
 		"Times":
 			[
-				"19:30",
 				"20:30",
 				"21:30",
-				"22:30"
+				"22:30",
+				"23:30"
 			]
 		}
 	]
