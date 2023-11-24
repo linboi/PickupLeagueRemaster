@@ -468,7 +468,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
             # Check if player suggested rank is formatted right
 
-            summoner_name = doc.find_all(class_="summoner-name")
+            summoner_name = doc.find_all(class_="css-ao94tw e1swkqyq1")
             summoner_name = summoner_name[0].decode_contents().strip()
 
             # Discord ID
@@ -484,42 +484,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 # Add player
                 self.addPlayer(discordID, summoner_name, op_url, rank)
                 # Give access to #select-role text channel (change permissions)
-                try:
-                    for guild in self.client.guilds:
-                        for member in guild.members:
-                            if (member.id == message_obj.author.id):
-                                # Access to role channel
-                                overwrite_role = discord.PermissionOverwrite()
-                                overwrite_role.send_messages = False
-                                overwrite_role.read_messages = True
-                                overwrite_role.read_message_history = True
-                                await self.roleChannel.set_permissions(member, overwrite=overwrite_role)
-                                # Access to other channels
-                                overwrite_general = discord.PermissionOverwrite()
-                                overwrite_general.send_messages = True
-                                overwrite_general.read_messages = True
-                                overwrite_general.read_message_history = True
-                                await self.announcementChannel.set_permissions(member, overwrite=overwrite_role)
-                                await self.generalChannel.set_permissions(member, overwrite=overwrite_general)
-                                # Access to voice channels
-                                overwrite_voice = discord.PermissionOverwrite()
-                                overwrite_voice.connect = True
-                                overwrite_voice.send_messages = True
-                                overwrite_voice.read_message_history = True
-                                overwrite_voice.speak = True
-                                overwrite_voice.read_messages = True
-                                overwrite_voice.stream = True
-                                # 1-n voice channels
-                                # Add each one from list
-                                # for channel in self.voiceChannels:
-                                # voip = int(channel)
-                                # await voip.set_permissions(member, overwrite=overwrite_voice)
-                except discord.Forbidden:
-                    print("Forbidden")
-                except:
-                    print("other")
-                finally:
-                    await message_obj.channel.send(f"🥳 Success {member.mention} head over to {self.roleChannel.mention} to assign your **Primary** and **Secondary** role!")
+                await message_obj.channel.send(f"🥳 Success {message_obj.author.mention} head over to {self.roleChannel.mention} to assign your **Primary** and **Secondary** role!")
             success = True
 
         except:
@@ -570,7 +535,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             if len(rank) == 1:
                 rank.append(lp)
 
-            summoner_name = doc.find_all(class_="summoner-name")
+            summoner_name = doc.find_all(class_="css-ao94tw e1swkqyq1")
             summoner_name = summoner_name[0].decode_contents().strip()
 
             # Discord ID
@@ -640,7 +605,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             if len(rank) == 1:
                 rank.append(lp)
 
-            summoner_name = doc.find_all(class_="summoner-name")
+            summoner_name = doc.find_all(class_="css-ao94tw e1swkqyq1")
             summoner_name = summoner_name[0].decode_contents().strip()
 
             # Check if player exists in Player DB, returns a boolean
