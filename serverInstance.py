@@ -425,52 +425,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
     # Scrape rank details from op.gg page
     async def signUpPlayer(self, msg_content, message_obj):
-        await self.applyRole(message_obj)
-        # Assign Headers, so scraping is not BLOCKED
-        headers = requests.utils.default_headers()
-        headers.update({
-            'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0',
-        })
-
-        # Try scrape OP.GG URL
         try:
-            op_url = msg_content.strip()
-            res_url = requests.get(op_url, headers=headers)
-            doc = BeautifulSoup(res_url.text, "html.parser")
-        except:
-            summoner_name = "Invalid Account"
-            rank_str = "Invalid Link"
-            success = False
-
-        # Try scraping valid OP.GG URL - Rank, Summoner Name.
-        try:
-            rank = doc.find_all(class_="tier")
-            rank = rank[0].decode_contents().strip()
-            rank = rank.replace("<!-- -->", "")
-            rank = rank.split()
-            lp = doc.find_all(class_="lp")
-            lp = lp[0].decode_contents().strip()
-            lp = lp.replace("<!-- -->", "")
-            lp = lp.split()
-            lp = lp[0]
-            lp = lp.replace(",", "")
-
-            print(int(lp))
-
-            rank_str = ""
-            for char in rank:
-                rank_str += char[0]
-
-            # Add rank division for Masters, GM, and Challenger players
-            if len(rank) == 1:
-                rank.append(lp)
-                rank_str += f" {lp}LP"
-
-            # Check if player suggested rank is formatted right
-
-            summoner_name = doc.find_all(class_="css-ao94tw e1swkqyq1")
-            summoner_name = summoner_name[0].decode_contents().strip()
-
+            summoner_name, rank_str, op_url = await self.fetchSummonerInfo(msg_content, message_obj)
             # Discord ID
             discordID = message_obj.author.id
 
@@ -482,11 +438,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 await message_obj.channel.send('😭 Player exists in the table, unable to register again!')
             else:
                 # Add player
-                self.addPlayer(discordID, summoner_name, op_url, rank)
+                self.addPlayer(discordID, summoner_name, op_url, rank_str)
                 # Give access to #select-role text channel (change permissions)
-                await message_obj.channel.send(f"🥳 Success {message_obj.author.mention} head over to {self.roleChannel.mention} to assign your **Primary** and **Secondary** role!")
+                await message_obj.channel.send(f"🥳 Success {message_obj.author.mention} head over to {self.roleChannel.mention} to assign your **Primary** and **Secondary** role!\nHighest Rating: {rank_str}")
             success = True
-
         except:
             rank_str = "Invalid Account + Channel Issue"
             summoner_name = "Invalid Account"
@@ -494,49 +449,175 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         return rank_str.upper(), summoner_name, success
 
-    # Add other accounts
-    async def addAccount(self, msg_content, message_obj):
+    async def fetchSummonerInfo(self, msg_content, message_obj):
+        await self.applyRole(message_obj)
 
+        current_tier = None
+        peaks = []
+        summoner_name = None
+        rank_str = None
+        highest_value = 0
+        highest_rank = None
+        
         # Assign Headers, so scraping is not BLOCKED
-        headers = requests.utils.default_headers()
-        headers.update({
-            'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0',
-        })
-
-        # Try scrape OP.GG URL
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Connection': 'keep-alive',
+        }
         try:
             op_url = msg_content.strip()
+            summoner_name = op_url
+            log_url = "https://www.leagueofgraphs.com/summoner/euw/"
+            op_url = log_url + op_url
             res_url = requests.get(op_url, headers=headers)
             doc = BeautifulSoup(res_url.text, "html.parser")
+            time.sleep(random.uniform(2, 4))
         except:
             summoner_name = "Invalid Account"
             rank_str = "Invalid Link"
             success = False
 
-        # Try scraping valid OP.GG URL - Rank, Summoner Name.
+        # Get current rank & lp
         try:
-            rank = doc.find_all(class_="tier")
-            rank = rank[0].decode_contents().strip()
-            rank = rank.replace("<!-- -->", "")
-            rank = rank.split()
+            current_html_tier = doc.select('div.txt.mainRankingDescriptionText div.leagueTier')
+            
+             # Method 1: Using .text
+            if current_html_tier:
+                current_tier = ' '.join(current_html_tier[0].text.split())
+            print(current_tier)
+            peaks.append(current_tier)
+        except:
+            current_tier = "Unranked 0"
+            print("Unranked account")
 
-            lp = doc.find_all(class_="lp")
-            lp = lp[0].decode_contents().strip()
-            lp = lp.replace("<!-- -->", "")
-            lp = lp.split()
-            lp = lp[0]
-            lp = lp.replace(",", "")
+        # Get last season peak
+        try:
+            # Now try to find the tags
+            div_tags = doc.find_all('div', class_='tag requireTooltip brown')
+            last_two_splits = div_tags[-2:]  # Get last 2 entries
 
-            rank_str = ""
-            for char in rank:
-                rank_str += char[0]
+            
+            for entry in last_two_splits:
+                tooltip = entry.get('tooltip')
+                tooltip_soup = BeautifulSoup(tooltip, 'html.parser')
+                
+                description = tooltip_soup.select_one('.tagDescription')
+                if description:
+                    desc_text = description.get_text()
+                    solo_section = desc_text.split('Ranked Flex')[0]
+                    
+                    if 'reached' in solo_section:
+                        peak = solo_section.split('reached')[1].split('during')[0].strip()
+                        peaks.append(peak)
 
-            # Add rank division for Masters, GM, and Challenger players
-            if len(rank) == 1:
-                rank.append(lp)
+        except requests.RequestException as e:
+            print(f"Request error: {str(e)}")
+        except Exception as e:
+            print(f"Error occurred: {str(e)}")        
 
-            summoner_name = doc.find_all(class_="css-ao94tw e1swkqyq1")
-            summoner_name = summoner_name[0].decode_contents().strip()
+        # Get peak
+        try:
+            for rank in peaks:
+                if rank:  # Check if rank exists
+                    value = self.get_rank_value(rank)
+                    if value > highest_value:
+                        highest_value = value
+                        highest_rank = rank
+            highest_rank = highest_rank.replace("LP", "")
+            # Only convert roman numerals if it's not Master+
+            if not any(tier in highest_rank for tier in ['Master', 'Grandmaster', 'Challenger']):
+                parts = highest_rank.split()
+                if len(parts) >= 2:
+                    # Convert only the division number (second part)
+                    parts[1] = self.roman_to_int(parts[1])
+                    highest_rank = f"{parts[0]} {parts[1]}"
+    
+            rank_str = highest_rank
+            print(f"Highest rank: {rank_str}")
+        except:
+            print("could not get highest rank")
+
+        return summoner_name, rank_str, op_url
+
+    # Convert Roman Numerals to Digits
+    def roman_to_int(self, roman):
+        roman_values = {
+            'I': '1',
+            'II': '2',
+            'III': '3',
+            'IV': '4'
+        }
+        return roman_values.get(roman, roman)
+
+    # Get the value of the rank + lp
+    def get_rank_value(self, rank_str):
+        if not rank_str:
+            return 0
+        
+        rank_no_lp = rank_str.replace("LP", "")
+        rank_no_lp = rank_no_lp.replace(" LP", "")
+            
+        # Dictionary for rank values
+        tier_values = {
+            'Unranked': 0,
+            'Iron': 0,
+            'Bronze': 1000,
+            'Silver': 2000,
+            'Gold': 3000,
+            'Platinum': 4000,
+            'Emerald': 5000,
+            'Diamond': 6000,
+            'Master': 7000,
+            'Grandmaster': 7000,
+            'Challenger': 7000
+        }
+        
+         # Split rank string into parts
+        parts = rank_str.strip().split()
+        
+        # Get base value for the tier
+        tier = parts[0]  # e.g., 'Diamond'
+        base_value = tier_values.get(tier, 0)
+        
+        # For Master+ ranks, only LP matters
+        if tier in ['Master', 'Grandmaster', 'Challenger']:
+            if len(parts) >= 2:  # If there's a number after Master/GM/Chall
+                try:
+                    lp = int(parts[1])
+                    return 7000 + lp
+                except ValueError:
+                    return 7000
+            return 7000
+        
+        # For other ranks, add division value
+        if len(parts) >= 2:
+            division = parts[1]
+            if division == 'I':
+                base_value += 400
+            elif division == 'II':
+                base_value += 300
+            elif division == 'III':
+                base_value += 200
+            elif division == 'IV':
+                base_value += 100
+                
+        # Add LP value if it exists
+        if len(parts) >= 3:  # If there's a third part, it's the LP value
+            try:
+                lp = int(parts[2])
+                base_value += lp
+            except ValueError:
+                pass
+
+        return base_value
+
+    # Add other accounts
+    async def addAccount(self, msg_content, message_obj):
+
+        try:
+            summoner_name, rank_str, url = await self.fetchSummonerInfo(msg_content, message_obj)
 
             # Discord ID
             discordID = message_obj.author.id
@@ -546,7 +627,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
             if doesPlayerExist:
                 # Player already exists, add account
-                self.addExtraAccount(discordID, summoner_name, op_url, rank)
+                self.addExtraAccount(discordID, summoner_name, url, rank_str)
                 success = True
             else:
                 rank_str = "Signup first before adding an account1!"
@@ -700,7 +781,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
     # Adds player to Player & Account DB
     def addPlayer(self, discordID, summoner_name, op_url, rank):
-
+        tier, division = rank.split()
         self.cursor.execute(
             f"INSERT INTO Player (discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, isAdmin, missedGames, signupCount, leaderboardPoints, QP) VALUES ({discordID}, 0, 0, 1500, 'FILL', 'FILL', 0, 0, 0, 1200, 0)")
         self.con.commit()
@@ -716,14 +797,14 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         # Name, OPGG, PID, Rank, Rank DIV, Main Account set to 1 for first account
         self.cursor.execute(
-            f"INSERT INTO Account (name, opgg, playerID, rankTier, rankDivision, Main) VALUES ('{summoner_name}', '{op_url}', {fetchedPlayerID[0]}, '{rank[0]}', {rank[1]}, 1)")
+            f"INSERT INTO Account (name, opgg, playerID, rankTier, rankDivision, Main) VALUES ('{summoner_name}', '{op_url}', {fetchedPlayerID[0]}, '{tier}', {division}, 1)")
         self.con.commit()
 
     # Adds another Account to Account DB
     def addExtraAccount(self, discordID, summoner_name, op_url, rank):
 
         # Add player account to Account table
-
+        tier, division = rank.split()
         # Fetch PlayerID value from Player Table w/ DiscordID
         res = self.cursor.execute(
             f"SELECT playerID from Player where discordID={discordID}")
@@ -733,7 +814,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         # Name, OPGG, PID, Rank, Rank DIV
         self.cursor.execute(
-            f"INSERT INTO Account (name, opgg, playerID, rankTier, rankDivision) VALUES ('{summoner_name}', '{op_url}', {fetchedPlayerID[0]}, '{rank[0]}', {rank[1]})")
+            f"INSERT INTO Account (name, opgg, playerID, rankTier, rankDivision) VALUES ('{summoner_name}', '{op_url}', {fetchedPlayerID[0]}, '{tier}', {division})")
         self.con.commit()
 
     def updateAccountRank(self, op_url, rank):

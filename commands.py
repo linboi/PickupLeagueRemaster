@@ -37,8 +37,6 @@ class commands:
         except Exception as e:
             await message.channel.send(e)
         finally:
-            print(pRank)
-            print(pName)
             # Give access to '#select-roles' channel
             if (signUpSuccess == False):
                 await message.channel.send("Failed 😔 please try again!")
