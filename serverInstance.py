@@ -952,13 +952,13 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         names = self.cursor.execute("SELECT name FROM Account").fetchall()
         for name, in names:
             try:
-                url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{name}/EUW"
+                acc_name, acc_tag = name.split('-')
+                url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{acc_name}/{acc_tag}?api_key={self.apiKey}"
                 headers = {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
-                    "Accept-Language": "en-GB,en-US;q=0.9,en;q=0.8",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+                    "Accept-Language": "en-US,en;q=0.7",
                     "Accept-Charset": "application/x-www-form-urlencoded; charset=UTF-8",
-                    "Origin": "https://developer.riotgames.com",
-                    "X-Riot-Token": self.apiKey
+                    "Origin": "https://developer.riotgames.com"
                 }
                 status_code = 429
                 while status_code == 429:
