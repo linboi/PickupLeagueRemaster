@@ -681,7 +681,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
             if doesPlayerExist:
                 # Player already exists, add account
-                self.addExtraAccount(discordID, summoner_name, url, rank_str)
+                self.addExtraAccount(discordID, summoner_name, url, rank_str, puuid)
                 success = True
             else:
                 rank_str = "Signup first before adding an account1!"
