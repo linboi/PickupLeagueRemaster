@@ -426,7 +426,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
     # Scrape rank details from op.gg page
     async def signUpPlayer(self, msg_content, message_obj):
         try:
-            summoner_name, rank_str, log_url, puuid = await self.fetchSummonerInfo(msg_content, message_obj)
+            await self.applyRole(message_obj)
+            summoner_name, rank_str, log_url, puuid = await self.fetchSummonerInfo(msg_content)
             # Discord ID
             discordID = message_obj.author.id
 
@@ -449,9 +450,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         return rank_str.upper(), summoner_name, success
 
-    async def fetchSummonerInfo(self, msg_content, message_obj):
-        await self.applyRole(message_obj)
-
+    async def fetchSummonerInfo(self, msg_content):
         current_tier = None
         peaks = []
         summoner_name = None
@@ -695,59 +694,11 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         return rank_str.upper(), summoner_name, success
 
-    def updateAccount(self, url):
-
-        # Assign Headers, so scraping is not BLOCKED
-        headers = requests.utils.default_headers()
-        headers.update({
-            'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0',
-        })
-
-        # Try scrape OP.GG URL
+    async def updateAccount(self, _summoner_name):  
         try:
-            op_url = url.strip()
-            res_url = requests.get(op_url, headers=headers)
-            doc = BeautifulSoup(res_url.text, "html.parser")
-        except Exception as e:
-            print(e)
-            summoner_name = "Invalid Account"
-            rank_str = "Invalid Link"
-            success = False
-
-        # Try scraping valid OP.GG URL - Rank, Summoner Name.
-        try:
-            rank = doc.find_all(class_="tier")
-            if len(rank) < 1:
-                print("didn't find it!")
-                pastrank = doc.find_all(class_="tier-list")
-                print(pastrank)
-            rank = rank[0].decode_contents().strip()
-            rank = rank.replace("<!-- -->", "")
-            rank = rank.split()
-
-            lp = doc.find_all(class_="lp")
-            lp = lp[0].decode_contents().strip()
-            lp = lp.replace("<!-- -->", "")
-            lp = lp.split()
-            lp = lp[0]
-            lp = lp.replace(",", "")
-
-            rank_str = ""
-            for char in rank:
-                rank_str += char[0]
-
-            # Add rank division for Masters, GM, and Challenger players
-            if len(rank) == 1:
-                rank.append(lp)
-
-            summoner_name = doc.find_all(class_="css-ao94tw e1swkqyq1")
-            summoner_name = summoner_name[0].decode_contents().strip()
-
-            # Check if player exists in Player DB, returns a boolean
-            # doesPlayerExist = await self.checkPlayerExsits(discordID)
-
+            summoner_name, rank_str, log_url, puuid = await self.fetchSummonerInfo(_summoner_name)
             # Player already exists, add account
-            self.updateAccountRank(op_url, rank)
+            self.updateAccountRank(log_url, rank_str)
             success = True
         except Exception as e:
             print(e)
@@ -870,11 +821,11 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             f"INSERT INTO Account (name, opgg, playerID, rankTier, rankDivision, puuid) VALUES ('{summoner_name}', '{op_url}', {fetchedPlayerID[0]}, '{tier}', {division}, '{puuid}')")
         self.con.commit()
 
-    def updateAccountRank(self, op_url, rank):
+    def updateAccountRank(self, url, rank):
         # Name, OPGG, PID, Rank, Rank DIV
-        print(rank)
+        tier, div = rank.split()
         self.cursor.execute(
-            f"UPDATE Account SET rankTier = '{rank[0]}', rankDivision = {rank[1]} WHERE [opgg] = '{op_url}'")
+            f"UPDATE Account SET rankTier = '{tier}', rankDivision = {div} WHERE [opgg] = '{url}'")
         self.con.commit()
 
     async def roleDist(self, message):
@@ -1709,13 +1660,12 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 f"SELECT puuid FROM Account WHERE playerID = {p}").fetchall()
             for puuid, in puuids:
                 try:
-                    url = f"https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{puuid}"
+                    url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-puuid/{puuid}?api_key={self.apiKey}"
                     headers = {
-                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
-                        "Accept-Language": "en-GB,en-US;q=0.9,en;q=0.8",
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+                        "Accept-Language": "en-US,en;q=0.7",
                         "Accept-Charset": "application/x-www-form-urlencoded; charset=UTF-8",
-                        "Origin": "https://developer.riotgames.com",
-                        "X-Riot-Token": self.apiKey
+                        "Origin": "https://developer.riotgames.com"
                     }
                     status_code = 429
                     while status_code == 429:
@@ -1726,13 +1676,15 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                         else:
                             if status_code == 200:
                                 data = r.json()
-                                name = data['name']
-                                opgg = f"https://www.op.gg/summoners/euw/{name}"
+                                gameName = data['gameName']
+                                gameTag = data['tagLine']
+                                summoner_name = "-".join([gameName, gameTag])
+                                log = f"https://www.leagueofgraphs.com/summoner/euw/{summoner_name}"
                                 self.cursor.execute(
-                                    f"UPDATE Account SET name = ?, opgg = ? WHERE [puuid] = '{puuid}'", (name, opgg))
+                                    f"UPDATE Account SET name = ?, opgg = ? WHERE [puuid] = '{puuid}'", (summoner_name, log))
                                 self.con.commit()
-                                result = self.updateAccount(opgg)
-                                await msg.channel.send(f"updated rank for {result[1]}")
+                                rank, name, success = await self.updateAccount(summoner_name)
+                                await msg.channel.send(f"[status: {success}] updated rank for {rank} {name}")
                 except Exception as e:
                     await msg.channel.send(e)
 
