@@ -69,6 +69,8 @@ class Team:
             username = player.getHighestAccountName()
             if username != None:
                 username = username.replace(" ", "+")
+                username = username.replace("-", "%23")
+                username = f"{username}%2C"
                 multi_opgg += f"{username},"
             else:
                 print(f"No opgg found for  {player}")

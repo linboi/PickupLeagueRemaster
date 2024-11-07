@@ -1379,7 +1379,6 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             pass
 
     # Check if discordID is Admin
-
     async def checkAdmin(self, discordID):
         res = self.cursor.execute(
             f"SELECT isAdmin FROM Player WHERE discordID = {discordID}")
