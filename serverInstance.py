@@ -426,7 +426,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
     # Scrape rank details from op.gg page
     async def signUpPlayer(self, msg_content, message_obj):
         try:
-            summoner_name, rank_str, op_url, puuid = await self.fetchSummonerInfo(msg_content, message_obj)
+            summoner_name, rank_str, log_url, puuid = await self.fetchSummonerInfo(msg_content, message_obj)
             # Discord ID
             discordID = message_obj.author.id
 
@@ -438,9 +438,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 await message_obj.channel.send('😭 Player exists in the table, unable to register again!')
             else:
                 # Add player
-                self.addPlayer(discordID, summoner_name, op_url, rank_str, puuid)
+                self.addPlayer(discordID, summoner_name, log_url, rank_str, puuid)
                 # Give access to #select-role text channel (change permissions)
-                await message_obj.channel.send(f"🥳 Success {message_obj.author.mention} head over to {self.roleChannel.mention} to assign your **Primary** and **Secondary** role!\nHighest Rating: {rank_str}")
+                await message_obj.channel.send(f"🥳 Success {message_obj.author.mention} head over to {self.roleChannel.mention} to assign your **Primary** and **Secondary** role!\nHighest Rating (Past 2 Splits): {rank_str}")
             success = True
         except:
             rank_str = "Invalid Account + Channel Issue"
@@ -671,7 +671,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
     async def addAccount(self, msg_content, message_obj):
 
         try:
-            summoner_name, rank_str, url = await self.fetchSummonerInfo(msg_content, message_obj)
+            summoner_name, rank_str, url, puuid = await self.fetchSummonerInfo(msg_content, message_obj)
 
             # Discord ID
             discordID = message_obj.author.id
@@ -854,7 +854,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         self.con.commit()
 
     # Adds another Account to Account DB
-    def addExtraAccount(self, discordID, summoner_name, op_url, rank):
+    def addExtraAccount(self, discordID, summoner_name, op_url, rank, puuid):
 
         # Add player account to Account table
         tier, division = rank.split()
@@ -867,7 +867,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         # Name, OPGG, PID, Rank, Rank DIV
         self.cursor.execute(
-            f"INSERT INTO Account (name, opgg, playerID, rankTier, rankDivision) VALUES ('{summoner_name}', '{op_url}', {fetchedPlayerID[0]}, '{tier}', {division})")
+            f"INSERT INTO Account (name, opgg, playerID, rankTier, rankDivision, puuid) VALUES ('{summoner_name}', '{op_url}', {fetchedPlayerID[0]}, '{tier}', {division}, '{puuid}')")
         self.con.commit()
 
     def updateAccountRank(self, op_url, rank):
