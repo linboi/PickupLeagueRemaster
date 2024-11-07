@@ -426,7 +426,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
     # Scrape rank details from op.gg page
     async def signUpPlayer(self, msg_content, message_obj):
         try:
-            summoner_name, rank_str, op_url = await self.fetchSummonerInfo(msg_content, message_obj)
+            summoner_name, rank_str, op_url, puuid = await self.fetchSummonerInfo(msg_content, message_obj)
             # Discord ID
             discordID = message_obj.author.id
 
@@ -438,7 +438,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 await message_obj.channel.send('😭 Player exists in the table, unable to register again!')
             else:
                 # Add player
-                self.addPlayer(discordID, summoner_name, op_url, rank_str)
+                self.addPlayer(discordID, summoner_name, op_url, rank_str, puuid)
                 # Give access to #select-role text channel (change permissions)
                 await message_obj.channel.send(f"🥳 Success {message_obj.author.mention} head over to {self.roleChannel.mention} to assign your **Primary** and **Secondary** role!\nHighest Rating: {rank_str}")
             success = True
@@ -458,6 +458,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         rank_str = None
         highest_value = 0
         highest_rank = None
+        puuid = None
         
         # Assign Headers, so scraping is not BLOCKED
         headers = {
@@ -481,15 +482,19 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         # Get current rank & lp
         try:
-            current_html_tier = doc.select('div.txt.mainRankingDescriptionText div.leagueTier')
-            
-             # Method 1: Using .text
-            if current_html_tier:
-                current_tier = ' '.join(current_html_tier[0].text.split())
-            print(current_tier)
+            current_tier = None
+            current_ranked_info = await self.get_player_rank(summoner_name)
+
+            if current_ranked_info == None:
+                current_tier = "unranked 0"
+            else:
+                current_tier = f"{current_ranked_info['tier']} {current_ranked_info['rank']} {current_ranked_info['lp']}"
+                puuid = current_ranked_info['puuid']
+
             peaks.append(current_tier)
         except:
-            current_tier = "Unranked 0"
+            current_tier = "unranked 0"
+            peaks.append(current_tier)
             print("Unranked account")
 
         # Get last season peak
@@ -535,11 +540,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                     highest_rank = f"{parts[0]} {parts[1]}"
     
             rank_str = highest_rank
-            print(f"Highest rank: {rank_str}")
         except:
             print("could not get highest rank")
 
-        return summoner_name, rank_str, op_url
+        return summoner_name, rank_str.lower(), op_url, puuid
 
     # Convert Roman Numerals to Digits
     def roman_to_int(self, roman):
@@ -613,6 +617,56 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         return base_value
 
+    async def get_player_rank(self, summoner_name):
+        name, tag = summoner_name.split('-')
+        puuid = None
+
+        # First, get the encrypted summoner ID
+        summoner_url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{name}/{tag}?api_key={self.apiKey}"
+
+        headers = {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+                    "Accept-Language": "en-US,en;q=0.7",
+                    "Accept-Charset": "application/x-www-form-urlencoded; charset=UTF-8",
+                    "Origin": "https://developer.riotgames.com"
+        }
+
+        try:
+            resp = requests.get(summoner_url, headers)
+
+            resp.raise_for_status()
+
+            puuid = resp.json().get('puuid')
+
+            account_url = f"https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{puuid}?api_key={self.apiKey}"
+
+            acc_id_resp = requests.get(account_url, headers)
+
+            acc_id_resp.raise_for_status()
+
+            acc_id = acc_id_resp.json().get('id')
+
+            ranked_info_url = f"https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/{acc_id}?api_key={self.apiKey}"
+
+            ranked_info = requests.get(ranked_info_url, headers)
+
+            ranked_info.raise_for_status()
+
+
+                # Find the solo queue entry
+            for queue in ranked_info.json():
+                if queue["queueType"] == "RANKED_SOLO_5x5":
+                    return {
+                        "tier": queue["tier"],
+                        "rank": queue["rank"],
+                        "lp": queue["leaguePoints"],
+                        "puuid": puuid
+                    }
+            return None
+        except:
+            print("API Request Failed (1)")
+            return None
+        
     # Add other accounts
     async def addAccount(self, msg_content, message_obj):
 
@@ -766,7 +820,6 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             await mainAccountMessage.delete()
 
     # Check if player exists in Table DB, returns a boolean
-
     async def checkPlayerExsits(self, discordID):
 
         # Check if the discordID already exists in DB
@@ -780,7 +833,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             return False
 
     # Adds player to Player & Account DB
-    def addPlayer(self, discordID, summoner_name, op_url, rank):
+    def addPlayer(self, discordID, summoner_name, op_url, rank, puuid):
         tier, division = rank.split()
         self.cursor.execute(
             f"INSERT INTO Player (discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, isAdmin, missedGames, signupCount, leaderboardPoints, QP) VALUES ({discordID}, 0, 0, 1500, 'FILL', 'FILL', 0, 0, 0, 1200, 0)")
@@ -797,7 +850,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         # Name, OPGG, PID, Rank, Rank DIV, Main Account set to 1 for first account
         self.cursor.execute(
-            f"INSERT INTO Account (name, opgg, playerID, rankTier, rankDivision, Main) VALUES ('{summoner_name}', '{op_url}', {fetchedPlayerID[0]}, '{tier}', {division}, 1)")
+            f"INSERT INTO Account (name, opgg, playerID, rankTier, rankDivision, puuid, Main) VALUES ('{summoner_name}', '{op_url}', {fetchedPlayerID[0]}, '{tier}', {division}, '{puuid}', 1)")
         self.con.commit()
 
     # Adds another Account to Account DB
