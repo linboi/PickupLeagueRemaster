@@ -7,7 +7,7 @@ from commands import commands
 from serverInstance import serverInstance
 
 # Load Environment variables
-load_dotenv()
+load_dotenv(override=True)
 
 # Setup connection to database
 con = sqlite3.connect(os.getenv('DATABASE'))
@@ -26,6 +26,7 @@ inst = serverInstance()
 main_channel_id = os.getenv('MAIN_CHANNEL')
 role_channel_id = os.getenv('ROLE_CHANNEL')
 game_channel_id = os.getenv('GAME_CHANNEL')
+signup_channel = os.getenv('SIGNUP_CHANNEL')
 API_KEY = os.getenv('API_KEY')
 announcement_channel_id = os.getenv('ANNOUNCEMENT_CHANNEL')
 general_channel_id = os.getenv('GENERAL_CHANNEL')
@@ -50,10 +51,11 @@ async def on_ready():
     announcement_channel = client.get_channel(int(announcement_channel_id))
     general_channel = client.get_channel(int(general_channel_id))
     game_channel = client.get_channel(int(game_channel_id))
+    signup_channel_id = client.get_channel(int(signup_channel))
     role_id = int(puRoleID)
 
     inst.ready(client, role_channel, main_channel, announcement_channel, general_channel,
-               game_channel, voice_channels, role_id, primary_role_msg, secondary_role_msg, cursor, con, API_KEY)
+               game_channel, signup_channel_id, voice_channels, role_id, primary_role_msg, secondary_role_msg, cursor, con, API_KEY)
 
     with open('./settings.json') as f:
         settings = json.load(f)
@@ -75,7 +77,8 @@ async def on_raw_reaction_add(reaction):
 
 
 def main():
-    client.run(os.getenv('BOT_TOKEN'))
+    token = os.getenv('BOT_TOKEN')
+    client.run(token)
 
 
 if __name__ == '__main__':

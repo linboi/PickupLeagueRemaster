@@ -26,7 +26,7 @@ class serverInstance:
         self.tournament_code_list = []
         self.fetch_tournament_file()
 
-    def ready(self, client, roleChannel, testChannel, announcementChannel, generalChannel, gameChannel, voiceChannels, roleID, primaryRoleMsg, secondaryRoleMsg, cursor, con, apiKey):
+    def ready(self, client, roleChannel, testChannel, announcementChannel, generalChannel, gameChannel, signupChannel, voiceChannels, roleID, primaryRoleMsg, secondaryRoleMsg, cursor, con, apiKey):
         self.client = client
         self.announcementChannel = announcementChannel
         self.roleChannel = roleChannel
@@ -34,6 +34,7 @@ class serverInstance:
         self.con = con
         self.testChannel = testChannel
         self.generalChannel = generalChannel
+        self.signupChannel = signupChannel
         self.voiceChannels = voiceChannels
         self.primaryRoleMSG = primaryRoleMsg
         self.secondaryRoleMSG = secondaryRoleMsg
@@ -439,7 +440,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 await message_obj.channel.send('😭 Player exists in the table, unable to register again!')
             else:
                 # Add player
-                self.addPlayer(discordID, summoner_name, log_url, rank_str, puuid)
+                self.addPlayer(discordID, summoner_name,
+                               log_url, rank_str, puuid)
                 # Give access to #select-role text channel (change permissions)
                 await message_obj.channel.send(f"🥳 Success {message_obj.author.mention} head over to {self.roleChannel.mention} to assign your **Primary** and **Secondary** role!\nHighest Rating (Past 2 Splits): {rank_str}")
             success = True
@@ -458,7 +460,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         highest_value = 0
         highest_rank = None
         puuid = None
-        
+
         # Assign Headers, so scraping is not BLOCKED
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
@@ -502,24 +504,24 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             div_tags = doc.find_all('div', class_='tag requireTooltip brown')
             last_two_splits = div_tags[-2:]  # Get last 2 entries
 
-            
             for entry in last_two_splits:
                 tooltip = entry.get('tooltip')
                 tooltip_soup = BeautifulSoup(tooltip, 'html.parser')
-                
+
                 description = tooltip_soup.select_one('.tagDescription')
                 if description:
                     desc_text = description.get_text()
                     solo_section = desc_text.split('Ranked Flex')[0]
-                    
+
                     if 'reached' in solo_section:
-                        peak = solo_section.split('reached')[1].split('during')[0].strip()
+                        peak = solo_section.split(
+                            'reached')[1].split('during')[0].strip()
                         peaks.append(peak)
 
         except requests.RequestException as e:
             print(f"Request error: {str(e)}")
         except Exception as e:
-            print(f"Error occurred: {str(e)}")        
+            print(f"Error occurred: {str(e)}")
 
         # Get peak
         try:
@@ -537,7 +539,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                     # Convert only the division number (second part)
                     parts[1] = self.roman_to_int(parts[1])
                     highest_rank = f"{parts[0]} {parts[1]}"
-    
+
             rank_str = highest_rank
         except:
             print("could not get highest rank")
@@ -558,10 +560,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
     def get_rank_value(self, rank_str):
         if not rank_str:
             return 0
-        
+
         rank_no_lp = rank_str.replace("LP", "")
         rank_no_lp = rank_no_lp.replace(" LP", "")
-            
+
         # Dictionary for rank values
         tier_values = {
             'Unranked': 0,
@@ -576,14 +578,14 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             'Grandmaster': 7000,
             'Challenger': 7000
         }
-        
-         # Split rank string into parts
+
+        # Split rank string into parts
         parts = rank_str.strip().split()
-        
+
         # Get base value for the tier
         tier = parts[0]  # e.g., 'Diamond'
         base_value = tier_values.get(tier, 0)
-        
+
         # For Master+ ranks, only LP matters
         if tier in ['Master', 'Grandmaster', 'Challenger']:
             if len(parts) >= 2:  # If there's a number after Master/GM/Chall
@@ -593,7 +595,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 except ValueError:
                     return 7000
             return 7000
-        
+
         # For other ranks, add division value
         if len(parts) >= 2:
             division = parts[1]
@@ -605,7 +607,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 base_value += 200
             elif division == 'IV':
                 base_value += 100
-                
+
         # Add LP value if it exists
         if len(parts) >= 3:  # If there's a third part, it's the LP value
             try:
@@ -624,10 +626,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         summoner_url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{name}/{tag}?api_key={self.apiKey}"
 
         headers = {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
-                    "Accept-Language": "en-US,en;q=0.7",
-                    "Accept-Charset": "application/x-www-form-urlencoded; charset=UTF-8",
-                    "Origin": "https://developer.riotgames.com"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+            "Accept-Language": "en-US,en;q=0.7",
+            "Accept-Charset": "application/x-www-form-urlencoded; charset=UTF-8",
+            "Origin": "https://developer.riotgames.com"
         }
 
         try:
@@ -651,8 +653,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
             ranked_info.raise_for_status()
 
-
-                # Find the solo queue entry
+            # Find the solo queue entry
             for queue in ranked_info.json():
                 if queue["queueType"] == "RANKED_SOLO_5x5":
                     return {
@@ -665,7 +666,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         except:
             print("API Request Failed (1)")
             return None
-        
+
     # Add other accounts
     async def addAccount(self, msg_content, message_obj):
 
@@ -680,7 +681,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
             if doesPlayerExist:
                 # Player already exists, add account
-                self.addExtraAccount(discordID, summoner_name, url, rank_str, puuid)
+                self.addExtraAccount(
+                    discordID, summoner_name, url, rank_str, puuid)
                 success = True
             else:
                 rank_str = "Signup first before adding an account1!"
@@ -694,7 +696,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         return rank_str.upper(), summoner_name, success
 
-    async def updateAccount(self, _summoner_name):  
+    async def updateAccount(self, _summoner_name):
         try:
             summoner_name, rank_str, log_url, puuid = await self.fetchSummonerInfo(_summoner_name)
             # Player already exists, add account
@@ -1782,3 +1784,6 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             match.matchID = self.cursor.lastrowid
 
         return bestMatches
+
+    def getSignupChannel(self):
+        return self.signupChannel

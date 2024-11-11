@@ -8,7 +8,6 @@ class commands:
     COMMAND_SYMBOL = "!"
 
     async def hello(message, inst, args):
-        print("working")
         await message.channel.send("hiya")
 
     async def queue(message, inst, args):
@@ -32,15 +31,16 @@ class commands:
             await message.channel.send("Queue is enabled")
 
     async def signup(message, inst, args):
-        try:
-            pRank, pName, signUpSuccess = await inst.signUpPlayer(args[0], message)
-        except Exception as e:
-            await message.channel.send(e)
-        finally:
-            # Give access to '#select-roles' channel
-            if (signUpSuccess == False):
-                await message.channel.send("Failed 😔 please try again!")
-            await inst.applyRole(message)
+        if (message.channel == inst.getSignupChannel()):
+            try:
+                pRank, pName, signUpSuccess = await inst.signUpPlayer(args[0], message)
+            except Exception as e:
+                await message.channel.send(e)
+            finally:
+                # Give access to '#select-roles' channel
+                if (signUpSuccess == False):
+                    await message.channel.send("Failed 😔 please try again!")
+                await inst.applyRole(message)
 
     async def addAccount(message, inst, args):
         pRank, pName, signUpSuccess = await inst.addAccount(args[0], message)
