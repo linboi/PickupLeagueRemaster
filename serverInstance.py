@@ -663,9 +663,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                         "puuid": puuid
                     }
             return None
-        except:
-            print("API Request Failed (1)")
-            return None
+        except Exception as e:
+            # Better error handling: print the actual error
+            print(f"API Request Failed: {str(e)}")
 
     # Add other accounts
     async def addAccount(self, msg_content, message_obj):
