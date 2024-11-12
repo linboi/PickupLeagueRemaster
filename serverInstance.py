@@ -1041,12 +1041,12 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                     self.cursor.execute(
                         f"UPDATE Player SET primaryRole = '{position}' WHERE discordID = {discordID}")
                     self.con.commit()
-                    await self.testChannel.send(f"✨ {user_name} has changed their PRIMARY role to {position}")
+                    await self.testChannel.send(f"✨ {user_name.name} has changed their PRIMARY role to {position}")
                 else:
                     self.cursor.execute(
                         f"UPDATE Player SET primaryRole = '{position}', secondaryRole = 'FILL' WHERE discordID = {discordID}")
                     self.con.commit()
-                    await self.testChannel.send(f"✨ {user_name}'s SECONDARY role is already set to {position}, setting SECONDARY to FILL")
+                    await self.testChannel.send(f"✨ {user_name.name}'s SECONDARY role is already set to {position}, setting SECONDARY to FILL")
 
             # Secondary Role
             else:
@@ -1057,12 +1057,12 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                     self.cursor.execute(
                         f"UPDATE Player SET secondaryRole = '{position}' WHERE discordID = {discordID}")
                     self.con.commit()
-                    await self.testChannel.send(f"✨ {user_name} has changed their SECONDARY role to {position}")
+                    await self.testChannel.send(f"✨ {user_name.name} has changed their SECONDARY role to {position}")
                 else:
                     self.cursor.execute(
                         f"UPDATE Player SET secondaryRole = '{position}', primaryRole = 'FILL' WHERE discordID = {discordID}")
                     self.con.commit()
-                    await self.testChannel.send(f"✨ {user_name}'s PRIMARY role is already set to {position}, setting PRIMARY to FILL")
+                    await self.testChannel.send(f"✨ {user_name.name}'s PRIMARY role is already set to {position}, setting PRIMARY to FILL")
 
     async def roles(self, message):
         roleMsg = await message.author.send("Choose your primary role:\n🥶 - TOP\n✨ - JG\n😎  - MID\n😭 - AD\n🤡  - SUP\n🤔  - FILL\n\nyou can change your role in the future, use !roles again.")
