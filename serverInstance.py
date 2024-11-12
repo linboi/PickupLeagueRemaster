@@ -669,9 +669,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
     # Add other accounts
     async def addAccount(self, msg_content, message_obj):
-
         try:
-            summoner_name, rank_str, url, puuid = await self.fetchSummonerInfo(msg_content, message_obj)
+            summoner_name, rank_str, url, puuid = await self.fetchSummonerInfo(msg_content)
 
             # Discord ID
             discordID = message_obj.author.id
