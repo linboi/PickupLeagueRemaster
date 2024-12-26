@@ -570,19 +570,21 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         rank_no_lp = rank_str.replace("LP", "")
         rank_no_lp = rank_no_lp.replace(" LP", "")
 
+        rank_no_lp = rank_no_lp.upper()
+
         # Dictionary for rank values
         tier_values = {
-            'Unranked': 0,
-            'Iron': 0,
-            'Bronze': 1000,
-            'Silver': 2000,
-            'Gold': 3000,
-            'Platinum': 4000,
-            'Emerald': 5000,
-            'Diamond': 6000,
-            'Master': 7000,
-            'Grandmaster': 7000,
-            'Challenger': 7000
+            'UNRANKED': 0,
+            'IRON': 0,
+            'BRONZE': 1000,
+            'SILVER': 2000,
+            'GOLD': 3000,
+            'PLATINUM': 4000,
+            'EMERALD': 5000,
+            'DIAMOND': 6000,
+            'MASTER': 7000,
+            'GRANDMASTER': 7000,
+            'CHALLENGER': 7000
         }
 
         # Split rank string into parts
