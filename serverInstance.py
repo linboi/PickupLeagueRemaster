@@ -432,10 +432,6 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
             summoner_name, rank_str, log_url, puuid = await self.fetchSummonerInfo(msg_content)
 
-            if (rank_str == "UNRANKED 0"):
-                await message_obj.channel.send('You need to be ranked to play in the league!')
-                return "UNRANKED 0", "Invalid Account", False
-
             # Discord ID
             discordID = message_obj.author.id
 
@@ -491,6 +487,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         # Get current rank & lp
         try:
             current_tier = None
+            # api rank
             current_ranked_info = await self.get_player_rank(summoner_name)
 
             if current_ranked_info == None:
@@ -500,6 +497,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 puuid = current_ranked_info['puuid']
 
             peaks.append(current_tier.upper())
+            print(f"Current rank: {current_tier.upper()}")
         except:
             current_tier = "UNRANKED 0"
             peaks.append(current_tier.upper())
@@ -525,6 +523,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                             'reached')[1].split('during')[0].strip()
                         peaks.append(peak.upper())
 
+            for p in peaks:
+                print(f"Peak rank: {p}")
         except requests.RequestException as e:
             print(f"Request error: {str(e)}")
         except Exception as e:
