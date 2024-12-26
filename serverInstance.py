@@ -497,6 +497,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 current_tier = f"{current_ranked_info['tier']} {current_ranked_info['rank']} {current_ranked_info['lp']}"
                 puuid = current_ranked_info['puuid']
 
+            if current_tier.split()[0] in {'MASTER', 'GRANDMASTER', 'CHALLENGER', 'UNRANKED'}:
+                current_tier = f"{current_ranked_info['tier']} {current_ranked_info['lp']}"
+
             peaks.append(current_tier.upper())
             print(f"Current rank: {current_tier.upper()}")
         except:
