@@ -621,7 +621,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 base_value += lp
             except ValueError:
                 pass
-
+        print(f"base value: {base_value}, peak rank: {rank_str}")
         return base_value
 
     async def get_player_rank(self, summoner_name):
