@@ -431,6 +431,11 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             await self.applyRole(message_obj)
 
             summoner_name, rank_str, log_url, puuid = await self.fetchSummonerInfo(msg_content)
+
+            if (rank_str == "Unranked 0"):
+                await message_obj.channel.send('You need to be ranked to play in the league!')
+                return "Unranked 0", "Invalid Account", False
+
             # Discord ID
             discordID = message_obj.author.id
 
