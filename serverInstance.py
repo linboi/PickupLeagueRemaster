@@ -432,9 +432,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
             summoner_name, rank_str, log_url, puuid = await self.fetchSummonerInfo(msg_content)
 
-            if (rank_str == "Unranked 0"):
+            if (rank_str == "UNRANKED 0"):
                 await message_obj.channel.send('You need to be ranked to play in the league!')
-                return "Unranked 0", "Invalid Account", False
+                return "UNRANKED 0", "Invalid Account", False
 
             # Discord ID
             discordID = message_obj.author.id
@@ -494,14 +494,14 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             current_ranked_info = await self.get_player_rank(summoner_name)
 
             if current_ranked_info == None:
-                current_tier = "unranked 0"
+                current_tier = "UNRANKED 0"
             else:
                 current_tier = f"{current_ranked_info['tier']} {current_ranked_info['rank']} {current_ranked_info['lp']}"
                 puuid = current_ranked_info['puuid']
 
             peaks.append(current_tier)
         except:
-            current_tier = "unranked 0"
+            current_tier = "UNRANKED 0"
             peaks.append(current_tier)
             print("Unranked account")
 
@@ -540,7 +540,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                         highest_rank = rank
             highest_rank = highest_rank.replace("LP", "")
             # Only convert roman numerals if it's not Master+
-            if not any(tier in highest_rank for tier in ['Master', 'Grandmaster', 'Challenger']):
+            if not any(tier in highest_rank for tier in ['MASTER', 'GRANDMASTER', 'CHALLENGER', 'UNRANKED']):
                 parts = highest_rank.split()
                 if len(parts) >= 2:
                     # Convert only the division number (second part)
