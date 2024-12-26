@@ -521,6 +521,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                             'reached')[1].split('during')[0].strip()
                         peaks.append(peak)
 
+            for peak in peaks:
+                print(f"peak: {peak}")
+
         except requests.RequestException as e:
             print(f"Request error: {str(e)}")
         except Exception as e:
