@@ -190,6 +190,7 @@ class serverInstance:
                     user = self.client.guilds[0].get_member(
                         int(message.author.id))
                     await user.add_roles(role)
+                    print("added")
                 except:
                     pass
 
