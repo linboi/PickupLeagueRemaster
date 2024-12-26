@@ -495,7 +495,6 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 puuid = current_ranked_info['puuid']
 
             peaks.append(current_tier)
-            print(f"current tier: {current_tier}")
         except:
             current_tier = "unranked 0"
             peaks.append(current_tier)
@@ -520,9 +519,6 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                         peak = solo_section.split(
                             'reached')[1].split('during')[0].strip()
                         peaks.append(peak)
-
-            for peak in peaks:
-                print(f"peak: {peak}")
 
         except requests.RequestException as e:
             print(f"Request error: {str(e)}")
