@@ -427,7 +427,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
     # Scrape rank details from op.gg page
     async def signUpPlayer(self, msg_content, message_obj):
         try:
+            # assign role
             await self.applyRole(message_obj)
+
             summoner_name, rank_str, log_url, puuid = await self.fetchSummonerInfo(msg_content)
             # Discord ID
             discordID = message_obj.author.id
@@ -493,6 +495,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 puuid = current_ranked_info['puuid']
 
             peaks.append(current_tier)
+            print(f"current tier: {current_tier}")
         except:
             current_tier = "unranked 0"
             peaks.append(current_tier)
