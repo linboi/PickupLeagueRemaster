@@ -567,10 +567,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         if not rank_str:
             return 0
 
+        rank_str = rank_str.upper()
         rank_no_lp = rank_str.replace("LP", "")
         rank_no_lp = rank_no_lp.replace(" LP", "")
-
-        rank_no_lp = rank_no_lp.upper()
 
         # Dictionary for rank values
         tier_values = {
@@ -591,11 +590,11 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         parts = rank_str.strip().split()
 
         # Get base value for the tier
-        tier = parts[0]  # e.g., 'Diamond'
+        tier = parts[0].upper()  # e.g., 'Diamond'
         base_value = tier_values.get(tier, 0)
 
         # For Master+ ranks, only LP matters
-        if tier in ['Master', 'Grandmaster', 'Challenger']:
+        if tier in ['MASTER', 'GRANDMASTER', 'CHALLENGER']:
             if len(parts) >= 2:  # If there's a number after Master/GM/Chall
                 try:
                     lp = int(parts[1])
