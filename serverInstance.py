@@ -499,10 +499,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 current_tier = f"{current_ranked_info['tier']} {current_ranked_info['rank']} {current_ranked_info['lp']}"
                 puuid = current_ranked_info['puuid']
 
-            peaks.append(current_tier)
+            peaks.append(current_tier.upper())
         except:
             current_tier = "UNRANKED 0"
-            peaks.append(current_tier)
+            peaks.append(current_tier.upper())
             print("Unranked account")
 
         # Get last season peak
@@ -523,7 +523,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                     if 'reached' in solo_section:
                         peak = solo_section.split(
                             'reached')[1].split('during')[0].strip()
-                        peaks.append(peak)
+                        peaks.append(peak.upper())
 
         except requests.RequestException as e:
             print(f"Request error: {str(e)}")
