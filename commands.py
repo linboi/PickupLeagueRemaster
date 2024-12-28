@@ -33,7 +33,7 @@ class commands:
     async def signup(message, inst, args):
         if (message.channel == inst.getSignupChannel()):
             try:
-                pRank, pName, signUpSuccess = await inst.signUpPlayer(args[0], message)
+                pRank, pName, signUpSuccess = await inst.signUpPlayer(args, message)
             except Exception as e:
                 await message.channel.send(e)
             finally:

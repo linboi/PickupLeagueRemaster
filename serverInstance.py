@@ -431,13 +431,13 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             # assign role
             await self.applyRole(message_obj)
 
-            summoner_name, rank_str, log_url, puuid = await self.fetchSummonerInfo(msg_content)
+            summoner_name, rank_str, log_url, puuid = await self.fetchSummonerInfo(''.join(msg_content))
 
             # Discord ID
             discordID = message_obj.author.id
 
             # Check if player exists in Player DB, returns a boolean
-            doesPlayerExist = await self.checkPlayerExsits(discordID)
+            doesPlayerExist = await self.checkPlayerExists(discordID)
 
             if doesPlayerExist:
                 # Player already exists
@@ -449,7 +449,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 # Give access to #select-role text channel (change permissions)
                 await message_obj.channel.send(f"🥳 Success {message_obj.author.mention} head over to {self.roleChannel.mention} to assign your **Primary** and **Secondary** role!\nHighest Rating (Past 2 Splits): {rank_str}")
             success = True
-        except:
+        except Exception as e:
+            print(e)
             rank_str = "Invalid Account + Channel Issue"
             summoner_name = "Invalid Account"
             success = False
@@ -473,7 +474,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             'Connection': 'keep-alive',
         }
         try:
-            op_url = msg_content.strip()
+            op_url = (msg_content.strip()).replace('#', '-')
             summoner_name = op_url
             log_url = "https://www.leagueofgraphs.com/summoner/euw/"
             op_url = log_url + op_url
@@ -688,7 +689,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             discordID = message_obj.author.id
 
             # Check if player exists in Player DB, returns a boolean
-            doesPlayerExist = await self.checkPlayerExsits(discordID)
+            doesPlayerExist = await self.checkPlayerExists(discordID)
 
             if doesPlayerExist:
                 # Player already exists, add account
@@ -784,7 +785,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             await mainAccountMessage.delete()
 
     # Check if player exists in Table DB, returns a boolean
-    async def checkPlayerExsits(self, discordID):
+    async def checkPlayerExists(self, discordID):
 
         # Check if the discordID already exists in DB
         res = self.cursor.execute(
@@ -1040,7 +1041,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         # Fetch Player's Username
         user_name = await self.client.fetch_user(discordID)
         # Check if player exists in DB
-        doesPlayerExist = await self.checkPlayerExsits(discordID)
+        doesPlayerExist = await self.checkPlayerExists(discordID)
         if (doesPlayerExist):
             # Update role in DB
 
