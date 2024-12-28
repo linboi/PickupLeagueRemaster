@@ -1432,9 +1432,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                                     VALUES ('{mmTime}', {len(listOfPlayers)})""")
             self.con.commit()
             gametimeID = self.cursor.lastrowid
-            for playerID, _, _, _, _, pRole, sRole, _, _, _, _, _, _, _, _, _ in listOfPlayers:
-                self.cursor.execute(f"""INSERT INTO PlayerGametime (playerID, primaryRole, secondaryRole, GametimeID)
-                                    VALUES ({playerID}, '{pRole}', '{sRole}', {gametimeID})""")
+            for playerID, _, _, _, internalRating, pRole, sRole, _, _, _, _, _, _, _, _, _ in listOfPlayers:
+                self.cursor.execute(f"""INSERT INTO PlayerGametime (playerID, primaryRole, secondaryRole, GametimeID, rating)
+                                    VALUES ({playerID}, '{pRole}', '{sRole}', {gametimeID}, {internalRating})""")
             self.con.commit()
         except:
             pass
@@ -1664,15 +1664,15 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             try:
                 for player in match.get_blue().get_player_list():
                     self.cursor.execute(f"""UPDATE PlayerGametime 
-                                        SET matchID = {match.matchID}, givenRole = {player.role}
+                                        SET matchID = {match.matchID}, givenRole = '{player.role.upper()}'
                                         WHERE {player.playerID} = playerID and GametimeID = {gametimeID}""")
                 for player in match.get_red().get_player_list():
                     self.cursor.execute(f"""UPDATE PlayerGametime 
-                                    SET matchID = {match.matchID}, givenRole = {player.role}
+                                    SET matchID = {match.matchID}, givenRole = '{player.role.upper()}'
                                     WHERE {player.playerID} = playerID and GametimeID = {gametimeID}""")
                 self.con.commit()
-            except:
-                pass
+            except Exception as e:
+                print(e)
 
         return bestMatches
         # \step 6
