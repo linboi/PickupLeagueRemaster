@@ -1433,8 +1433,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             self.con.commit()
             gametimeID = self.cursor.lastrowid
             for playerID, _, _, _, _, pRole, sRole, _, _, _, _, _, _, _, _, _ in listOfPlayers:
-                self.cursor.execute(f"""INSERT INTO PlayerGametime (playerID, primaryRole, secondaryRole)
-                                    VALUES ({playerID}, '{pRole}', '{sRole}')""")
+                self.cursor.execute(f"""INSERT INTO PlayerGametime (playerID, primaryRole, secondaryRole, GametimeID)
+                                    VALUES ({playerID}, '{pRole}', '{sRole}', {gametimeID})""")
             self.con.commit()
         except:
             pass
@@ -1661,6 +1661,18 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 f"INSERT INTO Match (matchTime, mode, season) VALUES ('{match.startTime}', 'SR', 2)")
             self.con.commit()
             match.matchID = self.cursor.lastrowid
+            try:
+                for player in match.get_blue().get_player_list():
+                    self.cursor.execute(f"""UPDATE PlayerGametime 
+                                        SET matchID = {match.matchID}, givenRole = {player.role}
+                                        WHERE {player.playerID} = playerID and GametimeID = {gametimeID}""")
+                for player in match.get_red().get_player_list():
+                    self.cursor.execute(f"""UPDATE PlayerGametime 
+                                    SET matchID = {match.matchID}, givenRole = {player.role}
+                                    WHERE {player.playerID} = playerID and GametimeID = {gametimeID}""")
+                self.con.commit()
+            except:
+                pass
 
         return bestMatches
         # \step 6
