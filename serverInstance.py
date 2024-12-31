@@ -44,6 +44,11 @@ class serverInstance:
         self.gameChannel = gameChannel
         self.roleID = roleID
         self.apiKey = apiKey
+        self.rankWeights = {
+            0,
+            200,
+            300
+        }
 
     # Send the user a DM with player database
     async def upload_db(self, member):
@@ -433,6 +438,11 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
             summoner_name, rank_str, log_url, puuid = await self.fetchSummonerInfo(''.join(msg_content))
 
+            # Check if fetchSummonerInfo returned None values
+            if summoner_name is None or rank_str is None or log_url is None:
+                await message_obj.channel.send('You need to be ranked in the past 2 or current splits to sign up!')
+                return "INVALID ACCOUNT", "INVALID ACCOUNT", False
+
             # Discord ID
             discordID = message_obj.author.id
 
@@ -484,7 +494,6 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         except:
             summoner_name = "Invalid Account"
             rank_str = "Invalid Link"
-            success = False
 
         # Get current rank & lp
         try:
@@ -502,11 +511,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 current_tier = f"{current_ranked_info['tier']} {current_ranked_info['lp']}"
 
             peaks.append(current_tier.upper())
-            print(f"Current rank: {current_tier.upper()}")
         except:
             current_tier = "UNRANKED 0"
             peaks.append(current_tier.upper())
-            print("Unranked account")
 
         # Get last season peak
         try:
@@ -527,6 +534,13 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                         peak = solo_section.split(
                             'reached')[1].split('during')[0].strip()
                         peaks.append(peak.upper())
+                    else:
+                        # This just makes it so peaks will always have 3 entries -- makes it easier to apply wieghts later
+                        peaks.append("UNRANKED 0")
+
+            # make sure there are always 3 entries in peaks
+            while len(peaks) < 3:
+                peaks.append("UNRANKED 0")
 
             for p in peaks:
                 print(f"Peak rank: {p}")
@@ -537,9 +551,11 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         # Get peak
         try:
-            for rank in peaks:
+            for idx, rank in enumerate(peaks):
                 if rank:  # Check if rank exists
-                    value = self.get_rank_value(rank)
+                    value = self.get_rank_value(rank) - self.rankWeights[idx]
+                    if value < 0:
+                        value = 0
                     if value > highest_value:
                         highest_value = value
                         highest_rank = rank
@@ -555,6 +571,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             rank_str = highest_rank
         except:
             print("could not get highest rank")
+
+        if highest_value == 0:
+            return None, None, None, None
 
         return summoner_name, rank_str.lower(), op_url, puuid
 
