@@ -46,8 +46,8 @@ class serverInstance:
         self.apiKey = apiKey
         self.rankWeights = {
             0,
-            200,
-            300
+            300,
+            200
         }
 
     # Send the user a DM with player database
@@ -569,7 +569,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                     highest_rank = f"{parts[0]} {parts[1]}"
 
             rank_str = highest_rank
-        except:
+        except (Exception) as e:
+            print(e)
             print("could not get highest rank")
 
         if highest_value == 0:
