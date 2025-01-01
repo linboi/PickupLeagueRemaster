@@ -559,6 +559,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                     if value > highest_value:
                         highest_value = value
                         highest_rank = rank
+            print(highest_value)
             highest_rank = highest_rank.replace("LP", "")
             # Only convert roman numerals if it's not Master+
             if not any(tier in highest_rank for tier in ['MASTER', 'GRANDMASTER', 'CHALLENGER', 'UNRANKED']):
