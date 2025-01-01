@@ -44,11 +44,11 @@ class serverInstance:
         self.gameChannel = gameChannel
         self.roleID = roleID
         self.apiKey = apiKey
-        self.rankWeights = {
+        self.rankWeights = [
             0,
             300,
             200
-        }
+        ]
 
     # Send the user a DM with player database
     async def upload_db(self, member):
