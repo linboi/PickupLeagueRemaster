@@ -597,7 +597,6 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         rank_str = rank_str.upper()
         rank_no_lp = rank_str.replace("LP", "")
-        rank_no_lp = rank_no_lp.replace(" LP", "")
 
         # Dictionary for rank values
         tier_values = {
@@ -615,7 +614,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         }
 
         # Split rank string into parts
-        parts = rank_str.strip().split()
+        parts = rank_no_lp.strip().split()
 
         # Get base value for the tier
         tier = parts[0].upper()  # e.g., 'Diamond'
