@@ -554,12 +554,13 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             for idx, rank in enumerate(peaks):
                 if rank:  # Check if rank exists
                     value = self.get_rank_value(rank) - self.rankWeights[idx]
+                    print(value)
                     if value < 0:
                         value = 0
                     if value > highest_value:
                         highest_value = value
                         highest_rank = rank
-            print(highest_value)
+
             highest_rank = highest_rank.replace("LP", "")
             # Only convert roman numerals if it's not Master+
             if not any(tier in highest_rank for tier in ['MASTER', 'GRANDMASTER', 'CHALLENGER', 'UNRANKED']):
@@ -649,7 +650,6 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 base_value += lp
             except ValueError:
                 pass
-        print(f"base value: {base_value}, peak rank: {rank_str}")
         return base_value
 
     async def get_player_rank(self, summoner_name):
