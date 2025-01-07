@@ -71,6 +71,9 @@ class commands:
     async def roleDist(message, inst, _):
         await inst.roleDist(message)
 
+    async def betties(message, inst, _):
+        await inst.showBetties(message)
+
     # Make Admin Command
     async def leaderboard(message, inst, args):
         if len(args) == 0:
@@ -284,7 +287,8 @@ class commands:
         'profile': profile,
         'update-api-key': updateAPIKey,
         'mainaccount': mainAccount,
-        'role-distribution': roleDist
+        'role-distribution': roleDist,
+        'betties': betties
     }
 
     async def parseReaction(reaction, inst):

@@ -878,6 +878,11 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         prettyString += "```"
         await message.channel.send(prettyString)
 
+    async def showBetties(self, message):
+        res = self.cursor.execute(
+            f"SELECT bettingPoints FROM Player WHERE discordID = {message.author.id}").fetchone()
+        await message.channel.send(f"You have {res[0]:.0f} betties remaining")
+
     async def displayHistory(self, player, message):
 
         result = f"Match history for {player.display_name}\n```{'ID':^5} {'DATE':^15} {'ROLE':^5} {'TEAM':^5} {'LP':^5} {'CHAMPION':^14} K/D/A\n"
