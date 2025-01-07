@@ -1,16 +1,23 @@
 Aatrox
 Ahri
 Akali
+Akshan
 Alistar
+Ambessa
 Amumu
 Anivia
 Annie
+Aphelios
 Ashe
+Aurelion Sol
 Azir
+Bard
+Bel'Veth
 Blitzcrank
 Brand
 Braum
 Caitlyn
+Camille
 Cassiopeia
 Cho'Gath
 Corki
@@ -18,6 +25,7 @@ Darius
 Diana
 Dr. Mundo
 Draven
+Ekko
 Elise
 Evelynn
 Ezreal
@@ -30,26 +38,36 @@ Garen
 Gnar
 Gragas
 Graves
+Gwen
 Hecarim
 Heimerdinger
+Illaoi
 Irelia
+Ivern
 Janna
 Jarvan IV
 Jax
 Jayce
 Jinx
+Kai'Sa
 Kalista
 Karma
 Karthus
 Kassadin
 Katarina
 Kayle
+Kayn
 Kennen
 Kha'Zix
+Khin
+Kindred
+Kled
 Kog'Maw
+K'Sante
 LeBlanc
 Lee Sin
 Leona
+Lillia
 Lissandra
 Lucian
 Lulu
@@ -58,28 +76,41 @@ Malphite
 Malzahar
 Maokai
 Master Yi
+Milio
 Miss Fortune
 Mordekaiser
 Morgana
 Nami
 Nasus
 Nautilus
+Neeko
 Nidalee
+Nilah
 Nocturne
 Nunu
 Olaf
 Orianna
+Ornn
 Pantheon
 Poppy
+Pyke
+Qiyana
 Quinn
+Rakan
 Rammus
 Rek'Sai
+Rell
+Renata Glasc
 Renekton
 Rengar
 Riven
 Rumble
 Ryze
+Samira
 Sejuani
+Senna
+Seraphine
+Sett
 Shaco
 Shen
 Shyvana
@@ -90,7 +121,10 @@ Skarner
 Sona
 Soraka
 Swain
+Sylas
 Syndra
+Tahm Kench
+Taliyah
 Talon
 Taric
 Teemo
@@ -106,58 +140,25 @@ Varus
 Vayne
 Veigar
 Vel'Koz
+Vex
 Vi
+Viego
 Viktor
 Vladimir
 Volibear
 Warwick
 Wukong
+Xayah
 Xerath
 Xin Zhao
 Yasuo
+Yone
 Yorick
+Yuumi
 Zac
 Zed
+Zeri
 Ziggs
 Zilean
+Zoe
 Zyra
-bard
-ekko
-tahm kench
-kindred
-illaoi
-jhin
-aurelion sol
-taliyah
-kled
-ivern
-camille
-rakan
-xayah
-kayn
-ornn
-zoe
-kai'sa
-pyke
-neeko
-sylas
-yuumi
-qiyana
-senna
-aphelios
-sett
-lillia
-yone
-samira
-seraphine
-rell
-viego
-gwen
-akshan
-vex
-zeri
-renata glasc
-bel'vet
-nilah
-k'sante
-milio
