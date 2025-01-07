@@ -1,11 +1,9 @@
-from player import Player
-from team import Team
-import random
-import copy
-import datetime
 import asyncio
-import time
+import datetime
 import math
+import time
+
+from player import Player
 
 
 class Match:

@@ -67,7 +67,7 @@ class Team:
         multi_opgg = "https://www.op.gg/multisearch/euw?summoners="
         for player in players:
             username = player.getHighestAccountName()
-            if username != None:
+            if username is not None:
                 username = username.replace(" ", "+")
                 username = username.replace("-", "%23")
                 username = f"{username}%2C"

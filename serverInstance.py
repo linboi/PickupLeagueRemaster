@@ -1,23 +1,25 @@
-import requests
-import discord
-import timing
-import datetime
-from datetime import date
-import time
 import asyncio
-from bs4 import BeautifulSoup
-from player import Player
-from match import Match
-from team import Team
-import discord
-import aramMatch
-import random
+import datetime
+import json
 import os
+import random
+import re
 import shutil
 import sqlite3
-import json
-from table2ascii import table2ascii as t2a, PresetStyle
-import re
+import time
+from datetime import date
+
+import discord
+import requests
+from bs4 import BeautifulSoup
+from table2ascii import PresetStyle
+from table2ascii import table2ascii as t2a
+
+import aramMatch
+import timing
+from match import Match
+from player import Player
+from team import Team
 
 
 class serverInstance:
@@ -103,7 +105,7 @@ class serverInstance:
             # Once 30 is reachead add delay
             timeObjs = datetime.datetime.now().replace(
                 minute=int(datetime.datetime.now().minute) + 1)
-            await channel.send(f"**Player Threshold Reached.**\n__Queue will close in <t:" + str(int(time.mktime(timeObjs.timetuple()))) + ":R>!__")
+            await channel.send("**Player Threshold Reached.**\n__Queue will close in <t:" + str(int(time.mktime(timeObjs.timetuple()))) + ":R>!__")
             await asyncio.sleep(60)
             try:
                 matches = await self.matchmakeV2(self.queue)
@@ -112,7 +114,7 @@ class serverInstance:
                 self.queue = []
                 await self.update_tournament_file()
             except:
-                await channel.send(f"Not enough players in queue, unable to start games!")
+                await channel.send("Not enough players in queue, unable to start games!")
 
     async def publish_matches(self, matches, channel):
         for match in matches:
@@ -212,7 +214,7 @@ class serverInstance:
             # Display Details of Match
             msg = await self.testChannel.send(f"{match.get_details_string()}\n")
             await msg.edit(suppress=True)
-            await self.testChannel.send(f"---------------------------------------------")
+            await self.testChannel.send("---------------------------------------------")
 
             # Send DM to all players
             user_list = match.listOfUsers()
@@ -426,7 +428,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 self.currentMatches.remove(correct_match[0][0])
                 await message.channel.send(f"🎊 Match *{match_id}* resolved, **{side}** side won! ({int(ratingChange)}LP)")
             if len(correct_match) > 1:
-                await message.channel.send(f"Resolve Error, too many matches with this ID.")
+                await message.channel.send("Resolve Error, too many matches with this ID.")
         except:
             await message.channel.send("Resolver Error, ID is not an number.")
 
@@ -864,7 +866,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
     async def roleDist(self, message):
         res = self.cursor.execute(
-            f"select count(*), primaryRole, 'primary' FROM Player GROUP BY primaryRole UNION ALL select count(*), secondaryRole, 'secondary' FROM Player GROUP BY secondaryRole").fetchall()
+            "select count(*), primaryRole, 'primary' FROM Player GROUP BY primaryRole UNION ALL select count(*), secondaryRole, 'secondary' FROM Player GROUP BY secondaryRole").fetchall()
         resultsDict = {}
         for count, role, prio in res:
             if role not in resultsDict:
@@ -889,9 +891,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                                    ORDER BY Match.matchID desc
                                    LIMIT 10
                                    """).fetchall()
-        for id, time, change, role, team, champ, kills, deaths, assists in rows:
+        for id, matchTime, change, role, team, champ, kills, deaths, assists in rows:
             change_str = ("+" if change > 0 else "") + f"{change:.0f}"
-            result += f"{id:^5} {time.split()[0]:^15} {role.upper():^5} {team.upper():^5} {change_str:^5} {champ:^14} {kills}/{deaths}/{assists}\n"
+            result += f"{id:^5} {matchTime.split()[0]:^15} {role.upper():^5} {team.upper():^5} {change_str:^5} {champ:^14} {kills}/{deaths}/{assists}\n"
         result += "```"
         await message.channel.send(result)
 
@@ -924,10 +926,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 else:
                     against["losses"] += 1
 
-        for id, time, change, ateam, bteam in rows[0:max(10, len(rows))]:
+        for id, matchTime, change, ateam, bteam in rows[0:max(10, len(rows))]:
             change_str = ("+" if change > 0 else "") + f"{change:.0f}"
             team_str = "WITH" if ateam == bteam else "AGAINST"
-            result += f"{id:^5} {time.split()[0]:^15} {team_str.upper():^8} {change_str:^5}\n"
+            result += f"{id:^5} {matchTime.split()[0]:^15} {team_str.upper():^8} {change_str:^5}\n"
         result += f"WITH ({together['wins']}W/{together['losses']}L) " + ("+" if together['change'] > 0 else "") + f"{together['change']:.0f}"\
             + f"\tAGAINST ({against['wins']}W/{against['losses']}L) " + ("+" if against['change'] > 0 else "") + f"""{against['change']:.0f}
                     ```"""
@@ -993,7 +995,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                         if status_code == 200:
                             to_insert = (matchID, json.dumps(data))
                             self.cursor.execute(
-                                f"INSERT INTO MatchDetails (matchID, json) VALUES (?, ?)", to_insert)
+                                "INSERT INTO MatchDetails (matchID, json) VALUES (?, ?)", to_insert)
                             self.con.commit()
                             await self.updatePlayerMatchDetails(channel, matchID)
                         else:
@@ -1019,12 +1021,12 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             else:
                 to_insert = (result[0][0], json.dumps(participant))
                 self.cursor.execute(
-                    f"INSERT INTO PlayerMatchDetails (playerMatchID, json) VALUES (?, ?)", to_insert)
+                    "INSERT INTO PlayerMatchDetails (playerMatchID, json) VALUES (?, ?)", to_insert)
                 self.con.commit()
                 to_insert = (participant["championName"], participant["kills"],
                              participant["deaths"], participant["assists"], result[0][0])
                 self.cursor.execute(
-                    f"UPDATE PlayerMatch SET champion = ?, kills = ?, deaths = ?, assists = ? WHERE playerMatchID = ?", to_insert)
+                    "UPDATE PlayerMatch SET champion = ?, kills = ?, deaths = ?, assists = ? WHERE playerMatchID = ?", to_insert)
                 self.con.commit()
 
     async def showProfile(self, player, message, season):
@@ -1198,7 +1200,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             f"SELECT leaderboardPoints, winCount, lossCount FROM Player WHERE discordID = {discordID}")
         mmr = res.fetchone()
         res = self.cursor.execute(
-            f"SELECT discordID FROM Player WHERE winCount > 0 OR lossCount > 0 ORDER BY leaderboardPoints DESC")
+            "SELECT discordID FROM Player WHERE winCount > 0 OR lossCount > 0 ORDER BY leaderboardPoints DESC")
         output = res.fetchall()
         test = []
         for rank in output:
@@ -1278,7 +1280,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
     async def displayBettyBoard(self, channelToSendIn, pageNum=0, message=None):
         res = self.cursor.execute(
-            f"SELECT discordID, bettingPoints, ROW_NUMBER() OVER (ORDER BY bettingPoints DESC) FROM Player WHERE bettingPoints <> 2000.0 ORDER BY bettingPoints DESC")
+            "SELECT discordID, bettingPoints, ROW_NUMBER() OVER (ORDER BY bettingPoints DESC) FROM Player WHERE bettingPoints <> 2000.0 ORDER BY bettingPoints DESC")
         output = res.fetchall()
         all_players = ""
         pageNum = min(pageNum, len(output)//20)
@@ -1405,10 +1407,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                     if player_found:
                         red_oplink, blue_oplink = match.getOPGGLink()
                         await self.embedOPGGLink(red_oplink, blue_oplink, self.gameChannel)
-                        await msg_obj.channel.send(f"✌️Replacement Successful")
+                        await msg_obj.channel.send("✌️Replacement Successful")
                 except Exception as e:
                     print(e)
-                    await msg_obj.channel.send(f"Replacement Error")
+                    await msg_obj.channel.send("Replacement Error")
         else:
             pass
 
@@ -1698,7 +1700,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         # \step 6
 
     async def updatePlayerMMRs(self, msg):
-        pIDs = self.cursor.execute(f"SELECT playerID FROM Player").fetchall()
+        pIDs = self.cursor.execute("SELECT playerID FROM Player").fetchall()
         for p, in pIDs:
             print(p)
             puuids = self.cursor.execute(
@@ -1765,7 +1767,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         players_in_queue = len(playerObjList)
 
-        # Number of macthes to create
+        # Number of matches to create
         match_count = players_in_queue // 10
 
         if match_count < 1:

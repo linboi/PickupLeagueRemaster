@@ -56,11 +56,11 @@ class ARAM_Match:
         string += f"\n```{'[Blue Team]': ^15}{'':^5}{'[Red Team]':^15}\n\n"
         for i, p in enumerate(self.blueTeam.players):
             string += f"{self.blueTeam.players[i].get_username():^15}\t{self.redTeam.players[i].get_username():^15}\n"
-        string += f"```"
+        string += "```"
         string += f"```{'[Blue Champs]': ^15}{'':^5}{'[Red Champs]':^15}\n"
         for i, c in enumerate(self.blueChamps):
             string += f"{self.blueChamps[i].upper():^15}\t{self.redChamps[i].upper():^15}\n"
-        string += f"```"
+        string += "```"
         for i, invite_string in enumerate(invite_strings):
             string += f"\nInvite list{i}: {invite_string}"
 
