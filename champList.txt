@@ -118,6 +118,7 @@ Singed
 Sion
 Sivir
 Skarner
+Smolder
 Sona
 Soraka
 Swain
