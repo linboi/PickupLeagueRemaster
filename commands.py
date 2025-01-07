@@ -1,7 +1,5 @@
 from rasp import rasp
-import discord
 import re
-import os
 
 
 class commands:
@@ -25,7 +23,7 @@ class commands:
             return
 
         state = await inst.queueSwitch()
-        if state == False:
+        if state is False:
             await message.channel.send("Queue is disabled, and list emptied.")
         else:
             await message.channel.send("Queue is enabled")
@@ -38,7 +36,7 @@ class commands:
                 await message.channel.send(e)
             finally:
                 # Give access to '#select-roles' channel
-                if (signUpSuccess == False):
+                if (signUpSuccess is False):
                     await message.channel.send("Failed 😔 please try again!")
                 await inst.applyRole(message)
 
@@ -303,4 +301,4 @@ class commands:
         try:
             await commands.userCommands[command](message, inst, args)
         except KeyError:
-            await message.channel.send(f"Command not recognised.\nUse !help to see a list of commands")
+            await message.channel.send("Command not recognised.\nUse !help to see a list of commands")

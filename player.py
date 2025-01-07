@@ -39,7 +39,7 @@ class Player:
 
     def __repr__(self):
         txt = "Player:{\n"
-        if self.discordUser == None:
+        if self.discordUser is None:
             txt += "\tdiscordUser Not Set\n"
         else:
             txt += f"\tUsername: {self.username}\n"
@@ -82,7 +82,7 @@ class Player:
         return self.discordID
 
     def get_username(self):
-        if self.username == None:
+        if self.username is None:
             return self.getHighestAccountName()
         return self.username
 
@@ -102,7 +102,7 @@ class Player:
         return self.isAdmin
 
     def set_username(self):
-        if self.discordUser != None:
+        if self.discordUser is not None:
             self.username = self.discordUser.name
         else:
             try:
@@ -171,7 +171,7 @@ class Player:
             self.roleMMR = self.internalRating - 300
 
     def getMMRinRole(self, role=None):
-        if role == None:
+        if role is None:
             role = self.get_role()
         if self.get_pRole() == role or self.get_pRole() == 'FILL':
             return self.internalRating
