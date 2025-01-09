@@ -406,6 +406,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 activePlayerMatches[0][1], gameID)
             self.currentMatches.remove(activePlayerMatches[0][0])
             await message.channel.send(f"🎊 WPGG, remember to upload a post-game screenshot! (+{ratingChange:.0f}LP)")
+            await self.getGameDetails(message.channel)
         if len(activePlayerMatches) > 1:
             await message.channel.send("Player found in more than one match, uh oh")
 
@@ -1022,7 +1023,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 WHERE puuid = '{participant['puuid']}'""").fetchall()
             if len(result) < 1:
                 await channel.send(
-                    f"Player '{participant['summonerName']}' not found in player list")
+                    f"Player '{participant['summonerName']}' not found in player list of match: {matchID}")
             else:
                 to_insert = (result[0][0], json.dumps(participant))
                 self.cursor.execute(
