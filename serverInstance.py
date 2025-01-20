@@ -21,6 +21,8 @@ from match import Match
 from player import Player
 from team import Team
 
+import ranks
+
 
 class serverInstance:
     def __init__(self):
@@ -435,315 +437,66 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
     # Scrape rank details from op.gg page
     async def signUpPlayer(self, msg_content, message_obj):
-        try:
-            # assign role
-            await self.applyRole(message_obj)
+        discordID = message_obj.author.id
+        if await self.checkPlayerExists(discordID):
+            # Player already exists
+            await message_obj.channel.send('😭 Player exists in the table, unable to register again!')
+            return False
+        # try:
+        # assign role
+        await self.applyRole(message_obj)
+        gamename, tagline = (' '.join(msg_content)).strip().replace(
+            '#', '-').split('-')
 
-            summoner_name, rank_str, log_url, puuid = await self.fetchSummonerInfo(''.join(msg_content))
-
-            # Check if fetchSummonerInfo returned None values
-            if summoner_name is None or rank_str is None or log_url is None:
-                await message_obj.channel.send('You need to be ranked in the past 2 or current splits to sign up!')
-                return "INVALID ACCOUNT", "INVALID ACCOUNT", False
-
-            # Discord ID
-            discordID = message_obj.author.id
-
-            # Check if player exists in Player DB, returns a boolean
-            doesPlayerExist = await self.checkPlayerExists(discordID)
-
-            if doesPlayerExist:
-                # Player already exists
-                await message_obj.channel.send('😭 Player exists in the table, unable to register again!')
-            else:
-                # Add player
-                self.addPlayer(discordID, summoner_name,
-                               log_url, rank_str, puuid)
-                # Give access to #select-role text channel (change permissions)
-                await message_obj.channel.send(f"🥳 Success {message_obj.author.mention} head over to {self.roleChannel.mention} to assign your **Primary** and **Secondary** role!\nHighest Rating (Past 2 Splits): {rank_str}")
-            success = True
-        except Exception as e:
-            print(e)
-            rank_str = "Invalid Account + Channel Issue"
-            summoner_name = "Invalid Account"
-            success = False
-
-        return rank_str.upper(), summoner_name, success
-
-    async def fetchSummonerInfo(self, msg_content):
-        current_tier = None
-        peaks = []
-        summoner_name = None
-        rank_str = None
-        highest_value = 0
-        highest_rank = None
-        puuid = None
-
-        # Assign Headers, so scraping is not BLOCKED
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Connection': 'keep-alive',
-        }
-        try:
-            op_url = (msg_content.strip()).replace('#', '-')
-            summoner_name = op_url
-            log_url = "https://www.leagueofgraphs.com/summoner/euw/"
-            op_url = log_url + op_url
-            res_url = requests.get(op_url, headers=headers)
-            doc = BeautifulSoup(res_url.text, "html.parser")
-            time.sleep(random.uniform(2, 4))
-        except:
-            summoner_name = "Invalid Account"
-            rank_str = "Invalid Link"
-
-        # Get current rank & lp
-        try:
-            current_tier = None
-            # api rank
-            current_ranked_info = await self.get_player_rank(summoner_name)
-
-            if current_ranked_info == None:
-                current_tier = "UNRANKED 0"
-            else:
-                current_tier = f"{current_ranked_info['tier']} {current_ranked_info['rank']} {current_ranked_info['lp']}"
-                puuid = current_ranked_info['puuid']
-
-            if current_tier.split()[0] in {'MASTER', 'GRANDMASTER', 'CHALLENGER', 'UNRANKED'}:
-                current_tier = f"{current_ranked_info['tier']} {current_ranked_info['lp']}"
-
-            peaks.append(current_tier.upper())
-        except:
-            current_tier = "UNRANKED 0"
-            peaks.append(current_tier.upper())
-
-        # Get last season peak
-        try:
-            # Now try to find the tags
-            div_tags = doc.find_all('div', class_='tag requireTooltip brown')
-            last_two_splits = div_tags[-2:]  # Get last 2 entries
-
-            for entry in last_two_splits:
-                tooltip = entry.get('tooltip')
-                tooltip_soup = BeautifulSoup(tooltip, 'html.parser')
-
-                description = tooltip_soup.select_one('.tagDescription')
-                if description:
-                    desc_text = description.get_text()
-                    solo_section = desc_text.split('Ranked Flex')[0]
-
-                    if 'reached' in solo_section:
-                        peak = solo_section.split(
-                            'reached')[1].split('during')[0].strip()
-                        peaks.append(peak.upper())
-                    else:
-                        # This just makes it so peaks will always have 3 entries -- makes it easier to apply wieghts later
-                        peaks.append("UNRANKED 0")
-
-            # make sure there are always 3 entries in peaks
-            while len(peaks) < 3:
-                peaks.append("UNRANKED 0")
-
-            for p in peaks:
-                print(f"Peak rank: {p}")
-        except requests.RequestException as e:
-            print(f"Request error: {str(e)}")
-        except Exception as e:
-            print(f"Error occurred: {str(e)}")
-
-        # Get peak
-        try:
-            for idx, rank in enumerate(peaks):
-                if rank:  # Check if rank exists
-                    value = self.get_rank_value(rank) - self.rankWeights[idx]
-                    print(value)
-                    if value < 0:
-                        value = 0
-                    if value > highest_value:
-                        highest_value = value
-                        highest_rank = rank
-
-            highest_rank = highest_rank.replace("LP", "")
-            # Only convert roman numerals if it's not Master+
-            if not any(tier in highest_rank for tier in ['MASTER', 'GRANDMASTER', 'CHALLENGER', 'UNRANKED']):
-                parts = highest_rank.split()
-                if len(parts) >= 2:
-                    # Convert only the division number (second part)
-                    parts[1] = self.roman_to_int(parts[1])
-                    highest_rank = f"{parts[0]} {parts[1]}"
-
-            rank_str = highest_rank
-        except (Exception) as e:
-            print(e)
-            print("could not get highest rank")
-
-        if highest_value == 0:
-            return None, None, None, None
-
-        return summoner_name, rank_str.lower(), op_url, puuid
-
-    # Convert Roman Numerals to Digits
-    def roman_to_int(self, roman):
-        roman_values = {
-            'I': '1',
-            'II': '2',
-            'III': '3',
-            'IV': '4'
-        }
-        return roman_values.get(roman, roman)
-
-    # Get the value of the rank + lp
-    def get_rank_value(self, rank_str):
-        if not rank_str:
-            return 0
-
-        rank_str = rank_str.upper()
-        rank_no_lp = rank_str.replace("LP", "")
-
-        # Dictionary for rank values
-        tier_values = {
-            'UNRANKED': 0,
-            'IRON': 0,
-            'BRONZE': 1000,
-            'SILVER': 2000,
-            'GOLD': 3000,
-            'PLATINUM': 4000,
-            'EMERALD': 5000,
-            'DIAMOND': 6000,
-            'MASTER': 7000,
-            'GRANDMASTER': 7000,
-            'CHALLENGER': 7000
-        }
-
-        # Split rank string into parts
-        parts = rank_no_lp.strip().split()
-
-        # Get base value for the tier
-        tier = parts[0].upper()  # e.g., 'Diamond'
-        base_value = tier_values.get(tier, 0)
-
-        # For Master+ ranks, only LP matters
-        if tier in ['MASTER', 'GRANDMASTER', 'CHALLENGER']:
-            if len(parts) >= 2:  # If there's a number after Master/GM/Chall
-                try:
-                    lp = int(parts[1])
-                    return 7000 + lp
-                except ValueError:
-                    return 7000
-            return 7000
-
-        # For other ranks, add division value
-        if len(parts) >= 2:
-            division = parts[1]
-            if division == 'I':
-                base_value += 400
-            elif division == 'II':
-                base_value += 300
-            elif division == 'III':
-                base_value += 200
-            elif division == 'IV':
-                base_value += 100
-
-        # Add LP value if it exists
-        if len(parts) >= 3:  # If there's a third part, it's the LP value
-            try:
-                lp = int(parts[2])
-                base_value += lp
-            except ValueError:
-                pass
-        return base_value
-
-    async def get_player_rank(self, summoner_name):
-        name, tag = summoner_name.split('-')
-        puuid = None
-
-        # First, get the encrypted summoner ID
-        summoner_url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{name}/{tag}?api_key={self.apiKey}"
-
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
-            "Accept-Language": "en-US,en;q=0.7",
-            "Accept-Charset": "application/x-www-form-urlencoded; charset=UTF-8",
-            "Origin": "https://developer.riotgames.com"
-        }
-
-        try:
-            resp = requests.get(summoner_url, headers)
-
-            resp.raise_for_status()
-
-            puuid = resp.json().get('puuid')
-
-            account_url = f"https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{puuid}?api_key={self.apiKey}"
-
-            acc_id_resp = requests.get(account_url, headers)
-
-            acc_id_resp.raise_for_status()
-
-            acc_id = acc_id_resp.json().get('id')
-
-            ranked_info_url = f"https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/{acc_id}?api_key={self.apiKey}"
-
-            ranked_info = requests.get(ranked_info_url, headers)
-
-            ranked_info.raise_for_status()
-
-            # Find the solo queue entry
-            for queue in ranked_info.json():
-                if queue["queueType"] == "RANKED_SOLO_5x5":
-                    return {
-                        "tier": queue["tier"],
-                        "rank": queue["rank"],
-                        "lp": queue["leaguePoints"],
-                        "puuid": puuid
-                    }
-            return None
-        except Exception as e:
-            # Better error handling: print the actual error
-            print(f"API Request Failed: {str(e)}")
+        # Add player
+        if self.addPlayer(discordID, gamename, tagline):
+            await message_obj.channel.send(f"🥳 Success {message_obj.author.mention} head over to {self.roleChannel.mention} to assign your **Primary** and **Secondary** role!")
+            return True
+        else:
+            await message_obj.channel.send("Account not found! :(")
+        # except Exception as e:
+        #    print(e)
+        #    return False
 
     # Add other accounts
-    async def addAccount(self, msg_content, message_obj):
-        try:
-            summoner_name, rank_str, url, puuid = await self.fetchSummonerInfo(msg_content)
+    async def addExtraAccount(self, msg_content, message_obj):
+        # Discord ID
+        discordID = message_obj.author.id
 
-            # Discord ID
-            discordID = message_obj.author.id
-
-            # Check if player exists in Player DB, returns a boolean
-            doesPlayerExist = await self.checkPlayerExists(discordID)
-
-            if doesPlayerExist:
-                # Player already exists, add account
-                self.addExtraAccount(
-                    discordID, summoner_name, url, rank_str, puuid)
-                success = True
-            else:
-                rank_str = "Signup first before adding an account1!"
-                summoner_name = "Invalid Account"
-                success = False
-
-        except:
-            rank_str = "Signup first before adding an account!"
-            summoner_name = "Invalid Account"
-            success = False
-
-        return rank_str.upper(), summoner_name, success
-
-    async def updateAccount(self, _summoner_name):
-        try:
-            summoner_name, rank_str, log_url, puuid = await self.fetchSummonerInfo(_summoner_name)
+        if self.checkPlayerExists(discordID):
+            gamename, tagline = (' '.join(msg_content)).strip().replace(
+                '#', '-').split('-')
             # Player already exists, add account
-            self.updateAccountRank(log_url, rank_str)
-            success = True
+            res = self.cursor.execute(
+                f"SELECT playerID from Player where discordID={discordID}")
+            fetchedPlayerID = res.fetchone()
+            if self.addAccount(fetchedPlayerID, gamename, tagline):
+                return True
+            else:
+                await message_obj.channel.send("Account not found!")
+        else:
+            await message_obj.channel.send("Signup before adding an account!")
+
+    def getPUUID(self, gamename, tagline):
+        try:
+            # Assign Headers, so scraping is not BLOCKED
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Connection': 'keep-alive',
+                "X-Riot-Token": self.apiKey
+            }
+            url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{gamename}/{tagline}?api_key={self.apiKey}"
+            r = requests.get(url=url, headers=headers)
+            r.raise_for_status()
+            data = r.json()
+            data['puuid']
+
+            return data['puuid']
         except Exception as e:
             print(e)
-            rank_str = "Signup first before adding an account!"
-            summoner_name = "Invalid Account"
-            success = False
-
-        return rank_str.upper(), summoner_name, success
+            return None
 
     async def updateMainAccount(self, message):
 
@@ -821,49 +574,30 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             return False
 
     # Adds player to Player & Account DB
-    def addPlayer(self, discordID, summoner_name, op_url, rank, puuid):
-        tier, division = rank.split()
+    def addPlayer(self, discordID, gamename, tagline):
         self.cursor.execute(
             f"INSERT INTO Player (discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, isAdmin, missedGames, signupCount, leaderboardPoints, QP) VALUES ({discordID}, 0, 0, 1500, 'FILL', 'FILL', 0, 0, 0, 1200, 0)")
         self.con.commit()
 
-        # Add player account to Account table
-
-        # Fetch PlayerID value from Player Table w/ DiscordID
-        res = self.cursor.execute(
-            f"SELECT playerID from Player where discordID={discordID}")
-        fetchedPlayerID = res.fetchone()
-
-        # Add information into Account Table
-
-        # Name, OPGG, PID, Rank, Rank DIV, Main Account set to 1 for first account
-        self.cursor.execute(
-            f"INSERT INTO Account (name, opgg, playerID, rankTier, rankDivision, puuid, Main) VALUES ('{summoner_name}', '{op_url}', {fetchedPlayerID[0]}, '{tier}', {division}, '{puuid}', 1)")
-        self.con.commit()
+        return self.addAccount(self.cursor.lastrowid, gamename, tagline)
 
     # Adds another Account to Account DB
-    def addExtraAccount(self, discordID, summoner_name, op_url, rank, puuid):
-
-        # Add player account to Account table
-        tier, division = rank.split()
-        # Fetch PlayerID value from Player Table w/ DiscordID
-        res = self.cursor.execute(
-            f"SELECT playerID from Player where discordID={discordID}")
-        fetchedPlayerID = res.fetchone()
-
-        # Add information into Account Table
-
-        # Name, OPGG, PID, Rank, Rank DIV
-        self.cursor.execute(
-            f"INSERT INTO Account (name, opgg, playerID, rankTier, rankDivision, puuid) VALUES ('{summoner_name}', '{op_url}', {fetchedPlayerID[0]}, '{tier}', {division}, '{puuid}')")
-        self.con.commit()
-
-    def updateAccountRank(self, url, rank):
-        # Name, OPGG, PID, Rank, Rank DIV
-        tier, div = rank.split()
-        self.cursor.execute(
-            f"UPDATE Account SET rankTier = '{tier}', rankDivision = {div} WHERE [opgg] = '{url}'")
-        self.con.commit()
+    def addAccount(self, playerID, gamename, tagline):
+        puuid = self.getPUUID(gamename, tagline)
+        if puuid is not None:
+            self.cursor.execute(
+                f"INSERT INTO Account (name, opgg, playerID, puuid) VALUES ('{gamename}-{tagline}', 'https://www.leagueofgraphs.com/summoner/euw/{gamename}-{tagline}', {playerID}, '{puuid}')")
+            self.con.commit()
+            accountID = self.cursor.lastrowid
+            rankList = ranks.getAllRanks(gamename, tagline, self.apiKey)
+            for rank in rankList:
+                toInsert = (accountID,) + rank
+                self.cursor.execute(
+                    f"INSERT INTO Ranks (accountID, queue, tier, division, lp, season) VALUES (?, ?, ?, ?, ?, ?)", toInsert)
+                self.con.commit()
+            return True
+        else:
+            return False
 
     async def roleDist(self, message):
         res = self.cursor.execute(
@@ -1708,10 +1442,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
     async def updatePlayerMMRs(self, msg):
         pIDs = self.cursor.execute("SELECT playerID FROM Player").fetchall()
         for p, in pIDs:
-            print(p)
             puuids = self.cursor.execute(
-                f"SELECT puuid FROM Account WHERE playerID = {p}").fetchall()
-            for puuid, in puuids:
+                f"SELECT puuid, accountID FROM Account WHERE playerID = {p}").fetchall()
+            for puuid, accountID in puuids:
                 try:
                     url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-puuid/{puuid}?api_key={self.apiKey}"
                     headers = {
@@ -1736,8 +1469,18 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                                 self.cursor.execute(
                                     f"UPDATE Account SET name = ?, opgg = ? WHERE [puuid] = '{puuid}'", (summoner_name, log))
                                 self.con.commit()
-                                rank, name, success = await self.updateAccount(summoner_name)
-                                await msg.channel.send(f"[status: {success}] updated rank for {rank} {name}")
+                                currentRanks = ranks.getCurrentRank(
+                                    gameName, gameTag, self.apiKey)
+                                for rank in currentRanks:
+                                    toInsert = (accountID,) + rank
+                                    self.cursor.execute(
+                                        f"INSERT OR IGNORE INTO Ranks (accountID, queue, tier, division, lp, season) VALUES (?, ?, ?, ?, ?, ?)", toInsert)
+                                    self.con.commit()
+                                    toInsert = rank[1:4] + \
+                                        (accountID, rank[0], rank[4])
+                                    self.cursor.execute(
+                                        f"UPDATE Ranks SET tier = ?, division = ?, lp = ? WHERE accountID = ? AND queue = ? AND season = ?", toInsert)
+                                    self.con.commit()
                 except Exception as e:
                     await msg.channel.send(e)
 

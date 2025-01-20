@@ -30,18 +30,19 @@ class commands:
 
     async def signup(message, inst, args):
         if (message.channel == inst.getSignupChannel()):
-            try:
-                pRank, pName, signUpSuccess = await inst.signUpPlayer(args, message)
-            except Exception as e:
-                await message.channel.send(e)
-            finally:
-                # Give access to '#select-roles' channel
-                if (signUpSuccess is False):
-                    await message.channel.send("Failed 😔 please try again!")
-                await inst.applyRole(message)
+            # try:
+            signUpSuccess = await inst.signUpPlayer(args, message)
+            # except Exception as e:
+            #    await message.channel.send(e)
+            #    signUpSuccess = False
+            # finally:
+            #    # Give access to '#select-roles' channel
+            #    if (signUpSuccess is False):
+            #        await message.channel.send("Failed 😔 please try again!")
+            #    await inst.applyRole(message)
 
     async def addAccount(message, inst, args):
-        pRank, pName, signUpSuccess = await inst.addAccount(args[0], message)
+        pRank, pName, signUpSuccess = await inst.addExtraAccount(args[0], message)
 
         if signUpSuccess:
             await message.channel.send("🗃️ Account Added: " + pName)
@@ -90,9 +91,6 @@ class commands:
 
     async def runSQL(message, inst, args):
         user_id = message.author.id
-        admin_check = await inst.checkAdmin(user_id)
-        if not admin_check:
-            return
         await inst.runSQL(message, args)
 
     # Punsih player
