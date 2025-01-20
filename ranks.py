@@ -135,10 +135,7 @@ def getAllRanks(gamename, tagline, apiKey):
 
 
 def main():
-    res = getAllRanks(sys.argv[1], sys.argv[2],
-                      "RGAPI-6877edc1-cb3e-4c0f-8e09-2aa8d1860969")
-    for line in res:
-        print(line)
+    pass
 
 
 if __name__ == '__main__':
