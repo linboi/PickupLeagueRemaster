@@ -120,8 +120,6 @@ venv.bak/
 # mkdocs documentation
 /site
 
-pul-S0301.db
-
 # mypy
 .mypy_cache/
 .dmypy.json
@@ -133,5 +131,6 @@ dmypy.json
 # Ignore secret file so nobody pushes a secret key to a public repository
 secret.json
 copy.db
+pul-S0301.db
 tournament_codes.csv
 parsed_tournament_codes.csv
