@@ -247,6 +247,9 @@ class commands:
     async def mainAccount(message, inst, args):
         await inst.updateMainAccount(message)
 
+    async def updateDiscordNames(message, inst, args):
+        await inst.update_discord_names(message)
+
     userCommands = {
         'hello': hello,
         'queue': queue,
@@ -288,7 +291,8 @@ class commands:
         'update-api-key': updateAPIKey,
         'mainaccount': mainAccount,
         'role-distribution': roleDist,
-        'betties': betties
+        'betties': betties,
+        'update-discord-names': updateDiscordNames
     }
 
     async def parseReaction(reaction, inst):

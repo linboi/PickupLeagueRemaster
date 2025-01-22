@@ -1839,3 +1839,18 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
     def getSignupChannel(self):
         return self.signupChannel
+
+    async def update_discord_names(self, message):
+        # for every player in the player table, fetch their discord id, and then get their discord name using the discord py api
+        res = self.cursor.execute("SELECT discordID FROM Player").fetchall()
+        for discordID, in res:
+            try:
+                user = await self.client.fetch_user(discordID)
+                await asyncio.sleep(0.5)
+                if user:
+                    self.cursor.execute(
+                        "UPDATE Player SET discord_name = ? WHERE discordID = ?", (user.name, discordID))
+                    self.con.commit()
+            except Exception as e:
+                print(f"Failed to update name for {discordID}: {e}")
+        await message.channel.send("Discord names updated successfully.")
