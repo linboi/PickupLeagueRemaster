@@ -449,7 +449,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             '#', '-').split('-')
 
         # Add player
-        if self.addPlayer(discordID, gamename, tagline):
+        if await self.addPlayer(discordID, gamename, tagline):
             await message_obj.channel.send(f"🥳 Success {message_obj.author.mention} head over to {self.roleChannel.mention} to assign your **Primary** and **Secondary** role!")
             return True
         else:
@@ -470,7 +470,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             res = self.cursor.execute(
                 f"SELECT playerID from Player where discordID={discordID}")
             fetchedPlayerID = res.fetchone()
-            if self.addAccount(fetchedPlayerID, gamename, tagline):
+            if await self.addAccount(fetchedPlayerID, gamename, tagline):
                 return True
             else:
                 await message_obj.channel.send("Account not found!")
@@ -574,22 +574,22 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             return False
 
     # Adds player to Player & Account DB
-    def addPlayer(self, discordID, gamename, tagline):
+    async def addPlayer(self, discordID, gamename, tagline):
         self.cursor.execute(
             f"INSERT INTO Player (discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, isAdmin, missedGames, signupCount, leaderboardPoints, QP) VALUES ({discordID}, 0, 0, 1500, 'FILL', 'FILL', 0, 0, 0, 1200, 0)")
         self.con.commit()
 
-        return self.addAccount(self.cursor.lastrowid, gamename, tagline)
+        return await self.addAccount(self.cursor.lastrowid, gamename, tagline)
 
     # Adds another Account to Account DB
-    def addAccount(self, playerID, gamename, tagline):
+    async def addAccount(self, playerID, gamename, tagline):
         puuid = self.getPUUID(gamename, tagline)
         if puuid is not None:
             self.cursor.execute(
                 f"INSERT INTO Account (name, opgg, playerID, puuid) VALUES ('{gamename}-{tagline}', 'https://www.leagueofgraphs.com/summoner/euw/{gamename}-{tagline}', {playerID}, '{puuid}')")
             self.con.commit()
             accountID = self.cursor.lastrowid
-            rankList = ranks.getAllRanks(gamename, tagline, self.apiKey)
+            rankList = await ranks.getAllRanks(gamename, tagline, self.apiKey)
             for rank in rankList:
                 toInsert = (accountID,) + rank
                 self.cursor.execute(
@@ -1439,7 +1439,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         return bestMatches
         # \step 6
 
-    async def updatePlayerMMRs(self, msg):
+    async def updatePlayerMMRs(self, msg, full=False):
         pIDs = self.cursor.execute("SELECT playerID FROM Player").fetchall()
         for p, in pIDs:
             puuids = self.cursor.execute(
@@ -1469,8 +1469,12 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                                 self.cursor.execute(
                                     f"UPDATE Account SET name = ?, opgg = ? WHERE [puuid] = '{puuid}'", (summoner_name, log))
                                 self.con.commit()
-                                currentRanks = ranks.getCurrentRank(
-                                    gameName, gameTag, self.apiKey)
+                                if full:
+                                    currentRanks = await ranks.getAllRanks(
+                                        gameName, gameTag, self.apiKey)
+                                else:
+                                    currentRanks = ranks.getCurrentRank(
+                                        gameName, gameTag, self.apiKey)
                                 for rank in currentRanks:
                                     toInsert = (accountID,) + rank
                                     self.cursor.execute(
@@ -1481,6 +1485,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                                     self.cursor.execute(
                                         f"UPDATE Ranks SET tier = ?, division = ?, lp = ? WHERE accountID = ? AND queue = ? AND season = ?", toInsert)
                                     self.con.commit()
+                                print("rank updated for " + str(gameName))
                 except Exception as e:
                     await msg.channel.send(e)
 

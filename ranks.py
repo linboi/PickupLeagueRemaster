@@ -4,6 +4,11 @@ from bs4 import BeautifulSoup
 import random
 import sys
 import re
+import asyncio
+
+
+def getHighestMMR(rankAndOffsetList):
+    return max(getMMRFromRank(tier, div, lp)-offset for tier, div, lp, offset in rankAndOffsetList)
 
 
 def getMMRFromRank(rankTier, rankDiv, rankLP):
@@ -27,10 +32,10 @@ def getMMRFromRank(rankTier, rankDiv, rankLP):
         '3': 100,
         '4': 0
     }
-    return mappingTiers[rankTier] + mappingDivs[rankDiv] + rankLP
+    return mappingTiers[rankTier.lower()] + mappingDivs[str(rankDiv)] + rankLP
 
 
-def scrapeRanksFromLOG(gamename, tagline):
+async def scrapeRanksFromLOG(gamename, tagline):
     rankList = []
     # Assign Headers, so scraping is not BLOCKED
     headers = {
@@ -43,7 +48,7 @@ def scrapeRanksFromLOG(gamename, tagline):
         log_url = f"https://www.leagueofgraphs.com/summoner/euw/{gamename}-{tagline}"
         res_url = requests.get(log_url, headers=headers)
         doc = BeautifulSoup(res_url.text, "html.parser")
-        time.sleep(random.uniform(2, 4))
+        await asyncio.sleep(random.uniform(2, 4))
     except:
         pass
     div_tags = doc.find_all('div', class_='tag requireTooltip brown')
@@ -79,7 +84,7 @@ def parseRank(text):
             div = 'I'
     except ValueError:
         return text, 1, 0
-    return tier, roman_to_int(div), Lp
+    return tier.lower(), roman_to_int(div), Lp
 
 
 def getCurrentRank(gamename, tagline, apiKey):
@@ -119,10 +124,10 @@ def getCurrentRank(gamename, tagline, apiKey):
         # Find the solo queue entry
         for queue in ranked_info.json():
             if queue['queueType'] == 'RANKED_SOLO_5x5':
-                rankList.append(('Ranked Solo/Duo', queue['tier'], roman_to_int(
+                rankList.append(('Ranked Solo/Duo', queue['tier'].lower(), roman_to_int(
                     queue['rank']), queue['leaguePoints'], 'Current Season'))
             if queue['queueType'] == 'RANKED_FLEX_SR':
-                rankList.append(('Ranked Flex', queue['tier'], roman_to_int(
+                rankList.append(('Ranked Flex', queue['tier'].lower(), roman_to_int(
                     queue['rank']), queue['leaguePoints'], 'Current Season'))
         return rankList
     except Exception as e:
@@ -130,8 +135,8 @@ def getCurrentRank(gamename, tagline, apiKey):
         print(f"API Request Failed: {str(e)}")
 
 
-def getAllRanks(gamename, tagline, apiKey):
-    return scrapeRanksFromLOG(gamename, tagline) + getCurrentRank(gamename, tagline, apiKey)
+async def getAllRanks(gamename, tagline, apiKey):
+    return await scrapeRanksFromLOG(gamename, tagline) + getCurrentRank(gamename, tagline, apiKey)
 
 
 def main():
