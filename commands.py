@@ -248,6 +248,10 @@ class commands:
         await inst.updateMainAccount(message)
 
     async def updateDiscordNames(message, inst, args):
+        user_id = message.author.id
+        admin_check = await inst.checkAdmin(user_id)
+        if not admin_check:
+            return
         await inst.update_discord_names(message)
 
     userCommands = {
