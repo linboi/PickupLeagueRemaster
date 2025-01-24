@@ -136,7 +136,13 @@ def getCurrentRank(gamename, tagline, apiKey):
 
 
 async def getAllRanks(gamename, tagline, apiKey):
-    return await scrapeRanksFromLOG(gamename, tagline) + getCurrentRank(gamename, tagline, apiKey)
+    logRanks = await scrapeRanksFromLOG(gamename, tagline)
+    if logRanks is None:
+        return getCurrentRank(gamename, tagline, apiKey)
+    currRanks = getCurrentRank(gamename, tagline, apiKey)
+    if currRanks is None:
+        return logRanks
+    return logRanks + currRanks
 
 
 def main():

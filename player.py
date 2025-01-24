@@ -37,7 +37,6 @@ class Player:
 
         # Sets inital MMR of player
         if self.winCount == 0 and self.lossCount == 0:
-            self.setInitMMR()
             self.update()
 
     def __repr__(self):
@@ -106,7 +105,7 @@ class Player:
 
     def set_username(self):
         if self.discordUser is not None:
-            self.username = self.discordUser.name
+            self.username = self.discordUser.display_name
         else:
             try:
                 self.username = self.getHighestAccountName()
@@ -199,48 +198,20 @@ class Player:
     # Returns the Players highest account name
 
     def getHighestAccountName(self):
-
-        # Tier Mappings
-        mappingTiers = {
-            'iron': 0,
-            'bronze': 400,
-            'silver': 800,
-            'gold': 1200,
-            'platinum': 1600,
-            'emerald': 2000,
-            'diamond': 2400,
-            'master': 2800,
-            'grandmaster': 2800,
-            'challenger': 2800
-        }
-
-        # Div Mappings
-        mappingDivs = {
-            '1': 300,
-            '2': 200,
-            '3': 100,
-            '4': 0
-        }
-
-        # Init vars
-        acc = None
-        counter_old = 0
-        counter_new = 0
-
-        for account in self.playerAccounts:
-            counter_new = 0
-            counter_new = mappingTiers[account[4]]
-
-            if counter_new >= 2800:
-                counter_new += int(account[5])
-            else:
-                counter_new += mappingDivs[account[5]]
-
-            if counter_new > counter_old:
-                counter_old = counter_new
-                acc = account[1]
-
-        return acc
+        res = self.con.execute(
+            f"SELECT name, accountID FROM Account WHERE playerID = {self.playerID}").fetchall()
+        highestRating = 0
+        nameOfHighest = ''
+        for name, accountID in res:
+            rankList = self.con.execute(
+                f"""SELECT tier, division, lp, offset FROM Ranks 
+                JOIN Offset ON Ranks.season = offset.season and ranks.queue = offset.queue 
+                WHERE accountID = {accountID}""").fetchall()
+            highestAccountMMR = ranks.getHighestMMR(rankList)
+            if highestAccountMMR > highestRating:
+                highestRating = highestAccountMMR
+                nameOfHighest = name
+        return nameOfHighest
 
     def fetchPlayerAccounts(self):
         res = self.cursor.execute(
@@ -268,7 +239,7 @@ class Player:
                 JOIN Offset ON Ranks.season = offset.season and ranks.queue = offset.queue 
                 WHERE Account.playerID = {self.playerID};""").fetchall()
         if (len(res) == 0):
-            print("no rank found for player " + str(self.get_username))
+            print("no rank found for player " + str(self.get_username()))
             maxMMR = 1500
         else:
             maxMMR = ranks.getHighestMMR(res)

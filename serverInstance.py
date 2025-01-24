@@ -1472,6 +1472,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                                 if full:
                                     currentRanks = await ranks.getAllRanks(
                                         gameName, gameTag, self.apiKey)
+                                    if currentRanks is None:
+                                        await msg.channel.send("Found no ranks for player: " + str(gameName))
                                 else:
                                     currentRanks = ranks.getCurrentRank(
                                         gameName, gameTag, self.apiKey)
