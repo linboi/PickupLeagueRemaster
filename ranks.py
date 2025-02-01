@@ -8,7 +8,7 @@ import asyncio
 
 
 def getHighestMMR(rankAndOffsetList):
-    return max(getMMRFromRank(tier, div, lp)-offset for tier, div, lp, offset in rankAndOffsetList)
+    return max((getMMRFromRank(tier, div, lp)+offset) for tier, div, lp, offset in rankAndOffsetList)
 
 
 def getMMRFromRank(rankTier, rankDiv, rankLP):

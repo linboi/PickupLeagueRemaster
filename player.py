@@ -207,10 +207,11 @@ class Player:
                 f"""SELECT tier, division, lp, offset FROM Ranks 
                 JOIN Offset ON Ranks.season = offset.season and ranks.queue = offset.queue 
                 WHERE accountID = {accountID}""").fetchall()
-            highestAccountMMR = ranks.getHighestMMR(rankList)
-            if highestAccountMMR > highestRating:
-                highestRating = highestAccountMMR
-                nameOfHighest = name
+            if len(rankList) > 0:
+                highestAccountMMR = ranks.getHighestMMR(rankList)
+                if highestAccountMMR > highestRating:
+                    highestRating = highestAccountMMR
+                    nameOfHighest = name
         return nameOfHighest
 
     def fetchPlayerAccounts(self):

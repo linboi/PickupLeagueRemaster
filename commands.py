@@ -42,12 +42,12 @@ class commands:
                 await inst.applyRole(message)
 
     async def addAccount(message, inst, args):
-        pRank, pName, signUpSuccess = await inst.addExtraAccount(args[0], message)
+        signUpSuccess = await inst.addExtraAccount(args, message)
 
         if signUpSuccess:
-            await message.channel.send("🗃️ Account Added: " + pName)
+            await message.channel.send("🗃️ Account Added")
         else:
-            await message.channel.send(pName + " (" + pRank + ")")
+            await message.channel.send("Something went wrong, couldn't find account")
 
     async def player(message, inst, args):
         user_id = message.author.id

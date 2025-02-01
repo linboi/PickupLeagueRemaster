@@ -125,6 +125,7 @@ class serverInstance:
             match_string = match.get_details_string()
             match_msg = await channel.send(match_string)
             asyncio.create_task(match.openBetting(match_msg))
+            match.match_message = match_msg
             red_oplink, blue_oplink = match.getOPGGLink()
             await self.embedOPGGLink(red_oplink, blue_oplink, channel)
             match_players = match.listOfUsers()
@@ -143,6 +144,7 @@ class serverInstance:
         for match in matches:
             match_string = match.get_details_string()
             match_msg = await channel.send(match_string)
+            match.match_message = match_msg
             match_players = match.listOfUsers()
             for player in match_players:
                 try:
@@ -215,6 +217,7 @@ class serverInstance:
         for match in self.currentMatches:
             # Display Details of Match
             msg = await self.testChannel.send(f"{match.get_details_string()}\n")
+            match.match_message = msg
             await msg.edit(suppress=True)
             await self.testChannel.send("---------------------------------------------")
 
@@ -366,7 +369,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
     # Test function for MM troubleshooting
     async def mmTest(self, mode="SR"):
-        discord_id_list = [165186656863780865, 343490464948813824, 413783321844383767, 197053913269010432, 187302526935105536, 574206308803412037, 197058147167371265, 127796716408799232, 180398163620790279,
+        discord_id_list = [165186656863780865, 225650967058710529, 413783321844383767, 197053913269010432, 187302526935105536, 574206308803412037, 197058147167371265, 127796716408799232, 180398163620790279,
                            225650967058710529, 618520923204485121, 160471312517562368, 188370105413926912, 694560846814117999, 266644132825530389, 132288462563966977, 355707373500760065, 259820776608235520, 182965319969669120,
                            240994422488170496]
         if (mode == "aram"):
@@ -386,6 +389,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         for line in res.fetchall():
             response += str(line) + '\n'
         await message.channel.send(f"{max(res.rowcount, 0)} rows affected.")
+        self.con.commit()
         if response != "":
             await message.channel.send(response)
         print(" ".join(args))
@@ -409,6 +413,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             self.currentMatches.remove(activePlayerMatches[0][0])
             await message.channel.send(f"🎊 WPGG, remember to upload a post-game screenshot! (+{ratingChange:.0f}LP)")
             await self.getGameDetails(message.channel)
+            await activePlayerMatches[0][0].linkResult(message)
         if len(activePlayerMatches) > 1:
             await message.channel.send("Player found in more than one match, uh oh")
 
@@ -430,6 +435,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                     correct_match[0][1], 0)
                 self.currentMatches.remove(correct_match[0][0])
                 await message.channel.send(f"🎊 Match *{match_id}* resolved, **{side}** side won! ({int(ratingChange)}LP)")
+                await correct_match[0][0].linkResult(message)
             if len(correct_match) > 1:
                 await message.channel.send("Resolve Error, too many matches with this ID.")
         except:
