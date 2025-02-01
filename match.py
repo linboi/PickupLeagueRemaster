@@ -420,3 +420,8 @@ class Match:
             else:
                 self.redBets[user.id] = amount
         await user.send(f"Successfully placed a bet of {amount:.0f} on team {team} in match {self.matchID}!")
+
+    async def linkResult(self, message):
+        if self.match_message is not None:
+            msg = self.match_message.content
+            await self.match_message.edit(content=msg+"\nMatch Result: " + message.jump_url)
