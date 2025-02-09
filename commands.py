@@ -304,11 +304,8 @@ class commands:
         'mainaccount': mainAccount,
         'role-distribution': roleDist,
         'betties': betties,
-        << << << < Updated upstream
-        'update-discord-names': updateDiscordNames
-        == == == =
+        'update-discord-names': updateDiscordNames,
         'set-nicknames': setNicknames
-        >> >>>> > Stashed changes
     }
 
     async def parseReaction(reaction, inst):
