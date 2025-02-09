@@ -248,6 +248,13 @@ class commands:
     async def mainAccount(message, inst, args):
         await inst.updateMainAccount(message)
 
+    async def setNicknames(message, inst, args):
+        user_id = message.author.id
+        admin_check = await inst.checkAdmin(user_id)
+        if not admin_check:
+            return
+        await inst.setNicknames()
+
     userCommands = {
         'hello': hello,
         'queue': queue,
@@ -289,7 +296,8 @@ class commands:
         'update-api-key': updateAPIKey,
         'mainaccount': mainAccount,
         'role-distribution': roleDist,
-        'betties': betties
+        'betties': betties,
+        'set-nicknames': setNicknames
     }
 
     async def parseReaction(reaction, inst):
