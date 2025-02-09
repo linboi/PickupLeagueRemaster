@@ -255,6 +255,13 @@ class commands:
             return
         await inst.update_discord_names(message)
 
+    async def setNicknames(message, inst, args):
+        user_id = message.author.id
+        admin_check = await inst.checkAdmin(user_id)
+        if not admin_check:
+            return
+        await inst.setNicknames()
+
     userCommands = {
         'hello': hello,
         'queue': queue,
@@ -297,7 +304,11 @@ class commands:
         'mainaccount': mainAccount,
         'role-distribution': roleDist,
         'betties': betties,
+        << << << < Updated upstream
         'update-discord-names': updateDiscordNames
+        == == == =
+        'set-nicknames': setNicknames
+        >> >>>> > Stashed changes
     }
 
     async def parseReaction(reaction, inst):

@@ -232,6 +232,15 @@ class serverInstance:
                 except:
                     pass
 
+    async def setNicknames(self):
+        res = self.con.execute(
+            "SELECT name, discordID FROM Player JOIN Account ON Player.playerID = Account.playerID and main = 1").fetchall()
+        for name, id in res:
+            try:
+                await self.client.guilds[0].get_member(id).edit(nick=(name.split('-'))[0])
+            except Exception as e:
+                print(e)
+
     async def embedOPGGLink(self, blue, red, channel):
         embed_list = []
         embed_list.append(discord.Embed(
@@ -585,14 +594,14 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             f"INSERT INTO Player (discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, isAdmin, missedGames, signupCount, leaderboardPoints, QP) VALUES ({discordID}, 0, 0, 1500, 'FILL', 'FILL', 0, 0, 0, 1200, 0)")
         self.con.commit()
 
-        return await self.addAccount(self.cursor.lastrowid, gamename, tagline)
+        return await self.addAccount(self.cursor.lastrowid, gamename, tagline, main=1)
 
     # Adds another Account to Account DB
-    async def addAccount(self, playerID, gamename, tagline):
+    async def addAccount(self, playerID, gamename, tagline, main=0):
         puuid = self.getPUUID(gamename, tagline)
         if puuid is not None:
             self.cursor.execute(
-                f"INSERT INTO Account (name, opgg, playerID, puuid) VALUES ('{gamename}-{tagline}', 'https://www.leagueofgraphs.com/summoner/euw/{gamename}-{tagline}', {playerID}, '{puuid}')")
+                f"INSERT INTO Account (name, opgg, playerID, puuid, main) VALUES ('{gamename}-{tagline}', 'https://www.leagueofgraphs.com/summoner/euw/{gamename}-{tagline}', {playerID}, '{puuid}', {main})")
             self.con.commit()
             accountID = self.cursor.lastrowid
             rankList = await ranks.getAllRanks(gamename, tagline, self.apiKey)
@@ -978,9 +987,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                         hotstreak = ""
             if player[0] not in self.playerIDNameMapping:
                 try:
-                    discord_name = (await self.client.fetch_user(player[0])).display_name
+                    discord_name = (await self.client.guilds[0].get_member(player[0])).display_name
                 except:
-                    discord_name = player[0]
+                    discord_name = (await self.client.fetch_user(player[0])).display_name
                 self.playerIDNameMapping[player[0]] = discord_name
             else:
                 discord_name = self.playerIDNameMapping[player[0]]
@@ -1210,9 +1219,13 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         for player_details in listOfPlayers:
             discordUser = None
             try:
+                discordUser = self.client.guilds[0].get_member(
+                    player_details[1])
+                if discordUser is None:
+                    discordUser = await self.client.fetch_user(player_details[1])
+            except Exception as e:
+                print(e)
                 discordUser = await self.client.fetch_user(player_details[1])
-            except:
-                discordUser = None
             player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
                             player_details[9], player_details[10], player_details[11], player_details[12], player_details[13], player_details[14], player_details[15], self.cursor, self.con, discordUser)
             player.updateMMR()
