@@ -1,8 +1,10 @@
-import discord
 import json
-import sqlite3
 import os
+import sqlite3
+
+import discord
 from dotenv import load_dotenv
+
 from commands import commands
 from serverInstance import serverInstance
 

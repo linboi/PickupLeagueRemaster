@@ -7,11 +7,9 @@ import re
 import shutil
 import sqlite3
 import time
-from datetime import date
 
 import discord
 import requests
-from bs4 import BeautifulSoup
 from table2ascii import PresetStyle
 from table2ascii import table2ascii as t2a
 
@@ -24,7 +22,11 @@ from team import Team
 import ranks
 
 
-class serverInstance:
+class ServerInstance:
+    """A class that manages the pickup league server instance.
+    
+    This class handles matchmaking, player management, queuing, and game scheduling.
+    """
     def __init__(self):
         self.queue = []
         self.tournament_code_list = []
@@ -193,7 +195,7 @@ class serverInstance:
 
     # Switch for enabling/disabling queue
     async def queueSwitch(self):
-        if self.queue_state == False:
+        if self.queue_state is False:
             self.queue_state = True
         else:
             self.queue_state = False
@@ -347,9 +349,9 @@ class serverInstance:
             startTime=startTime,
         )
         self.currentMatches.append(match)
-        tournament_code = await self.fetch_tournament_code()
+        await self.fetch_tournament_code()
         match_string = match.get_details_string()
-        match_msg = await self.gameChannel.send(match_string)
+        await self.gameChannel.send(match_string)
         red_oplink, blue_oplink = match.getOPGGLink()
         await self.embedOPGGLink(red_oplink, blue_oplink, self.gameChannel)
 
@@ -434,7 +436,6 @@ After a win, post a screenshot of the victory and type !win (only one player on 
     async def createGames(self, numSeconds, emoji, channel, messageID, mode=None):
         await asyncio.sleep(numSeconds)
         message = await channel.fetch_message(messageID)
-        msg = f"Users who reacted for game {emoji}:"
         playerIDs = []
         reactionList = message.reactions
         for reaction in reactionList:
@@ -739,7 +740,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             for rank in rankList:
                 toInsert = (accountID,) + rank
                 self.cursor.execute(
-                    f"INSERT INTO Ranks (accountID, queue, tier, division, lp, season) VALUES (?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO Ranks (accountID, queue, tier, division, lp, season) VALUES (?, ?, ?, ?, ?, ?)",
                     toInsert,
                 )
                 self.con.commit()
@@ -1216,7 +1217,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             all_players.append(
                 [pos, id, leaderboardPoints, f"{hotstreak}{winloss}", pRole, sRole]
             )
-        if message == None:
+        if message is None:
             output = t2a(
                 header=["Rank", "Name", "LP", "W/L", "Primary", "Secondary"],
                 body=all_players,
@@ -1289,8 +1290,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
             all_players += f"{pos}{id}{bettingPoints}\n"
 
-        now = date.today()
-        if message == None:
+        if message is None:
             message = await channelToSendIn.send(
                 f"**__Bettyboard__**```{all_players}```"
             )
@@ -1350,7 +1350,6 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             )
             result = res.fetchone()
             new_mmr = result[0] - 50
-            add_signupCount = result[1] + 3
             user = await self.client.fetch_user(discordID)
             self.cursor.execute(
                 f"UPDATE Player SET leaderboardPoints = {new_mmr}, QP = QP - 2 WHERE discordID = {discordID}"
@@ -1522,20 +1521,13 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         players_in_queue = len(playerObjList)
 
-        # Number of macthes to create
+        # Number of matches to create
         match_count = players_in_queue // 10
 
         if match_count < 1:
             return []
 
         team_count = match_count * 2
-
-        # Number of players required
-        required_players = match_count * 10
-
-        # up to here was your code @cail
-        # Static players in queue list duplicate
-        init_player_list = playerObjList
 
         # step 1
         def getRatioOfMissedGames(player):
@@ -1841,13 +1833,13 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                                 for rank in currentRanks:
                                     toInsert = (accountID,) + rank
                                     self.cursor.execute(
-                                        f"INSERT OR IGNORE INTO Ranks (accountID, queue, tier, division, lp, season) VALUES (?, ?, ?, ?, ?, ?)",
+                                        "INSERT OR IGNORE INTO Ranks (accountID, queue, tier, division, lp, season) VALUES (?, ?, ?, ?, ?, ?)",
                                         toInsert,
                                     )
                                     self.con.commit()
                                     toInsert = rank[1:4] + (accountID, rank[0], rank[4])
                                     self.cursor.execute(
-                                        f"UPDATE Ranks SET tier = ?, division = ?, lp = ? WHERE accountID = ? AND queue = ? AND season = ?",
+                                        "UPDATE Ranks SET tier = ?, division = ?, lp = ? WHERE accountID = ? AND queue = ? AND season = ?",
                                         toInsert,
                                     )
                                     self.con.commit()
@@ -1913,8 +1905,6 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         if match_count < 1:
             return []
-
-        team_count = match_count * 2
 
         # Number of players required
         required_players = match_count * 10

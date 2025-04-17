@@ -4,7 +4,7 @@ import subprocess
 class rasp:
     def restart_pi():
         # restart pi
-        process = subprocess.Popen(["sudo", "reboot"], stdout=subprocess.PIPE)
+        subprocess.Popen(["sudo", "reboot"], stdout=subprocess.PIPE)
 
     def update_pi():
         # update bot version

@@ -90,7 +90,6 @@ class commands:
         await inst.endMatch(message, args[0])
 
     async def runSQL(message, inst, args):
-        user_id = message.author.id
         await inst.runSQL(message, args)
 
     # Punsih player
