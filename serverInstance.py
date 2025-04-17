@@ -75,11 +75,11 @@ class ServerInstance:
         tempcon = sqlite3.connect("./temp.db")
         try:
             tempcon.cursor().execute("DROP TABLE MatchDetails;")
-        except:
+        except Exception:
             pass  # table didn't exist, do nothing
         try:
             tempcon.cursor().execute("DROP TABLE PlayerMatchDetails;")
-        except:
+        except Exception:
             pass  # table didn't exist, do nothing
         tempcon.cursor().execute("VACUUM")
         tempcon.commit()
@@ -88,7 +88,7 @@ class ServerInstance:
         try:
             if member:
                 await member.send(file=file)
-        except:
+        except Exception:
             await self.generalChannel.send("Member not found")
         os.remove("./temp.db")
 
@@ -136,7 +136,7 @@ class ServerInstance:
                 await self.publish_matches(matches, self.gameChannel)
                 self.queue = []
                 await self.update_tournament_file()
-            except:
+            except Exception:
                 await channel.send(
                     "Not enough players in queue, unable to start games!"
                 )
@@ -163,7 +163,7 @@ class ServerInstance:
                         print(
                             f"{player.get_username()} not found as a member of the discord server."
                         )
-                except:
+                except Exception:
                     pass
 
     async def publish_aram_matches(self, matches, channel):
@@ -183,7 +183,7 @@ class ServerInstance:
                         print(
                             f"{player.get_username()} not found as a member of the discord server."
                         )
-                except:
+                except Exception:
                     pass
 
     async def removeFromQueue(self, player, channel):
@@ -219,7 +219,7 @@ class ServerInstance:
                         user = self.client.guilds[0].get_member(int(player[0]))
                         await user.add_roles(role)
                         print("Added")
-                    except:
+                    except Exception:
                         pass
 
     async def applyRole(self, message):
@@ -232,7 +232,7 @@ class ServerInstance:
                     user = self.client.guilds[0].get_member(int(message.author.id))
                     await user.add_roles(role)
                     print("added")
-                except:
+                except Exception:
                     pass
 
     async def testTag(self, message):
@@ -260,7 +260,7 @@ class ServerInstance:
                         await memberFound.send(
                             f"✨ You have been picked for a game, head over to {self.testChannel.mention} to see the teams!"
                         )
-                except:
+                except Exception:
                     pass
 
     async def setNicknames(self):
@@ -303,7 +303,7 @@ class ServerInstance:
             discordUser = None
             try:
                 discordUser = await self.client.fetch_user(player_details[1])
-            except:
+            except Exception:
                 discordUser = None
             player = Player(
                 player_details[0],
@@ -557,7 +557,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 await message.channel.send(
                     "Resolve Error, too many matches with this ID."
                 )
-        except:
+        except Exception:
             await message.channel.send("Resolver Error, ID is not an number.")
 
     # Scrape rank details from op.gg page
@@ -1197,7 +1197,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                     discord_name = (
                         await self.client.guilds[0].get_member(player[0])
                     ).display_name
-                except:
+                except Exception:
                     discord_name = (
                         await self.client.fetch_user(player[0])
                     ).display_name
@@ -1276,7 +1276,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                     discord_name = (
                         await self.client.fetch_user(player[0])
                     ).display_name
-                except:
+                except Exception:
                     discord_name = player[0]
                 self.playerIDNameMapping[player[0]] = discord_name
             else:
@@ -1335,7 +1335,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                         # Pop match off list
                         self.currentMatches.remove(match)
                         await message_obj.channel.send(f"🗑️ Match ({match_id}) Removed")
-                except:
+                except Exception:
                     pass
 
     # Method to punish a player -> reducing LP and QP
@@ -1379,7 +1379,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                         await match.swapPlayers(
                             discordIDPlayer, discordIDOtherPlayer, message_obj
                         )
-                    except:
+                    except Exception:
                         pass
         except asyncio.TimeoutError:
             await message_obj.channel.send(
@@ -1482,7 +1482,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 self.cursor.execute(f"""INSERT INTO PlayerGametime (playerID, primaryRole, secondaryRole, GametimeID, rating)
                                     VALUES ({playerID}, '{pRole}', '{sRole}', {gametimeID}, {internalRating})""")
             self.con.commit()
-        except:
+        except Exception:
             pass
         playerObjList = []
         for player_details in listOfPlayers:
@@ -1869,7 +1869,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             discordUser = None
             try:
                 discordUser = await self.client.fetch_user(player_details[1])
-            except:
+            except Exception:
                 discordUser = None
             player = Player(
                 player_details[0],

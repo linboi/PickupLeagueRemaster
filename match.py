@@ -113,7 +113,7 @@ class Match:
         player_details = res.fetchone()
         try:
             discordUser = await client.fetch_user(player_details[1])
-        except:
+        except Exception:
             discordUser = None
         replacement_player = Player(
             player_details[0],

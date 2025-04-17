@@ -114,7 +114,7 @@ class commands:
     async def win(message, inst, args):
         try:
             gameID = int(args[0])
-        except:
+        except Exception:
             await message.channel.send(
                 "Please include the gameID found at the top of the match summary screen.\nIf this is unavailable for some reason, use 0."
             )
@@ -163,7 +163,7 @@ class commands:
             try:
                 await inst.createCustomMatch(idint_list)
                 await message.channel.send("✅ Match Created")
-            except:
+            except Exception:
                 await message.channel.send(
                     "Match Creation Error, please make all players are valid discord @'s."
                 )

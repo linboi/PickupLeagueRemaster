@@ -129,7 +129,7 @@ class Player:
         else:
             try:
                 self.username = self.getHighestAccountName()
-            except:
+            except Exception:
                 self.username = self.discordID
 
     def set_role(self, role):

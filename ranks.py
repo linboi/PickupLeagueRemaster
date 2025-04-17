@@ -45,7 +45,7 @@ async def scrapeRanksFromLOG(gamename, tagline):
         res_url = requests.get(log_url, headers=headers)
         doc = BeautifulSoup(res_url.text, "html.parser")
         await asyncio.sleep(random.uniform(2, 4))
-    except:
+    except Exception:
         pass
     div_tags = doc.find_all("div", class_="tag requireTooltip brown")
     for box in div_tags:
