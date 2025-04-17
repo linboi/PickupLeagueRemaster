@@ -58,8 +58,7 @@ class Team:
         self.set_avg_MMR(total_MMR / 5)
 
     def get_player_list(self):
-        players = [self.top, self.jungle,
-                   self.mid, self.adc, self.support]
+        players = [self.top, self.jungle, self.mid, self.adc, self.support]
         return players
 
     def get_multi_opgg(self):

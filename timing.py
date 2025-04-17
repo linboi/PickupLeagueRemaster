@@ -5,8 +5,7 @@ import asyncio
 async def sleep_until(schedule):
     # Get the current date and time
     now = datetime.datetime.now()
-    gamedays = [(gameday['Day'], gameday['AnnouncementTime'])
-                for gameday in schedule]
+    gamedays = [(gameday["Day"], gameday["AnnouncementTime"]) for gameday in schedule]
     gamedays.sort()
     # Find the soonest gameday
     soonest_gameday = None
@@ -26,8 +25,9 @@ async def sleep_until(schedule):
             days_until_gameday = 7
 
         # Calculate the datetime for the next gameday
-        next_gameday_datetime = gameday_datetime + \
-            datetime.timedelta(days=days_until_gameday)
+        next_gameday_datetime = gameday_datetime + datetime.timedelta(
+            days=days_until_gameday
+        )
 
         # If the next gameday is earlier than the soonest gameday found so far, update the soonest gameday
         if not soonest_gameday or next_gameday_datetime < soonest_gameday:
@@ -43,37 +43,23 @@ async def sleep_until(schedule):
         weekday, time_str = gamedays[0]
         time_obj = datetime.datetime.strptime(time_str, "%H:%M").time()
         next_gameday_datetime = datetime.datetime.combine(
-            now.date(), time_obj) + datetime.timedelta(days=(7 - now.weekday() + weekday) % 7)
+            now.date(), time_obj
+        ) + datetime.timedelta(days=(7 - now.weekday() + weekday) % 7)
 
         # Calculate the number of seconds until the next gameday and sleep for that amount of time
-        seconds_until_next_gameday = (
-            next_gameday_datetime - now).total_seconds()
+        seconds_until_next_gameday = (next_gameday_datetime - now).total_seconds()
         if seconds_until_next_gameday < 0:
             seconds_until_next_gameday = (
-                next_gameday_datetime + datetime.timedelta(days=7) - now).total_seconds()
+                next_gameday_datetime + datetime.timedelta(days=7) - now
+            ).total_seconds()
         await asyncio.sleep(seconds_until_next_gameday)
 
+
 # Example usage:
-if __name__ == '__main__':
+if __name__ == "__main__":
     gamedays = [
-        {
-            "Day": 1,
-            "AnnouncementTime": "18:30",
-            "Times":
-                [
-                    "19:00",
-                    "20:00"
-                ]
-        },
-        {
-            "Day": 3,
-            "AnnouncementTime": "18:30",
-            "Times":
-                [
-                    "19:00",
-                    "20:00"
-                ]
-        }
+        {"Day": 1, "AnnouncementTime": "18:30", "Times": ["19:00", "20:00"]},
+        {"Day": 3, "AnnouncementTime": "18:30", "Times": ["19:00", "20:00"]},
     ]
     sleep_until(gamedays)
     print("Time to play the game!")
