@@ -7,11 +7,9 @@ import re
 import shutil
 import sqlite3
 import time
-from datetime import date
 
 import discord
 import requests
-from bs4 import BeautifulSoup
 from table2ascii import PresetStyle
 from table2ascii import table2ascii as t2a
 
@@ -24,13 +22,33 @@ from team import Team
 import ranks
 
 
-class serverInstance:
+class ServerInstance:
+    """A class that manages the pickup league server instance.
+    
+    This class handles matchmaking, player management, queuing, and game scheduling.
+    """
     def __init__(self):
         self.queue = []
         self.tournament_code_list = []
         self.fetch_tournament_file()
 
-    def ready(self, client, roleChannel, testChannel, announcementChannel, generalChannel, gameChannel, signupChannel, voiceChannels, roleID, primaryRoleMsg, secondaryRoleMsg, cursor, con, apiKey):
+    def ready(
+        self,
+        client,
+        roleChannel,
+        testChannel,
+        announcementChannel,
+        generalChannel,
+        gameChannel,
+        signupChannel,
+        voiceChannels,
+        roleID,
+        primaryRoleMsg,
+        secondaryRoleMsg,
+        cursor,
+        con,
+        apiKey,
+    ):
         self.client = client
         self.announcementChannel = announcementChannel
         self.roleChannel = roleChannel
@@ -48,33 +66,29 @@ class serverInstance:
         self.gameChannel = gameChannel
         self.roleID = roleID
         self.apiKey = apiKey
-        self.rankWeights = [
-            0,
-            300,
-            200
-        ]
+        self.rankWeights = [0, 300, 200]
 
     # Send the user a DM with player database
     async def upload_db(self, member):
-        shutil.copy(os.getenv('DATABASE'), './temp.db')
+        shutil.copy(os.getenv("DATABASE"), "./temp.db")
 
-        tempcon = sqlite3.connect('./temp.db')
+        tempcon = sqlite3.connect("./temp.db")
         try:
-            tempcon.cursor().execute('DROP TABLE MatchDetails;')
-        except:
+            tempcon.cursor().execute("DROP TABLE MatchDetails;")
+        except Exception:
             pass  # table didn't exist, do nothing
         try:
-            tempcon.cursor().execute('DROP TABLE PlayerMatchDetails;')
-        except:
+            tempcon.cursor().execute("DROP TABLE PlayerMatchDetails;")
+        except Exception:
             pass  # table didn't exist, do nothing
-        tempcon.cursor().execute('VACUUM')
+        tempcon.cursor().execute("VACUUM")
         tempcon.commit()
         tempcon.close()
-        file = discord.File('./temp.db')
+        file = discord.File("./temp.db")
         try:
             if member:
                 await member.send(file=file)
-        except:
+        except Exception:
             await self.generalChannel.send("Member not found")
         os.remove("./temp.db")
 
@@ -102,12 +116,19 @@ class serverInstance:
     async def addToQueue(self, player, channel):
         if player not in self.queue:
             self.queue.append(player)
-        await channel.send(f"{len(self.queue)} players in queue.\nEstimated wait time: Literally forever")
+        await channel.send(
+            f"{len(self.queue)} players in queue.\nEstimated wait time: Literally forever"
+        )
         if len(self.queue) % 10 == 0:
             # Once 30 is reachead add delay
             timeObjs = datetime.datetime.now().replace(
-                minute=int(datetime.datetime.now().minute) + 1)
-            await channel.send("**Player Threshold Reached.**\n__Queue will close in <t:" + str(int(time.mktime(timeObjs.timetuple()))) + ":R>!__")
+                minute=int(datetime.datetime.now().minute) + 1
+            )
+            await channel.send(
+                "**Player Threshold Reached.**\n__Queue will close in <t:"
+                + str(int(time.mktime(timeObjs.timetuple())))
+                + ":R>!__"
+            )
             await asyncio.sleep(60)
             try:
                 matches = await self.matchmakeV2(self.queue)
@@ -115,8 +136,10 @@ class serverInstance:
                 await self.publish_matches(matches, self.gameChannel)
                 self.queue = []
                 await self.update_tournament_file()
-            except:
-                await channel.send("Not enough players in queue, unable to start games!")
+            except Exception:
+                await channel.send(
+                    "Not enough players in queue, unable to start games!"
+                )
 
     async def publish_matches(self, matches, channel):
         for match in matches:
@@ -133,11 +156,14 @@ class serverInstance:
                 try:
                     member = self.client.guilds[0].get_member(player)
                     if member:
-                        await member.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!\n **Tournament Code:** {tournament_code}")
+                        await member.send(
+                            f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!\n **Tournament Code:** {tournament_code}"
+                        )
                     else:
                         print(
-                            f"{player.get_username()} not found as a member of the discord server.")
-                except:
+                            f"{player.get_username()} not found as a member of the discord server."
+                        )
+                except Exception:
                     pass
 
     async def publish_aram_matches(self, matches, channel):
@@ -150,21 +176,26 @@ class serverInstance:
                 try:
                     member = self.client.guilds[0].get_member(player)
                     if member:
-                        await member.send(f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!\n")
+                        await member.send(
+                            f"✨ You have been picked for a game, head over to {match_msg.jump_url} to see the teams!\n"
+                        )
                     else:
                         print(
-                            f"{player.get_username()} not found as a member of the discord server.")
-                except:
+                            f"{player.get_username()} not found as a member of the discord server."
+                        )
+                except Exception:
                     pass
 
     async def removeFromQueue(self, player, channel):
         if player in self.queue:
             self.queue.remove(player)
-        await channel.send(f"{len(self.queue)} players in queue.\nEstimated wait time: Literally forever")
+        await channel.send(
+            f"{len(self.queue)} players in queue.\nEstimated wait time: Literally forever"
+        )
 
     # Switch for enabling/disabling queue
     async def queueSwitch(self):
-        if self.queue_state == False:
+        if self.queue_state is False:
             self.queue_state = True
         else:
             self.queue_state = False
@@ -188,7 +219,7 @@ class serverInstance:
                         user = self.client.guilds[0].get_member(int(player[0]))
                         await user.add_roles(role)
                         print("Added")
-                    except:
+                    except Exception:
                         pass
 
     async def applyRole(self, message):
@@ -198,16 +229,14 @@ class serverInstance:
             # If role found, fetch db for users discord id's
             if role.id == self.roleID:
                 try:
-                    user = self.client.guilds[0].get_member(
-                        int(message.author.id))
+                    user = self.client.guilds[0].get_member(int(message.author.id))
                     await user.add_roles(role)
                     print("added")
-                except:
+                except Exception:
                     pass
 
     async def testTag(self, message):
-        pu_role = discord.utils.get(
-            self.client.guilds[0].roles, id=self.roleID)
+        pu_role = discord.utils.get(self.client.guilds[0].roles, id=self.roleID)
         await message.channel.send(f"{pu_role.mention}")
         await self.gameChannel.send("Working!")
 
@@ -228,25 +257,30 @@ class serverInstance:
                 try:
                     memberFound = self.client.guilds[0].get_member(user)
                     if memberFound:
-                        await memberFound.send(f"✨ You have been picked for a game, head over to {self.testChannel.mention} to see the teams!")
-                except:
+                        await memberFound.send(
+                            f"✨ You have been picked for a game, head over to {self.testChannel.mention} to see the teams!"
+                        )
+                except Exception:
                     pass
 
     async def setNicknames(self):
         res = self.con.execute(
-            "SELECT name, discordID FROM Player JOIN Account ON Player.playerID = Account.playerID and main = 1").fetchall()
+            "SELECT name, discordID FROM Player JOIN Account ON Player.playerID = Account.playerID and main = 1"
+        ).fetchall()
         for name, id in res:
             try:
-                await self.client.guilds[0].get_member(id).edit(nick=(name.split('-'))[0])
+                await (
+                    self.client.guilds[0].get_member(id).edit(nick=(name.split("-"))[0])
+                )
             except Exception as e:
                 print(e)
 
     async def embedOPGGLink(self, blue, red, channel):
         embed_list = []
-        embed_list.append(discord.Embed(
-            title="Blue Team OPGG", url=blue, color=0x3498db))
-        embed_list.append(discord.Embed(
-            title="Red Team OPGG", url=red, color=0xe74c3c))
+        embed_list.append(
+            discord.Embed(title="Blue Team OPGG", url=blue, color=0x3498DB)
+        )
+        embed_list.append(discord.Embed(title="Red Team OPGG", url=red, color=0xE74C3C))
         for embed in embed_list:
             await channel.send(embed=(embed))
 
@@ -257,38 +291,67 @@ class serverInstance:
         await self.update_tournament_file()
 
     async def setMatch(self, initMsg):
-
         playerObjs = []
-        ids = re.findall(r'(?<=<@)\d*(?=>)', initMsg.content)
+        ids = re.findall(r"(?<=<@)\d*(?=>)", initMsg.content)
         if len(ids) != 10:
             await initMsg.channel.send("Invalid number of players")
             return
         for id in ids:
             player_details = self.cursor.execute(
-                f"SELECT playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGames, signupCount, leaderboardPoints, aram_internalRating, aram_leaderboardPoints, aram_winCount, aram_lossCount FROM Player WHERE discordID = {id}").fetchone()
+                f"SELECT playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGames, signupCount, leaderboardPoints, aram_internalRating, aram_leaderboardPoints, aram_winCount, aram_lossCount FROM Player WHERE discordID = {id}"
+            ).fetchone()
             discordUser = None
             try:
                 discordUser = await self.client.fetch_user(player_details[1])
-            except:
+            except Exception:
                 discordUser = None
-            player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
-                            player_details[9], player_details[10], player_details[11], player_details[12], player_details[13], player_details[14], player_details[15], self.cursor, self.con, discordUser)
+            player = Player(
+                player_details[0],
+                player_details[1],
+                player_details[2],
+                player_details[3],
+                player_details[4],
+                player_details[5],
+                player_details[6],
+                player_details[7],
+                player_details[8],
+                player_details[9],
+                player_details[10],
+                player_details[11],
+                player_details[12],
+                player_details[13],
+                player_details[14],
+                player_details[15],
+                self.cursor,
+                self.con,
+                discordUser,
+            )
             playerObjs.append(player)
 
-        blueTeam = Team(playerObjs[0], playerObjs[1],
-                        playerObjs[2], playerObjs[3], playerObjs[4])
-        redTeam = Team(playerObjs[5], playerObjs[6],
-                       playerObjs[7], playerObjs[8], playerObjs[9])
+        blueTeam = Team(
+            playerObjs[0], playerObjs[1], playerObjs[2], playerObjs[3], playerObjs[4]
+        )
+        redTeam = Team(
+            playerObjs[5], playerObjs[6], playerObjs[7], playerObjs[8], playerObjs[9]
+        )
         startTime = datetime.datetime.now()
         self.cursor.execute(
-            f"INSERT INTO Match (matchTime, mode, season) VALUES ('{startTime}', 'SR', 2)")
+            f"INSERT INTO Match (matchTime, mode, season) VALUES ('{startTime}', 'SR', 2)"
+        )
         self.con.commit()
-        match = Match(self.cursor, self.con, self.client, self.cursor.lastrowid,
-                      blueTeam=blueTeam, redTeam=redTeam, startTime=startTime)
+        match = Match(
+            self.cursor,
+            self.con,
+            self.client,
+            self.cursor.lastrowid,
+            blueTeam=blueTeam,
+            redTeam=redTeam,
+            startTime=startTime,
+        )
         self.currentMatches.append(match)
-        tournament_code = await self.fetch_tournament_code()
+        await self.fetch_tournament_code()
         match_string = match.get_details_string()
-        match_msg = await self.gameChannel.send(match_string)
+        await self.gameChannel.send(match_string)
         red_oplink, blue_oplink = match.getOPGGLink()
         await self.embedOPGGLink(red_oplink, blue_oplink, self.gameChannel)
 
@@ -296,14 +359,15 @@ class serverInstance:
         await timing.sleep_until(schedule)
         thisGameday = {}
         for gameday in schedule:
-            if gameday['Day'] == datetime.datetime.now().weekday():
+            if gameday["Day"] == datetime.datetime.now().weekday():
                 thisGameday = gameday
         timeObjs = []
-        thisGameday['Times'].sort()
-        for times in thisGameday['Times']:
+        thisGameday["Times"].sort()
+        for times in thisGameday["Times"]:
             hours, minutes = times.split(":")
-            timeObjs.append(datetime.datetime.now().replace(
-                hour=int(hours), minute=int(minutes)))
+            timeObjs.append(
+                datetime.datetime.now().replace(hour=int(hours), minute=int(minutes))
+            )
 
         await self.triggerGamesAtGivenTimes(timeObjs, channel)
 
@@ -311,51 +375,67 @@ class serverInstance:
 
     async def triggerGamesAtGivenTimes(self, timeObjs, channel, mode=None):
         relativeTimeString = ""
-        pu_role = discord.utils.get(
-            self.client.guilds[0].roles, id=self.roleID)
+        pu_role = discord.utils.get(self.client.guilds[0].roles, id=self.roleID)
         print(pu_role)
         for idx, times in enumerate(timeObjs):
-            relativeTimeString += (f"Game {idx+1}: <t:" +
-                                   str(int(time.mktime(times.timetuple()))) + ":R>\n")
+            relativeTimeString += (
+                f"Game {idx + 1}: <t:"
+                + str(int(time.mktime(times.timetuple())))
+                + ":R>\n"
+            )
 
         if mode == "aram":
-            checkinMessage = await channel.send(f"ARAM Check in for registered players {pu_role.mention}\n \
+            checkinMessage = await channel.send(
+                f"ARAM Check in for registered players {pu_role.mention}\n \
 React with the corresponding number to check in for a game\n\
 {relativeTimeString}\n\
 After a win, post a screenshot of the victory and type !win (only one player on the winning team must do this).\n\
-")
+"
+            )
         else:
-            checkinMessage = await channel.send(f"Check in for registered players {pu_role.mention}\n \
+            checkinMessage = await channel.send(
+                f"Check in for registered players {pu_role.mention}\n \
 React with the corresponding number to check in for a game\n\
 {relativeTimeString}\n\
 After a win, post a screenshot of the victory and type !win (only one player on the winning team must do this).\n\
-")
-        emojiList = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣']
+"
+            )
+        emojiList = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣"]
         waitSecondsAndEmoji = []
         for idx, games in enumerate(timeObjs):
             await checkinMessage.add_reaction(emojiList[idx])
             waitSecondsAndEmoji.append(
-                ((games - datetime.datetime.now()).seconds, emojiList[idx]))
+                ((games - datetime.datetime.now()).seconds, emojiList[idx])
+            )
         waitSecondsAndEmoji.sort()
 
         gamesList = []
         for idx, timeAndEmoji in enumerate(waitSecondsAndEmoji):
-            gamesList.append(self.createGames(
-                timeAndEmoji[0], timeAndEmoji[1], channel, checkinMessage.id, mode=mode))
+            gamesList.append(
+                self.createGames(
+                    timeAndEmoji[0],
+                    timeAndEmoji[1],
+                    channel,
+                    checkinMessage.id,
+                    mode=mode,
+                )
+            )
 
         await asyncio.gather(*gamesList)
 
     async def unscheduledGames(self, minutesUntil, mode=None):
         timeObjs = []
         for minutes in minutesUntil:
-            timeObjs.append(datetime.datetime.now() +
-                            datetime.timedelta(minutes=int(minutes)))
-        await self.triggerGamesAtGivenTimes(timeObjs, self.announcementChannel, mode=mode)
+            timeObjs.append(
+                datetime.datetime.now() + datetime.timedelta(minutes=int(minutes))
+            )
+        await self.triggerGamesAtGivenTimes(
+            timeObjs, self.announcementChannel, mode=mode
+        )
 
     async def createGames(self, numSeconds, emoji, channel, messageID, mode=None):
         await asyncio.sleep(numSeconds)
         message = await channel.fetch_message(messageID)
-        msg = f"Users who reacted for game {emoji}:"
         playerIDs = []
         reactionList = message.reactions
         for reaction in reactionList:
@@ -368,7 +448,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         else:
             matches = await self.matchmakeV2(playerIDs)
         leftout = (len(playerIDs)) % 10
-        await self.gameChannel.send(f"GAME {emoji}:\nEnough players signed up for {len(matches)} games! {leftout} players were left out " + (":)" if leftout == 0 else ":("))
+        await self.gameChannel.send(
+            f"GAME {emoji}:\nEnough players signed up for {len(matches)} games! {leftout} players were left out "
+            + (":)" if leftout == 0 else ":(")
+        )
         self.currentMatches.extend(matches)
         if mode == "aram":
             await self.publish_aram_matches(matches, self.gameChannel)
@@ -378,10 +461,29 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
     # Test function for MM troubleshooting
     async def mmTest(self, mode="SR"):
-        discord_id_list = [165186656863780865, 225650967058710529, 413783321844383767, 197053913269010432, 187302526935105536, 574206308803412037, 197058147167371265, 127796716408799232, 180398163620790279,
-                           225650967058710529, 618520923204485121, 160471312517562368, 188370105413926912, 694560846814117999, 266644132825530389, 132288462563966977, 355707373500760065, 259820776608235520, 182965319969669120,
-                           240994422488170496]
-        if (mode == "aram"):
+        discord_id_list = [
+            165186656863780865,
+            225650967058710529,
+            413783321844383767,
+            197053913269010432,
+            187302526935105536,
+            574206308803412037,
+            197058147167371265,
+            127796716408799232,
+            180398163620790279,
+            225650967058710529,
+            618520923204485121,
+            160471312517562368,
+            188370105413926912,
+            694560846814117999,
+            266644132825530389,
+            132288462563966977,
+            355707373500760065,
+            259820776608235520,
+            182965319969669120,
+            240994422488170496,
+        ]
+        if mode == "aram":
             matches = await self.matchmake_aram(discord_id_list)
             await self.publish_aram_matches(matches, self.testChannel)
         else:
@@ -391,12 +493,15 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         await self.update_tournament_file()
 
     async def runSQL(self, message, args):
-        if message.author.id != 225650967058710529 and message.author.id != 197058147167371265:
+        if (
+            message.author.id != 225650967058710529
+            and message.author.id != 197058147167371265
+        ):
             return  # too dangerous
         res = self.cursor.execute(" ".join(args))
         response = ""
         for line in res.fetchall():
-            response += str(line) + '\n'
+            response += str(line) + "\n"
         await message.channel.send(f"{max(res.rowcount, 0)} rows affected.")
         self.con.commit()
         if response != "":
@@ -409,18 +514,21 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         for match in self.currentMatches:
             for player in match.blueTeam.get_player_list():
                 if player.get_dID() == activePlayer:
-                    activePlayerMatches.append((match, 'BLUE'))
+                    activePlayerMatches.append((match, "BLUE"))
             for player in match.redTeam.get_player_list():
                 if player.get_dID() == activePlayer:
-                    activePlayerMatches.append((match, 'RED'))
+                    activePlayerMatches.append((match, "RED"))
 
         if len(activePlayerMatches) == 0:
             await message.channel.send("Player not found in any active matches")
         if len(activePlayerMatches) == 1:
             ratingChange = activePlayerMatches[0][0].resolve(
-                activePlayerMatches[0][1], gameID)
+                activePlayerMatches[0][1], gameID
+            )
             self.currentMatches.remove(activePlayerMatches[0][0])
-            await message.channel.send(f"🎊 WPGG, remember to upload a post-game screenshot! (+{ratingChange:.0f}LP)")
+            await message.channel.send(
+                f"🎊 WPGG, remember to upload a post-game screenshot! (+{ratingChange:.0f}LP)"
+            )
             await self.getGameDetails(message.channel)
             await activePlayerMatches[0][0].linkResult(message)
         if len(activePlayerMatches) > 1:
@@ -431,23 +539,25 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         try:
             match_id = int(match_id)
             for match in self.currentMatches:
-
-                if match_id == int(match.get_matchID()) and side == 'BLUE':
-                    correct_match.append((match, 'BLUE'))
-                elif match_id == int(match.get_matchID()) and side == 'RED':
-                    correct_match.append((match, 'RED'))
+                if match_id == int(match.get_matchID()) and side == "BLUE":
+                    correct_match.append((match, "BLUE"))
+                elif match_id == int(match.get_matchID()) and side == "RED":
+                    correct_match.append((match, "RED"))
 
             if len(correct_match) == 0:
                 await message.channel.send("Resolve Error, no match found.")
             if len(correct_match) == 1:
-                ratingChange = correct_match[0][0].resolve(
-                    correct_match[0][1], 0)
+                ratingChange = correct_match[0][0].resolve(correct_match[0][1], 0)
                 self.currentMatches.remove(correct_match[0][0])
-                await message.channel.send(f"🎊 Match *{match_id}* resolved, **{side}** side won! ({int(ratingChange)}LP)")
+                await message.channel.send(
+                    f"🎊 Match *{match_id}* resolved, **{side}** side won! ({int(ratingChange)}LP)"
+                )
                 await correct_match[0][0].linkResult(message)
             if len(correct_match) > 1:
-                await message.channel.send("Resolve Error, too many matches with this ID.")
-        except:
+                await message.channel.send(
+                    "Resolve Error, too many matches with this ID."
+                )
+        except Exception:
             await message.channel.send("Resolver Error, ID is not an number.")
 
     # Scrape rank details from op.gg page
@@ -455,17 +565,20 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         discordID = message_obj.author.id
         if await self.checkPlayerExists(discordID):
             # Player already exists
-            await message_obj.channel.send('😭 Player exists in the table, unable to register again!')
+            await message_obj.channel.send(
+                "😭 Player exists in the table, unable to register again!"
+            )
             return False
         # try:
         # assign role
         await self.applyRole(message_obj)
-        gamename, tagline = (' '.join(msg_content)).strip().replace(
-            '#', '-').split('-')
+        gamename, tagline = (" ".join(msg_content)).strip().replace("#", "-").split("-")
 
         # Add player
         if await self.addPlayer(discordID, gamename, tagline):
-            await message_obj.channel.send(f"🥳 Success {message_obj.author.mention} head over to {self.roleChannel.mention} to assign your **Primary** and **Secondary** role!")
+            await message_obj.channel.send(
+                f"🥳 Success {message_obj.author.mention} head over to {self.roleChannel.mention} to assign your **Primary** and **Secondary** role!"
+            )
             return True
         else:
             await message_obj.channel.send("Account not found! :(")
@@ -479,11 +592,13 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         discordID = message_obj.author.id
 
         if self.checkPlayerExists(discordID):
-            gamename, tagline = (' '.join(msg_content)).strip().replace(
-                '#', '-').split('-')
+            gamename, tagline = (
+                (" ".join(msg_content)).strip().replace("#", "-").split("-")
+            )
             # Player already exists, add account
             res = self.cursor.execute(
-                f"SELECT playerID from Player where discordID={discordID}")
+                f"SELECT playerID from Player where discordID={discordID}"
+            )
             fetchedPlayerID = res.fetchone()
             if await self.addAccount(fetchedPlayerID, gamename, tagline):
                 return True
@@ -496,42 +611,45 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         try:
             # Assign Headers, so scraping is not BLOCKED
             headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.5',
-                'Connection': 'keep-alive',
-                "X-Riot-Token": self.apiKey
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.5",
+                "Connection": "keep-alive",
+                "X-Riot-Token": self.apiKey,
             }
             url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{gamename}/{tagline}?api_key={self.apiKey}"
             r = requests.get(url=url, headers=headers)
             r.raise_for_status()
             data = r.json()
-            data['puuid']
+            data["puuid"]
 
-            return data['puuid']
+            return data["puuid"]
         except Exception as e:
             print(e)
             return None
 
     async def updateMainAccount(self, message):
-
         # get playerID from discordID
         res = self.cursor.execute(
-            f"SELECT playerID from Player where discordID = '{message.author.id}'")
+            f"SELECT playerID from Player where discordID = '{message.author.id}'"
+        )
         fetchedPlayerID = res.fetchone()[0]
 
         # get all accounts from playerID
         self.cursor.execute(
-            f'SELECT name FROM Account WHERE playerID = {fetchedPlayerID}')
+            f"SELECT name FROM Account WHERE playerID = {fetchedPlayerID}"
+        )
 
         # transform into list then combine with emojis in to dict
         fetchedAccountNames = [_[0] for _ in self.cursor.fetchall()]
 
         if len(fetchedAccountNames) < 2:
-            await message.channel.send("You only have one account, please add another account first!")
+            await message.channel.send(
+                "You only have one account, please add another account first!"
+            )
             return
 
-        emojiList = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣']
+        emojiList = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣"]
         emojiAccountDict = dict(zip(emojiList, fetchedAccountNames))
 
         # create pretty string for embed
@@ -540,12 +658,14 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             emojiAccountDictString += f"{idx} {emojiAccountDict[idx]}\n"
 
         # create embed
-        embed = discord.Embed(title="Select your main account",
-                              description="React with the corresponding number to set your main account",  color=0x3498db)
+        embed = discord.Embed(
+            title="Select your main account",
+            description="React with the corresponding number to set your main account",
+            color=0x3498DB,
+        )
 
         # add fields to embed
-        embed.add_field(name="Accounts",
-                        value=emojiAccountDictString, inline=True)
+        embed.add_field(name="Accounts", value=emojiAccountDictString, inline=True)
 
         # send embed and add reactions
         mainAccountMessage = await message.channel.send(embed=embed)
@@ -554,21 +674,31 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         # check for reaction
         def check(reaction, user):
-            return user == message.author and str(reaction.emoji) in emojiList and reaction.message.id == mainAccountMessage.id
+            return (
+                user == message.author
+                and str(reaction.emoji) in emojiList
+                and reaction.message.id == mainAccountMessage.id
+            )
 
         try:
-            reaction, user = await self.client.wait_for('reaction_add', timeout=60.0, check=check)
+            reaction, user = await self.client.wait_for(
+                "reaction_add", timeout=60.0, check=check
+            )
 
             # reset main account before set new main account
             self.cursor.execute(
-                f"UPDATE Account SET Main = 0 WHERE playerID = '{fetchedPlayerID}'")
+                f"UPDATE Account SET Main = 0 WHERE playerID = '{fetchedPlayerID}'"
+            )
             self.con.commit()
 
             self.cursor.execute(
-                f"UPDATE Account SET Main = 1 WHERE name = '{emojiAccountDict[reaction.emoji]}';")
+                f"UPDATE Account SET Main = 1 WHERE name = '{emojiAccountDict[reaction.emoji]}';"
+            )
             self.con.commit()
 
-            await message.channel.send(f"Main account set to {emojiAccountDict[reaction.emoji]}!")
+            await message.channel.send(
+                f"Main account set to {emojiAccountDict[reaction.emoji]}!"
+            )
             await mainAccountMessage.delete()
 
         except asyncio.TimeoutError:
@@ -577,10 +707,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
     # Check if player exists in Table DB, returns a boolean
     async def checkPlayerExists(self, discordID):
-
         # Check if the discordID already exists in DB
         res = self.cursor.execute(
-            f"SELECT COUNT(*) FROM Player WHERE discordID = '{discordID}'")
+            f"SELECT COUNT(*) FROM Player WHERE discordID = '{discordID}'"
+        )
         result = res.fetchone()
 
         if result[0] > 0:
@@ -591,7 +721,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
     # Adds player to Player & Account DB
     async def addPlayer(self, discordID, gamename, tagline):
         self.cursor.execute(
-            f"INSERT INTO Player (discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, isAdmin, missedGames, signupCount, leaderboardPoints, QP) VALUES ({discordID}, 0, 0, 1500, 'FILL', 'FILL', 0, 0, 0, 1200, 0)")
+            f"INSERT INTO Player (discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, isAdmin, missedGames, signupCount, leaderboardPoints, QP) VALUES ({discordID}, 0, 0, 1500, 'FILL', 'FILL', 0, 0, 0, 1200, 0)"
+        )
         self.con.commit()
 
         return await self.addAccount(self.cursor.lastrowid, gamename, tagline, main=1)
@@ -601,14 +732,17 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         puuid = self.getPUUID(gamename, tagline)
         if puuid is not None:
             self.cursor.execute(
-                f"INSERT INTO Account (name, opgg, playerID, puuid, main) VALUES ('{gamename}-{tagline}', 'https://www.leagueofgraphs.com/summoner/euw/{gamename}-{tagline}', {playerID}, '{puuid}', {main})")
+                f"INSERT INTO Account (name, opgg, playerID, puuid, main) VALUES ('{gamename}-{tagline}', 'https://www.leagueofgraphs.com/summoner/euw/{gamename}-{tagline}', {playerID}, '{puuid}', {main})"
+            )
             self.con.commit()
             accountID = self.cursor.lastrowid
             rankList = await ranks.getAllRanks(gamename, tagline, self.apiKey)
             for rank in rankList:
                 toInsert = (accountID,) + rank
                 self.cursor.execute(
-                    f"INSERT INTO Ranks (accountID, queue, tier, division, lp, season) VALUES (?, ?, ?, ?, ?, ?)", toInsert)
+                    "INSERT INTO Ranks (accountID, queue, tier, division, lp, season) VALUES (?, ?, ?, ?, ?, ?)",
+                    toInsert,
+                )
                 self.con.commit()
             return True
         else:
@@ -616,7 +750,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
     async def roleDist(self, message):
         res = self.cursor.execute(
-            "select count(*), primaryRole, 'primary' FROM Player GROUP BY primaryRole UNION ALL select count(*), secondaryRole, 'secondary' FROM Player GROUP BY secondaryRole").fetchall()
+            "select count(*), primaryRole, 'primary' FROM Player GROUP BY primaryRole UNION ALL select count(*), secondaryRole, 'secondary' FROM Player GROUP BY secondaryRole"
+        ).fetchall()
         resultsDict = {}
         for count, role, prio in res:
             if role not in resultsDict:
@@ -630,11 +765,11 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
     async def showBetties(self, message):
         res = self.cursor.execute(
-            f"SELECT bettingPoints FROM Player WHERE discordID = {message.author.id}").fetchone()
+            f"SELECT bettingPoints FROM Player WHERE discordID = {message.author.id}"
+        ).fetchone()
         await message.channel.send(f"You have {res[0]:.0f} betties remaining")
 
     async def displayHistory(self, player, message):
-
         result = f"Match history for {player.display_name}\n```{'ID':^5} {'DATE':^15} {'ROLE':^5} {'TEAM':^5} {'LP':^5} {'CHAMPION':^14} K/D/A\n"
         rows = self.cursor.execute(f"""
                                    SELECT   PlayerMatch.matchID, Match.matchTime, PlayerMatch.ratingChange, PlayerMatch.role,
@@ -681,41 +816,48 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 else:
                     against["losses"] += 1
 
-        for id, matchTime, change, ateam, bteam in rows[0:max(10, len(rows))]:
+        for id, matchTime, change, ateam, bteam in rows[0 : max(10, len(rows))]:
             change_str = ("+" if change > 0 else "") + f"{change:.0f}"
             team_str = "WITH" if ateam == bteam else "AGAINST"
             result += f"{id:^5} {matchTime.split()[0]:^15} {team_str.upper():^8} {change_str:^5}\n"
-        result += f"WITH ({together['wins']}W/{together['losses']}L) " + ("+" if together['change'] > 0 else "") + f"{together['change']:.0f}"\
-            + f"\tAGAINST ({against['wins']}W/{against['losses']}L) " + ("+" if against['change'] > 0 else "") + f"""{against['change']:.0f}
+        result += (
+            f"WITH ({together['wins']}W/{together['losses']}L) "
+            + ("+" if together["change"] > 0 else "")
+            + f"{together['change']:.0f}"
+            + f"\tAGAINST ({against['wins']}W/{against['losses']}L) "
+            + ("+" if against["change"] > 0 else "")
+            + f"""{against["change"]:.0f}
                     ```"""
+        )
         await message.channel.send(result)
 
     async def updatePUUIDs(self, channel):
         names = self.cursor.execute("SELECT name FROM Account").fetchall()
-        for name, in names:
+        for (name,) in names:
             try:
-                acc_name, acc_tag = name.split('-')
+                acc_name, acc_tag = name.split("-")
                 url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{acc_name}/{acc_tag}?api_key={self.apiKey}"
                 headers = {
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
                     "Accept-Language": "en-US,en;q=0.7",
                     "Accept-Charset": "application/x-www-form-urlencoded; charset=UTF-8",
-                    "Origin": "https://developer.riotgames.com"
+                    "Origin": "https://developer.riotgames.com",
                 }
                 status_code = 429
                 while status_code == 429:
                     r = requests.get(url=url, headers=headers)
                     status_code = r.status_code
                     if status_code == 429:
-                        print((r.headers['Retry-After']))
+                        print((r.headers["Retry-After"]))
                         print(r.json())
-                        await asyncio.sleep(int(r.headers['Retry-After']))
+                        await asyncio.sleep(int(r.headers["Retry-After"]))
                     else:
                         data = r.json()
                         if status_code == 200:
-                            print(data['puuid'])
+                            print(data["puuid"])
                             self.cursor.execute(
-                                f"UPDATE Account SET puuid = '{data['puuid']}' WHERE [name] = '{name}'")
+                                f"UPDATE Account SET puuid = '{data['puuid']}' WHERE [name] = '{name}'"
+                            )
                             self.con.commit()
                         else:
                             print(r.status_code)
@@ -727,8 +869,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
     async def getGameDetails(self, channel):
         games = self.cursor.execute("""SELECT Match.matchID, gameID FROM Match 
                                     LEFT OUTER JOIN MatchDetails ON Match.matchID = MatchDetails.matchID 
-                                    WHERE gameID is not null and gameID <> 0 and json is null"""
-                                    ).fetchall()
+                                    WHERE gameID is not null and gameID <> 0 and json is null""").fetchall()
         for matchID, gameID in games:
             try:
                 url = f"https://europe.api.riotgames.com/lol/match/v5/matches/EUW1_{gameID}"
@@ -737,20 +878,22 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                     "Accept-Language": "en-GB,en-US;q=0.9,en;q=0.8",
                     "Accept-Charset": "application/x-www-form-urlencoded; charset=UTF-8",
                     "Origin": "https://developer.riotgames.com",
-                    "X-Riot-Token": self.apiKey
+                    "X-Riot-Token": self.apiKey,
                 }
                 status_code = 429
                 while status_code == 429:
                     r = requests.get(url=url, headers=headers)
                     status_code = r.status_code
                     if status_code == 429:
-                        await asyncio.sleep(int(r.headers['Retry-After']))
+                        await asyncio.sleep(int(r.headers["Retry-After"]))
                     else:
                         data = r.json()
                         if status_code == 200:
                             to_insert = (matchID, json.dumps(data))
                             self.cursor.execute(
-                                "INSERT INTO MatchDetails (matchID, json) VALUES (?, ?)", to_insert)
+                                "INSERT INTO MatchDetails (matchID, json) VALUES (?, ?)",
+                                to_insert,
+                            )
                             self.con.commit()
                             await self.updatePlayerMatchDetails(channel, matchID)
                         else:
@@ -762,26 +905,38 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 await channel.send(e)
 
     async def updatePlayerMatchDetails(self, channel, matchID):
-        jsonString, = self.cursor.execute(
-            f"SELECT json FROM MatchDetails WHERE matchID = {matchID}").fetchall()[0]
+        (jsonString,) = self.cursor.execute(
+            f"SELECT json FROM MatchDetails WHERE matchID = {matchID}"
+        ).fetchall()[0]
         matchData = json.loads(jsonString)
         for participant in matchData["info"]["participants"]:
             result = self.cursor.execute(
                 f"""SELECT playerMatchID, Account.playerID FROM Account 
                 JOIN PlayerMatch ON Account.playerID = PlayerMatch.playerID and PlayerMatch.matchID = {matchID} 
-                WHERE puuid = '{participant['puuid']}'""").fetchall()
+                WHERE puuid = '{participant["puuid"]}'"""
+            ).fetchall()
             if len(result) < 1:
                 await channel.send(
-                    f"Player '{participant['summonerName']}' not found in player list of match: {matchID}")
+                    f"Player '{participant['summonerName']}' not found in player list of match: {matchID}"
+                )
             else:
                 to_insert = (result[0][0], json.dumps(participant))
                 self.cursor.execute(
-                    "INSERT INTO PlayerMatchDetails (playerMatchID, json) VALUES (?, ?)", to_insert)
+                    "INSERT INTO PlayerMatchDetails (playerMatchID, json) VALUES (?, ?)",
+                    to_insert,
+                )
                 self.con.commit()
-                to_insert = (participant["championName"], participant["kills"],
-                             participant["deaths"], participant["assists"], result[0][0])
+                to_insert = (
+                    participant["championName"],
+                    participant["kills"],
+                    participant["deaths"],
+                    participant["assists"],
+                    result[0][0],
+                )
                 self.cursor.execute(
-                    "UPDATE PlayerMatch SET champion = ?, kills = ?, deaths = ?, assists = ? WHERE playerMatchID = ?", to_insert)
+                    "UPDATE PlayerMatch SET champion = ?, kills = ?, deaths = ?, assists = ? WHERE playerMatchID = ?",
+                    to_insert,
+                )
                 self.con.commit()
 
     async def showProfile(self, player, message, season):
@@ -801,11 +956,33 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                                   ORDER BY Games DESC, winCount DESC
                                   LIMIT 20
                                   """).fetchall()
-        output = t2a(header=["Champion", "Kills", "Deaths", "Assists", "KDA", "Games", "W/L", "Win Rate"],
-                     body=[[x[0], x[1], x[2], x[3], f"{(x[1] + x[3]) / (x[2] if x[2] != 0 else 1):.2f}", x[4],
-                            f"{x[5]}/{x[6]}", f"{x[5] / (x[4]) * 100:.0f}%"] for x in res],
-                     style=PresetStyle.thin_compact,
-                     first_col_heading=True)
+        output = t2a(
+            header=[
+                "Champion",
+                "Kills",
+                "Deaths",
+                "Assists",
+                "KDA",
+                "Games",
+                "W/L",
+                "Win Rate",
+            ],
+            body=[
+                [
+                    x[0],
+                    x[1],
+                    x[2],
+                    x[3],
+                    f"{(x[1] + x[3]) / (x[2] if x[2] != 0 else 1):.2f}",
+                    x[4],
+                    f"{x[5]}/{x[6]}",
+                    f"{x[5] / (x[4]) * 100:.0f}%",
+                ]
+                for x in res
+            ],
+            style=PresetStyle.thin_compact,
+            first_col_heading=True,
+        )
         await message.channel.send(f"```\n{output}\n```")
 
     async def updateAPIKey(self, message, key):
@@ -814,65 +991,80 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
     # Update roles of player
     async def updatePlayerRole(self, discordID, roleType, position):
-
         # Fetch Player's Username
         user_name = await self.client.fetch_user(discordID)
         # Check if player exists in DB
         doesPlayerExist = await self.checkPlayerExists(discordID)
-        if (doesPlayerExist):
+        if doesPlayerExist:
             # Update role in DB
 
             # Primary Role
-            if (roleType == 1):
-
+            if roleType == 1:
                 # Check if duplicate position
                 canChangeRole = self.checkDupPos(discordID, roleType, position)
                 if canChangeRole:
                     self.cursor.execute(
-                        f"UPDATE Player SET primaryRole = '{position}' WHERE discordID = {discordID}")
+                        f"UPDATE Player SET primaryRole = '{position}' WHERE discordID = {discordID}"
+                    )
                     self.con.commit()
-                    await self.testChannel.send(f"✨ {user_name.name} has changed their PRIMARY role to {position}")
+                    await self.testChannel.send(
+                        f"✨ {user_name.name} has changed their PRIMARY role to {position}"
+                    )
                 else:
                     self.cursor.execute(
-                        f"UPDATE Player SET primaryRole = '{position}', secondaryRole = 'FILL' WHERE discordID = {discordID}")
+                        f"UPDATE Player SET primaryRole = '{position}', secondaryRole = 'FILL' WHERE discordID = {discordID}"
+                    )
                     self.con.commit()
-                    await self.testChannel.send(f"✨ {user_name.name}'s SECONDARY role is already set to {position}, setting SECONDARY to FILL")
+                    await self.testChannel.send(
+                        f"✨ {user_name.name}'s SECONDARY role is already set to {position}, setting SECONDARY to FILL"
+                    )
 
             # Secondary Role
             else:
-
                 # Check if duplicate position
                 canChangeRole = self.checkDupPos(discordID, roleType, position)
                 if canChangeRole:
                     self.cursor.execute(
-                        f"UPDATE Player SET secondaryRole = '{position}' WHERE discordID = {discordID}")
+                        f"UPDATE Player SET secondaryRole = '{position}' WHERE discordID = {discordID}"
+                    )
                     self.con.commit()
-                    await self.testChannel.send(f"✨ {user_name.name} has changed their SECONDARY role to {position}")
+                    await self.testChannel.send(
+                        f"✨ {user_name.name} has changed their SECONDARY role to {position}"
+                    )
                 else:
                     self.cursor.execute(
-                        f"UPDATE Player SET secondaryRole = '{position}', primaryRole = 'FILL' WHERE discordID = {discordID}")
+                        f"UPDATE Player SET secondaryRole = '{position}', primaryRole = 'FILL' WHERE discordID = {discordID}"
+                    )
                     self.con.commit()
-                    await self.testChannel.send(f"✨ {user_name.name}'s PRIMARY role is already set to {position}, setting PRIMARY to FILL")
+                    await self.testChannel.send(
+                        f"✨ {user_name.name}'s PRIMARY role is already set to {position}, setting PRIMARY to FILL"
+                    )
 
     async def roles(self, message):
-        roleMsg = await message.author.send("Choose your primary role:\n🥶 - TOP\n✨ - JG\n😎  - MID\n😭 - AD\n🤡  - SUP\n🤔  - FILL\n\nyou can change your role in the future, use !roles again.")
+        roleMsg = await message.author.send(
+            "Choose your primary role:\n🥶 - TOP\n✨ - JG\n😎  - MID\n😭 - AD\n🤡  - SUP\n🤔  - FILL\n\nyou can change your role in the future, use !roles again."
+        )
         roleMapping = {
-            '🥶': 'TOP',
-            '✨': 'JNG',
-            '😎': 'MID',
-            '😭': 'ADC',
-            '🤡': 'SUP',
-            '🤔': 'FILL'
+            "🥶": "TOP",
+            "✨": "JNG",
+            "😎": "MID",
+            "😭": "ADC",
+            "🤡": "SUP",
+            "🤔": "FILL",
         }
         for react in roleMapping:
             await roleMsg.add_reaction(react)
 
         def check(reaction, user):
-            return (reaction.message.id == roleMsg.id and user == message.author and reaction.emoji in roleMapping)
+            return (
+                reaction.message.id == roleMsg.id
+                and user == message.author
+                and reaction.emoji in roleMapping
+            )
 
-        primaryRole, user = await self.client.wait_for('reaction_add', check=check)
+        primaryRole, user = await self.client.wait_for("reaction_add", check=check)
         await message.author.send("Now choose secondary role")
-        secondaryRole, _ = await self.client.wait_for('reaction_add', check=check)
+        secondaryRole, _ = await self.client.wait_for("reaction_add", check=check)
 
         await self.updatePlayerRole(user.id, 1, roleMapping[primaryRole.emoji])
         await self.updatePlayerRole(user.id, 2, roleMapping[secondaryRole.emoji])
@@ -885,7 +1077,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         secondary_role_message = self.secondaryRoleMSG
 
         # Select PRIMARY ROLE
-        if reaction.channel_id == self.roleChannel.id and str(reaction.message_id) == primary_role_message:
+        if (
+            reaction.channel_id == self.roleChannel.id
+            and str(reaction.message_id) == primary_role_message
+        ):
             # Jungle Selected
             if str(reaction.emoji) == "✨":
                 await self.updatePlayerRole(reaction.user_id, 1, "JNG")
@@ -906,7 +1101,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 await self.updatePlayerRole(reaction.user_id, 1, "FILL")
 
         # Select SECONDARY ROLE
-        if reaction.channel_id == self.roleChannel.id and str(reaction.message_id) == secondary_role_message:
+        if (
+            reaction.channel_id == self.roleChannel.id
+            and str(reaction.message_id) == secondary_role_message
+        ):
             # Jungle Selected
             if str(reaction.emoji) == "✨":
                 await self.updatePlayerRole(reaction.user_id, 2, "JNG")
@@ -928,11 +1126,11 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
     # Check if position is aleady set in other role
     def checkDupPos(self, discordID, newRoleType, position):
-
         # Get position in other roleType
         if newRoleType == 1:
             res = self.cursor.execute(
-                f"SELECT secondaryRole FROM Player WHERE discordID = {discordID}")
+                f"SELECT secondaryRole FROM Player WHERE discordID = {discordID}"
+            )
             currentPosition = res.fetchone()
             if currentPosition[0] != position:
                 return True
@@ -941,7 +1139,8 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         elif newRoleType == 2:
             res = self.cursor.execute(
-                f"SELECT primaryRole FROM Player WHERE discordID = {discordID}")
+                f"SELECT primaryRole FROM Player WHERE discordID = {discordID}"
+            )
             currentPosition = res.fetchone()
             if currentPosition[0] != position:
                 return True
@@ -952,44 +1151,56 @@ After a win, post a screenshot of the victory and type !win (only one player on 
     async def displayRank(self, message_obj):
         discordID = message_obj.author.id
         res = self.cursor.execute(
-            f"SELECT leaderboardPoints, winCount, lossCount FROM Player WHERE discordID = {discordID}")
+            f"SELECT leaderboardPoints, winCount, lossCount FROM Player WHERE discordID = {discordID}"
+        )
         mmr = res.fetchone()
         res = self.cursor.execute(
-            "SELECT discordID FROM Player WHERE winCount > 0 OR lossCount > 0 ORDER BY leaderboardPoints DESC")
+            "SELECT discordID FROM Player WHERE winCount > 0 OR lossCount > 0 ORDER BY leaderboardPoints DESC"
+        )
         output = res.fetchall()
         test = []
         for rank in output:
             test.append(rank[0])
-        await message_obj.channel.send(f"*Current Rank* **#{test.index(discordID) + 1}**\t{message_obj.author.mention}\t{round(mmr[0])}**LP**\t({round(mmr[1])}**W**/{round(mmr[2])}**L**)")
+        await message_obj.channel.send(
+            f"*Current Rank* **#{test.index(discordID) + 1}**\t{message_obj.author.mention}\t{round(mmr[0])}**LP**\t({round(mmr[1])}**W**/{round(mmr[2])}**L**)"
+        )
 
     # Method to display Leaderboard
-    async def displayLeaderboard(self, channelToSendIn, pageNum=0, message=None, mode="SR"):
+    async def displayLeaderboard(
+        self, channelToSendIn, pageNum=0, message=None, mode="SR"
+    ):
         fieldPrefix = ""
         if mode == "aram":
             fieldPrefix = "aram_"
         res = self.cursor.execute(
-            f"SELECT discordID, {fieldPrefix}winCount, {fieldPrefix}lossCount, {fieldPrefix}leaderboardPoints, ROW_NUMBER() OVER (ORDER BY {fieldPrefix}leaderboardPoints DESC), primaryRole, secondaryRole, playerID FROM Player WHERE {fieldPrefix}winCount > 0 OR {fieldPrefix}lossCount > 0 ORDER BY {fieldPrefix}leaderboardPoints DESC")
+            f"SELECT discordID, {fieldPrefix}winCount, {fieldPrefix}lossCount, {fieldPrefix}leaderboardPoints, ROW_NUMBER() OVER (ORDER BY {fieldPrefix}leaderboardPoints DESC), primaryRole, secondaryRole, playerID FROM Player WHERE {fieldPrefix}winCount > 0 OR {fieldPrefix}lossCount > 0 ORDER BY {fieldPrefix}leaderboardPoints DESC"
+        )
         output = res.fetchall()
         all_players = []
-        pageNum = min(pageNum, len(output)//20)
+        pageNum = min(pageNum, len(output) // 20)
         pageNum = max(pageNum, 0)
-        toPosition = min((pageNum+1)*20, len(output))
-        fromPosition = pageNum*20
+        toPosition = min((pageNum + 1) * 20, len(output))
+        fromPosition = pageNum * 20
 
         for player in output[fromPosition:toPosition:]:
             recentGames = self.cursor.execute(
-                f"SELECT ratingChange FROM PlayerMatch join Match on Match.matchID = PlayerMatch.matchID WHERE playerID = {player[7]} and mode = '{mode.upper()}' ORDER BY PlayerMatchID desc LIMIT 3").fetchall()
+                f"SELECT ratingChange FROM PlayerMatch join Match on Match.matchID = PlayerMatch.matchID WHERE playerID = {player[7]} and mode = '{mode.upper()}' ORDER BY PlayerMatchID desc LIMIT 3"
+            ).fetchall()
             hotstreak = ""
             if len(recentGames) >= 3:
                 hotstreak = "🔥"
-                for game, in recentGames:
+                for (game,) in recentGames:
                     if game <= 0:
                         hotstreak = ""
             if player[0] not in self.playerIDNameMapping:
                 try:
-                    discord_name = (await self.client.guilds[0].get_member(player[0])).display_name
-                except:
-                    discord_name = (await self.client.fetch_user(player[0])).display_name
+                    discord_name = (
+                        await self.client.guilds[0].get_member(player[0])
+                    ).display_name
+                except Exception:
+                    discord_name = (
+                        await self.client.fetch_user(player[0])
+                    ).display_name
                 self.playerIDNameMapping[player[0]] = discord_name
             else:
                 discord_name = self.playerIDNameMapping[player[0]]
@@ -1003,51 +1214,69 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             leaderboardPoints = leaderboardPoints.ljust(7)
             pRole = player[5]
             sRole = player[6]
-            all_players.append([pos, id, leaderboardPoints,
-                               f"{hotstreak}{winloss}", pRole, sRole])
-        if message == None:
-            output = t2a(header=["Rank", "Name", "LP", "W/L", "Primary", "Secondary"],
-                         body=all_players,
-                         first_col_heading=True)
-            message = await channelToSendIn.send(f"**__{fieldPrefix.upper()}Leaderboard__**```{output}```")
-            await message.add_reaction('⬅')
-            await message.add_reaction('➡')
+            all_players.append(
+                [pos, id, leaderboardPoints, f"{hotstreak}{winloss}", pRole, sRole]
+            )
+        if message is None:
+            output = t2a(
+                header=["Rank", "Name", "LP", "W/L", "Primary", "Secondary"],
+                body=all_players,
+                first_col_heading=True,
+            )
+            message = await channelToSendIn.send(
+                f"**__{fieldPrefix.upper()}Leaderboard__**```{output}```"
+            )
+            await message.add_reaction("⬅")
+            await message.add_reaction("➡")
         else:
-            output = t2a(header=["Rank", "Name", "LP", "W/L", "Primary", "Secondary"],
-                         body=all_players,
-                         first_col_heading=True)
-            message = await message.edit(content=f"**__{fieldPrefix.upper()}Leaderboard__**```{output}```")
+            output = t2a(
+                header=["Rank", "Name", "LP", "W/L", "Primary", "Secondary"],
+                body=all_players,
+                first_col_heading=True,
+            )
+            message = await message.edit(
+                content=f"**__{fieldPrefix.upper()}Leaderboard__**```{output}```"
+            )
 
         def check(reaction, user):
-            return reaction.message.id == message.id and reaction.emoji in ['⬅', '➡']
+            return reaction.message.id == message.id and reaction.emoji in ["⬅", "➡"]
 
         try:
-            emoji, user = await self.client.wait_for('reaction_add', check=check, timeout=300)
+            emoji, user = await self.client.wait_for(
+                "reaction_add", check=check, timeout=300
+            )
             await emoji.remove(user)
         except asyncio.TimeoutError:
             await message.clear_reactions()
             return
 
-        if emoji.emoji == '⬅':
-            await self.displayLeaderboard(channelToSendIn, pageNum=pageNum-1, message=message, mode=mode)
-        elif emoji.emoji == '➡':
-            await self.displayLeaderboard(channelToSendIn, pageNum=pageNum+1, message=message, mode=mode)
+        if emoji.emoji == "⬅":
+            await self.displayLeaderboard(
+                channelToSendIn, pageNum=pageNum - 1, message=message, mode=mode
+            )
+        elif emoji.emoji == "➡":
+            await self.displayLeaderboard(
+                channelToSendIn, pageNum=pageNum + 1, message=message, mode=mode
+            )
 
     async def displayBettyBoard(self, channelToSendIn, pageNum=0, message=None):
         res = self.cursor.execute(
-            "SELECT discordID, bettingPoints, ROW_NUMBER() OVER (ORDER BY bettingPoints DESC) FROM Player WHERE bettingPoints <> 2000.0 ORDER BY bettingPoints DESC")
+            "SELECT discordID, bettingPoints, ROW_NUMBER() OVER (ORDER BY bettingPoints DESC) FROM Player WHERE bettingPoints <> 2000.0 ORDER BY bettingPoints DESC"
+        )
         output = res.fetchall()
         all_players = ""
-        pageNum = min(pageNum, len(output)//20)
+        pageNum = min(pageNum, len(output) // 20)
         pageNum = max(pageNum, 0)
-        toPosition = min((pageNum+1)*20, len(output))
-        fromPosition = pageNum*20
+        toPosition = min((pageNum + 1) * 20, len(output))
+        fromPosition = pageNum * 20
 
         for player in output[fromPosition:toPosition:]:
             if player[0] not in self.playerIDNameMapping:
                 try:
-                    discord_name = (await self.client.fetch_user(player[0])).display_name
-                except:
+                    discord_name = (
+                        await self.client.fetch_user(player[0])
+                    ).display_name
+                except Exception:
                     discord_name = player[0]
                 self.playerIDNameMapping[player[0]] = discord_name
             else:
@@ -1061,28 +1290,35 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
             all_players += f"{pos}{id}{bettingPoints}\n"
 
-        now = date.today()
-        if message == None:
-            message = await channelToSendIn.send(f"**__Bettyboard__**```{all_players}```")
-            await message.add_reaction('⬅')
-            await message.add_reaction('➡')
+        if message is None:
+            message = await channelToSendIn.send(
+                f"**__Bettyboard__**```{all_players}```"
+            )
+            await message.add_reaction("⬅")
+            await message.add_reaction("➡")
         else:
             await message.edit(content=f"**__Bettyboard__**```{all_players}```")
 
         def check(reaction, user):
-            return reaction.message.id == message.id and reaction.emoji in ['⬅', '➡']
+            return reaction.message.id == message.id and reaction.emoji in ["⬅", "➡"]
 
         try:
-            emoji, user = await self.client.wait_for('reaction_add', check=check, timeout=300)
+            emoji, user = await self.client.wait_for(
+                "reaction_add", check=check, timeout=300
+            )
             await emoji.remove(user)
         except asyncio.TimeoutError:
             await message.clear_reactions()
             return
 
-        if emoji.emoji == '⬅':
-            await self.displayBettyBoard(channelToSendIn, pageNum=pageNum-1, message=message)
-        elif emoji.emoji == '➡':
-            await self.displayBettyBoard(channelToSendIn, pageNum=pageNum+1, message=message)
+        if emoji.emoji == "⬅":
+            await self.displayBettyBoard(
+                channelToSendIn, pageNum=pageNum - 1, message=message
+            )
+        elif emoji.emoji == "➡":
+            await self.displayBettyBoard(
+                channelToSendIn, pageNum=pageNum + 1, message=message
+            )
 
     # Method to End a Current Match if not started or void
     async def endMatch(self, message_obj, matchID):
@@ -1099,27 +1335,29 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                         # Pop match off list
                         self.currentMatches.remove(match)
                         await message_obj.channel.send(f"🗑️ Match ({match_id}) Removed")
-                except:
+                except Exception:
                     pass
 
     # Method to punish a player -> reducing LP and QP
     async def punishPlayer(self, message_obj, discordID):
-
         # Check if admin
         admin_check = await self.checkAdmin(message_obj.author.id)
         if admin_check:
             discordID = discordID.replace("<@", "")
             discordID = discordID.replace(">", "")
             res = self.cursor.execute(
-                f"SELECT leaderboardPoints, signupCount, discordID FROM Player WHERE discordID = {discordID}")
+                f"SELECT leaderboardPoints, signupCount, discordID FROM Player WHERE discordID = {discordID}"
+            )
             result = res.fetchone()
             new_mmr = result[0] - 50
-            add_signupCount = result[1] + 3
             user = await self.client.fetch_user(discordID)
             self.cursor.execute(
-                f"UPDATE Player SET leaderboardPoints = {new_mmr}, QP = QP - 2 WHERE discordID = {discordID}")
+                f"UPDATE Player SET leaderboardPoints = {new_mmr}, QP = QP - 2 WHERE discordID = {discordID}"
+            )
             self.con.commit()
-            await message_obj.channel.send(f"🔨 {user.mention} has been given a penalty of -50**LP** and added to **Low Priority Queue**")
+            await message_obj.channel.send(
+                f"🔨 {user.mention} has been given a penalty of -50**LP** and added to **Low Priority Queue**"
+            )
 
     # Method to swap two players on the same team
     async def swapPlayers(self, message_obj, discordIDOtherPlayer):
@@ -1132,19 +1370,23 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 check=lambda y, x: y.message.channel.id == message_obj.channel.id
                 and str(x.id) == str(discordIDPlayer)
                 and y.emoji == "✨",
-                timeout=60.0,)
+                timeout=60.0,
+            )
 
             if str(reaction.emoji) == "✨":
                 for match in self.currentMatches:
                     try:
-                        await match.swapPlayers(discordIDPlayer, discordIDOtherPlayer, message_obj)
-                    except:
+                        await match.swapPlayers(
+                            discordIDPlayer, discordIDOtherPlayer, message_obj
+                        )
+                    except Exception:
                         pass
         except asyncio.TimeoutError:
-            await message_obj.channel.send(f"Swap timed out {message_obj.author.mention}")
+            await message_obj.channel.send(
+                f"Swap timed out {message_obj.author.mention}"
+            )
 
     async def replacePlayer(self, msg_obj, discordIDOrigin, discordIDReplacement):
-
         # Check called by (isAdmin)
         user_id = msg_obj.author.id
         admin_check = await self.checkAdmin(user_id)
@@ -1157,11 +1399,18 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             # Check for players in every match -> if found, replace player
             for match in self.currentMatches:
                 try:
-                    player_found = await match.replacePlayer(discordIDOrigin, discordIDReplacement, self.gameChannel, self.client)
+                    player_found = await match.replacePlayer(
+                        discordIDOrigin,
+                        discordIDReplacement,
+                        self.gameChannel,
+                        self.client,
+                    )
                     # Display match in unique msg
                     if player_found:
                         red_oplink, blue_oplink = match.getOPGGLink()
-                        await self.embedOPGGLink(red_oplink, blue_oplink, self.gameChannel)
+                        await self.embedOPGGLink(
+                            red_oplink, blue_oplink, self.gameChannel
+                        )
                         await msg_obj.channel.send("✌️Replacement Successful")
                 except Exception as e:
                     print(e)
@@ -1172,9 +1421,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
     # Check if discordID is Admin
     async def checkAdmin(self, discordID):
         res = self.cursor.execute(
-            f"SELECT isAdmin FROM Player WHERE discordID = {discordID}")
+            f"SELECT isAdmin FROM Player WHERE discordID = {discordID}"
+        )
         result = res.fetchone()
-        if (result[0] == 1):
+        if result[0] == 1:
             return True
         else:
             return False
@@ -1194,14 +1444,16 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             playerIDList.remove(self.client.user.id)
         # WHERE discordID in ({seq})".format(seq=','.join(['?']*len(playerIDList))))
         res = self.cursor.execute(
-            "SELECT playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGames, signupCount, leaderboardPoints, aram_internalRating, aram_leaderboardPoints, aram_winCount, aram_lossCount FROM Player")
+            "SELECT playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGames, signupCount, leaderboardPoints, aram_internalRating, aram_leaderboardPoints, aram_winCount, aram_lossCount FROM Player"
+        )
         listOfPlayers = res.fetchall()
         shorterlist = []
         for player in listOfPlayers:
             if player[1] in playerIDList:
                 shorterlist.append(player)
                 self.cursor.execute(
-                    f"UPDATE Player SET bettingPoints = bettingPoints + 100, pointsFromSignup = pointsFromSignup + 100 WHERE discordID = {player[1]}")
+                    f"UPDATE Player SET bettingPoints = bettingPoints + 100, pointsFromSignup = pointsFromSignup + 100 WHERE discordID = {player[1]}"
+                )
         listOfPlayers = shorterlist
         print("Shorter List Compiled:" + str(len(shorterlist)))
         try:
@@ -1209,32 +1461,67 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                                     VALUES ('{mmTime}', {len(listOfPlayers)})""")
             self.con.commit()
             gametimeID = self.cursor.lastrowid
-            for playerID, _, _, _, internalRating, pRole, sRole, _, _, _, _, _, _, _, _, _ in listOfPlayers:
+            for (
+                playerID,
+                _,
+                _,
+                _,
+                internalRating,
+                pRole,
+                sRole,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+                _,
+            ) in listOfPlayers:
                 self.cursor.execute(f"""INSERT INTO PlayerGametime (playerID, primaryRole, secondaryRole, GametimeID, rating)
                                     VALUES ({playerID}, '{pRole}', '{sRole}', {gametimeID}, {internalRating})""")
             self.con.commit()
-        except:
+        except Exception:
             pass
         playerObjList = []
         for player_details in listOfPlayers:
             discordUser = None
             try:
-                discordUser = self.client.guilds[0].get_member(
-                    player_details[1])
+                discordUser = self.client.guilds[0].get_member(player_details[1])
                 if discordUser is None:
                     discordUser = await self.client.fetch_user(player_details[1])
             except Exception as e:
                 print(e)
                 discordUser = await self.client.fetch_user(player_details[1])
-            player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
-                            player_details[9], player_details[10], player_details[11], player_details[12], player_details[13], player_details[14], player_details[15], self.cursor, self.con, discordUser)
+            player = Player(
+                player_details[0],
+                player_details[1],
+                player_details[2],
+                player_details[3],
+                player_details[4],
+                player_details[5],
+                player_details[6],
+                player_details[7],
+                player_details[8],
+                player_details[9],
+                player_details[10],
+                player_details[11],
+                player_details[12],
+                player_details[13],
+                player_details[14],
+                player_details[15],
+                self.cursor,
+                self.con,
+                discordUser,
+            )
             player.updateMMR()
             # Add player to list
             playerObjList.append(player)
 
         players_in_queue = len(playerObjList)
 
-        # Number of macthes to create
+        # Number of matches to create
         match_count = players_in_queue // 10
 
         if match_count < 1:
@@ -1242,18 +1529,13 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
         team_count = match_count * 2
 
-        # Number of players required
-        required_players = match_count * 10
-
-        # up to here was your code @cail
-        # Static players in queue list duplicate
-        init_player_list = playerObjList
-
         # step 1
         def getRatioOfMissedGames(player):
             if player.get_signUpCount() == 0:
                 return 1
-            return (player.get_missedGameCount()/player.get_signUpCount()) + player.get_QP()
+            return (
+                player.get_missedGameCount() / player.get_signUpCount()
+            ) + player.get_QP()
 
         # /step 1
         playerObjList.sort(key=getRatioOfMissedGames, reverse=True)
@@ -1263,17 +1545,19 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             player.addSignUpCount()
 
         # step 2
-        playersInRoles = {'TOP': [], 'JNG': [],
-                          'MID': [], 'ADC': [], 'SUP': []}
+        playersInRoles = {"TOP": [], "JNG": [], "MID": [], "ADC": [], "SUP": []}
         usedPlayers = []
         for player in playerObjList:
             if player.get_pRole() in playersInRoles:
-                if (len(playersInRoles[player.get_pRole().upper()]) < team_count) and player.get_QP() >= 0:
+                if (
+                    len(playersInRoles[player.get_pRole().upper()]) < team_count
+                ) and player.get_QP() >= 0:
                     playersInRoles[player.get_pRole()].append(player)
                     usedPlayers.append(player)
         # this is just remaining players now
         playerObjList = [
-            player for player in playerObjList if player not in usedPlayers]
+            player for player in playerObjList if player not in usedPlayers
+        ]
 
         # Now put in the FILL primaries
         # Find them
@@ -1283,12 +1567,15 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 fillPlayers.append(player)
         # this is just remaining non fill primary players now
         playerObjList = [
-            player for player in playerObjList if player not in fillPlayers]
+            player for player in playerObjList if player not in fillPlayers
+        ]
 
         # place them into teams
         fillIndex = 0
         for key in playersInRoles:
-            while len(playersInRoles[key]) < team_count and fillIndex < len(fillPlayers):
+            while len(playersInRoles[key]) < team_count and fillIndex < len(
+                fillPlayers
+            ):
                 playersInRoles[key].append(fillPlayers[fillIndex])
                 fillIndex += 1
 
@@ -1299,9 +1586,15 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             idx = 0
             # print(getRatioOfMissedGames(fillPlayers[fillIndex]))
 
-            while fillIndex < len(fillPlayers) and idx < len(playersInRoles[key]) and getRatioOfMissedGames(playersInRoles[key][idx]) < getRatioOfMissedGames(fillPlayers[fillIndex]):
+            while (
+                fillIndex < len(fillPlayers)
+                and idx < len(playersInRoles[key])
+                and getRatioOfMissedGames(playersInRoles[key][idx])
+                < getRatioOfMissedGames(fillPlayers[fillIndex])
+            ):
                 print(
-                    f"replaced {playersInRoles[key][idx]} with {fillPlayers[fillIndex]}")
+                    f"replaced {playersInRoles[key][idx]} with {fillPlayers[fillIndex]}"
+                )
                 playerObjList.append(playersInRoles[key][idx])
                 playersInRoles[key][idx] = fillPlayers[fillIndex]
                 fillIndex += 1
@@ -1311,7 +1604,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         while fillIndex < len(fillPlayers):
             fillPlayers[fillIndex].addGameMissed()
             fillPlayers[fillIndex].addGameMissed()
-            fillPlayers[fillIndex].set_QP(fillPlayers[fillIndex].get_QP()+1)
+            fillPlayers[fillIndex].set_QP(fillPlayers[fillIndex].get_QP() + 1)
             fillIndex += 1
 
         # step 3
@@ -1326,7 +1619,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             # print(getRatioOfMissedGames(player))
             player.addGameMissed()
             player.addGameMissed()
-            player.set_QP(player.get_QP()+1)
+            player.set_QP(player.get_QP() + 1)
             # print(player)
         playerObjList = playerObjList[:remainingPlayersNeeded]
         # /step 4
@@ -1341,12 +1634,15 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                     usedPlayers.append(player)
         # this is just remaining players now
         playerObjList = [
-            player for player in playerObjList if player not in usedPlayers]
+            player for player in playerObjList if player not in usedPlayers
+        ]
 
         # next we just put everyone else into any role, these are fill players or players who are being autofilled
         remainingPlayerIndex = 0
         for key in playersInRoles:
-            while len(playersInRoles[key]) < team_count and remainingPlayerIndex < len(playerObjList):
+            while len(playersInRoles[key]) < team_count and remainingPlayerIndex < len(
+                playerObjList
+            ):
                 playersInRoles[key].append(playerObjList[remainingPlayerIndex])
                 playerObjList[remainingPlayerIndex].addGameMissed()
                 remainingPlayerIndex += 1
@@ -1380,7 +1676,7 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         # if abs(teamList[idx][1] - teamList[idx+1][1]) > maxDiffBetweenTeams:
         # maxDiffBetweenTeams = abs(teamList[idx][1] - teamList[idx+1][1])
         # idx += 2
-#
+        #
         # print("beep boop" + str(maxDiffBetweenTeams))225650967058710529
         # if maxDiffBetweenTeams < bestMaxMMRdiff:
         # print("here" + str(maxDiffBetweenTeams))
@@ -1398,28 +1694,37 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         for x in range(team_count**5):
             teamList = []
             for y in range(team_count):
-                top = playersInRoles["TOP"][(
-                    ((x//team_count**4) % team_count)+y) % team_count]
-                jng = playersInRoles["JNG"][(
-                    ((x//team_count**3) % team_count)+y) % team_count]
-                mid = playersInRoles["MID"][(
-                    ((x//team_count**2) % team_count)+y) % team_count]
-                adc = playersInRoles["ADC"][(
-                    ((x//team_count**1) % team_count)+y) % team_count]
-                sup = playersInRoles["SUP"][(
-                    ((x//team_count**0) % team_count)+y) % team_count]
+                top = playersInRoles["TOP"][
+                    (((x // team_count**4) % team_count) + y) % team_count
+                ]
+                jng = playersInRoles["JNG"][
+                    (((x // team_count**3) % team_count) + y) % team_count
+                ]
+                mid = playersInRoles["MID"][
+                    (((x // team_count**2) % team_count) + y) % team_count
+                ]
+                adc = playersInRoles["ADC"][
+                    (((x // team_count**1) % team_count) + y) % team_count
+                ]
+                sup = playersInRoles["SUP"][
+                    (((x // team_count**0) % team_count) + y) % team_count
+                ]
 
-                team = ((top, "TOP"), (jng, "JNG"),
-                        (mid, "MID"), (adc, "ADC"), (sup, "SUP"))
-                avgMMR = self.getTotalMMR(team)/5
+                team = (
+                    (top, "TOP"),
+                    (jng, "JNG"),
+                    (mid, "MID"),
+                    (adc, "ADC"),
+                    (sup, "SUP"),
+                )
+                avgMMR = self.getTotalMMR(team) / 5
                 teamList.append((team, avgMMR))
 
             idx = 0
             maxDiffBetweenTeams = 0
-            while idx+1 < len(teamList):
-                if abs(teamList[idx][1] - teamList[idx+1][1]) > maxDiffBetweenTeams:
-                    maxDiffBetweenTeams = abs(
-                        teamList[idx][1] - teamList[idx+1][1])
+            while idx + 1 < len(teamList):
+                if abs(teamList[idx][1] - teamList[idx + 1][1]) > maxDiffBetweenTeams:
+                    maxDiffBetweenTeams = abs(teamList[idx][1] - teamList[idx + 1][1])
                 idx += 2
 
             # print("beep boop" + str(maxDiffBetweenTeams))
@@ -1427,19 +1732,40 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 bestMaxMMRdiff = maxDiffBetweenTeams
                 bestMatches = []
                 idx = 0
-                while idx+1 < len(teamList):
-                    blueTeam = Team(teamList[idx][0][0][0], teamList[idx][0][1][0],
-                                    teamList[idx][0][2][0], teamList[idx][0][3][0], teamList[idx][0][4][0])
-                    redTeam = Team(teamList[idx+1][0][0][0], teamList[idx+1][0][1][0], teamList[idx+1]
-                                   [0][2][0], teamList[idx+1][0][3][0], teamList[idx+1][0][4][0])
-                    bestMatches.append(Match(self.cursor, self.con, self.client, matchID=None,
-                                       blueTeam=blueTeam, redTeam=redTeam, startTime=mmTime))
+                while idx + 1 < len(teamList):
+                    blueTeam = Team(
+                        teamList[idx][0][0][0],
+                        teamList[idx][0][1][0],
+                        teamList[idx][0][2][0],
+                        teamList[idx][0][3][0],
+                        teamList[idx][0][4][0],
+                    )
+                    redTeam = Team(
+                        teamList[idx + 1][0][0][0],
+                        teamList[idx + 1][0][1][0],
+                        teamList[idx + 1][0][2][0],
+                        teamList[idx + 1][0][3][0],
+                        teamList[idx + 1][0][4][0],
+                    )
+                    bestMatches.append(
+                        Match(
+                            self.cursor,
+                            self.con,
+                            self.client,
+                            matchID=None,
+                            blueTeam=blueTeam,
+                            redTeam=redTeam,
+                            startTime=mmTime,
+                        )
+                    )
                     idx += 2
         print(
-            f"After comparing {team_count**5} possibities across {(team_count**5)*team_count} teams, lowest max mmr diff found was {bestMaxMMRdiff}")
+            f"After comparing {team_count**5} possibities across {(team_count**5) * team_count} teams, lowest max mmr diff found was {bestMaxMMRdiff}"
+        )
         for match in bestMatches:
             self.cursor.execute(
-                f"INSERT INTO Match (matchTime, mode, season) VALUES ('{match.startTime}', 'SR', 2)")
+                f"INSERT INTO Match (matchTime, mode, season) VALUES ('{match.startTime}', 'SR', 2)"
+            )
             self.con.commit()
             match.matchID = self.cursor.lastrowid
             try:
@@ -1460,9 +1786,10 @@ After a win, post a screenshot of the victory and type !win (only one player on 
 
     async def updatePlayerMMRs(self, msg, full=False):
         pIDs = self.cursor.execute("SELECT playerID FROM Player").fetchall()
-        for p, in pIDs:
+        for (p,) in pIDs:
             puuids = self.cursor.execute(
-                f"SELECT puuid, accountID FROM Account WHERE playerID = {p}").fetchall()
+                f"SELECT puuid, accountID FROM Account WHERE playerID = {p}"
+            ).fetchall()
             for puuid, accountID in puuids:
                 try:
                     url = f"https://europe.api.riotgames.com/riot/account/v1/accounts/by-puuid/{puuid}?api_key={self.apiKey}"
@@ -1470,41 +1797,51 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
                         "Accept-Language": "en-US,en;q=0.7",
                         "Accept-Charset": "application/x-www-form-urlencoded; charset=UTF-8",
-                        "Origin": "https://developer.riotgames.com"
+                        "Origin": "https://developer.riotgames.com",
                     }
                     status_code = 429
                     while status_code == 429:
                         r = requests.get(url=url, headers=headers)
                         status_code = r.status_code
                         if status_code == 429:
-                            await asyncio.sleep(int(r.headers['Retry-After']))
+                            await asyncio.sleep(int(r.headers["Retry-After"]))
                         else:
                             if status_code == 200:
                                 data = r.json()
-                                gameName = data['gameName']
-                                gameTag = data['tagLine']
+                                gameName = data["gameName"]
+                                gameTag = data["tagLine"]
                                 summoner_name = "-".join([gameName, gameTag])
                                 log = f"https://www.leagueofgraphs.com/summoner/euw/{summoner_name}"
                                 self.cursor.execute(
-                                    f"UPDATE Account SET name = ?, opgg = ? WHERE [puuid] = '{puuid}'", (summoner_name, log))
+                                    f"UPDATE Account SET name = ?, opgg = ? WHERE [puuid] = '{puuid}'",
+                                    (summoner_name, log),
+                                )
                                 self.con.commit()
                                 if full:
                                     currentRanks = await ranks.getAllRanks(
-                                        gameName, gameTag, self.apiKey)
+                                        gameName, gameTag, self.apiKey
+                                    )
                                     if currentRanks is None:
-                                        await msg.channel.send("Found no ranks for player: " + str(gameName))
+                                        await msg.channel.send(
+                                            "Found no ranks for player: "
+                                            + str(gameName)
+                                        )
                                 else:
                                     currentRanks = ranks.getCurrentRank(
-                                        gameName, gameTag, self.apiKey)
+                                        gameName, gameTag, self.apiKey
+                                    )
                                 for rank in currentRanks:
                                     toInsert = (accountID,) + rank
                                     self.cursor.execute(
-                                        f"INSERT OR IGNORE INTO Ranks (accountID, queue, tier, division, lp, season) VALUES (?, ?, ?, ?, ?, ?)", toInsert)
+                                        "INSERT OR IGNORE INTO Ranks (accountID, queue, tier, division, lp, season) VALUES (?, ?, ?, ?, ?, ?)",
+                                        toInsert,
+                                    )
                                     self.con.commit()
-                                    toInsert = rank[1:4] + \
-                                        (accountID, rank[0], rank[4])
+                                    toInsert = rank[1:4] + (accountID, rank[0], rank[4])
                                     self.cursor.execute(
-                                        f"UPDATE Ranks SET tier = ?, division = ?, lp = ? WHERE accountID = ? AND queue = ? AND season = ?", toInsert)
+                                        "UPDATE Ranks SET tier = ?, division = ?, lp = ? WHERE accountID = ? AND queue = ? AND season = ?",
+                                        toInsert,
+                                    )
                                     self.con.commit()
                                 print("rank updated for " + str(gameName))
                 except Exception as e:
@@ -1515,14 +1852,16 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             playerIDList.remove(self.client.user.id)
         # WHERE discordID in ({seq})".format(seq=','.join(['?']*len(playerIDList))))
         res = self.cursor.execute(
-            "SELECT playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGames, signupCount, leaderboardPoints, aram_internalRating, aram_leaderboardPoints, aram_winCount, aram_lossCount FROM Player")
+            "SELECT playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGames, signupCount, leaderboardPoints, aram_internalRating, aram_leaderboardPoints, aram_winCount, aram_lossCount FROM Player"
+        )
         listOfPlayers = res.fetchall()
         shorterlist = []
         for player in listOfPlayers:
             if player[1] in playerIDList:
                 shorterlist.append(player)
                 self.cursor.execute(
-                    f"UPDATE Player SET bettingPoints = bettingPoints + 100, pointsFromSignup = pointsFromSignup + 100 WHERE discordID = {player[1]}")
+                    f"UPDATE Player SET bettingPoints = bettingPoints + 100, pointsFromSignup = pointsFromSignup + 100 WHERE discordID = {player[1]}"
+                )
         listOfPlayers = shorterlist
         print("Shorter List Compiled:" + str(len(shorterlist)))
         playerObjList = []
@@ -1530,10 +1869,29 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             discordUser = None
             try:
                 discordUser = await self.client.fetch_user(player_details[1])
-            except:
+            except Exception:
                 discordUser = None
-            player = Player(player_details[0], player_details[1], player_details[2], player_details[3], player_details[4], player_details[5], player_details[6], player_details[7], player_details[8],
-                            player_details[9], player_details[10], player_details[11], player_details[12], player_details[13], player_details[14], player_details[15], self.cursor, self.con, discordUser)
+            player = Player(
+                player_details[0],
+                player_details[1],
+                player_details[2],
+                player_details[3],
+                player_details[4],
+                player_details[5],
+                player_details[6],
+                player_details[7],
+                player_details[8],
+                player_details[9],
+                player_details[10],
+                player_details[11],
+                player_details[12],
+                player_details[13],
+                player_details[14],
+                player_details[15],
+                self.cursor,
+                self.con,
+                discordUser,
+            )
             player.updateMMR(mode="ARAM")
             # Add player to list
             player.addSignUpCount()
@@ -1548,15 +1906,15 @@ After a win, post a screenshot of the victory and type !win (only one player on 
         if match_count < 1:
             return []
 
-        team_count = match_count * 2
-
         # Number of players required
         required_players = match_count * 10
 
         def getRatioOfMissedGames(player):
             if player.get_signUpCount() == 0:
                 return 1
-            return (player.get_missedGameCount()/player.get_signUpCount()) + player.get_QP()
+            return (
+                player.get_missedGameCount() / player.get_signUpCount()
+            ) + player.get_QP()
 
         playerObjList.sort(key=getRatioOfMissedGames, reverse=True)
         for player in playerObjList:
@@ -1578,10 +1936,9 @@ After a win, post a screenshot of the victory and type !win (only one player on 
             random.shuffle(playersInGames)
             maxDiffBetweenTeams = 0
             for y in range(match_count):
-                offset = y*10
-                blueTeam = aramMatch.ARAM_Team(playersInGames[offset:offset+5])
-                redTeam = aramMatch.ARAM_Team(
-                    playersInGames[offset+5:offset+10])
+                offset = y * 10
+                blueTeam = aramMatch.ARAM_Team(playersInGames[offset : offset + 5])
+                redTeam = aramMatch.ARAM_Team(playersInGames[offset + 5 : offset + 10])
                 mmrdiff = abs(redTeam.get_avg_MMR() - blueTeam.get_avg_MMR())
                 if mmrdiff > maxDiffBetweenTeams:
                     maxDiffBetweenTeams = mmrdiff
@@ -1590,17 +1947,27 @@ After a win, post a screenshot of the victory and type !win (only one player on 
                 bestMaxMMRdiff = maxDiffBetweenTeams
                 bestMatches = []
                 for y in range(match_count):
-                    offset = y*10
-                    blueTeam = aramMatch.ARAM_Team(
-                        playersInGames[offset:offset+5])
+                    offset = y * 10
+                    blueTeam = aramMatch.ARAM_Team(playersInGames[offset : offset + 5])
                     redTeam = aramMatch.ARAM_Team(
-                        playersInGames[offset+5:offset+10])
-                    bestMatches.append(aramMatch.ARAM_Match(self.cursor, self.con, self.client, matchID=None,
-                                                            blueTeam=blueTeam, redTeam=redTeam, startTime=str(datetime.datetime.now())))
+                        playersInGames[offset + 5 : offset + 10]
+                    )
+                    bestMatches.append(
+                        aramMatch.ARAM_Match(
+                            self.cursor,
+                            self.con,
+                            self.client,
+                            matchID=None,
+                            blueTeam=blueTeam,
+                            redTeam=redTeam,
+                            startTime=str(datetime.datetime.now()),
+                        )
+                    )
 
         for match in bestMatches:
             self.cursor.execute(
-                f"INSERT INTO Match (matchTime, mode, season) VALUES ('{match.startTime}', 'ARAM', 2)")
+                f"INSERT INTO Match (matchTime, mode, season) VALUES ('{match.startTime}', 'ARAM', 2)"
+            )
             self.con.commit()
             match.matchID = self.cursor.lastrowid
 
@@ -1612,13 +1979,15 @@ After a win, post a screenshot of the victory and type !win (only one player on 
     async def update_discord_names(self, message):
         # for every player in the player table, fetch their discord id, and then get their discord name using the discord py api
         res = self.cursor.execute("SELECT discordID FROM Player").fetchall()
-        for discordID, in res:
+        for (discordID,) in res:
             try:
                 user = await self.client.fetch_user(discordID)
                 await asyncio.sleep(0.5)
                 if user:
                     self.cursor.execute(
-                        "UPDATE Player SET discord_name = ? WHERE discordID = ?", (user.name, discordID))
+                        "UPDATE Player SET discord_name = ? WHERE discordID = ?",
+                        (user.name, discordID),
+                    )
                     self.con.commit()
             except Exception as e:
                 print(f"Failed to update name for {discordID}: {e}")

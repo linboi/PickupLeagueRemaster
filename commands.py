@@ -29,7 +29,7 @@ class commands:
             await message.channel.send("Queue is enabled")
 
     async def signup(message, inst, args):
-        if (message.channel == inst.getSignupChannel()):
+        if message.channel == inst.getSignupChannel():
             try:
                 signUpSuccess = await inst.signUpPlayer(args, message)
             except Exception as e:
@@ -37,7 +37,7 @@ class commands:
                 signUpSuccess = False
             finally:
                 # Give access to '#select-roles' channel
-                if (signUpSuccess is False):
+                if signUpSuccess is False:
                     await message.channel.send("Failed 😔 please try again!")
                 await inst.applyRole(message)
 
@@ -90,7 +90,6 @@ class commands:
         await inst.endMatch(message, args[0])
 
     async def runSQL(message, inst, args):
-        user_id = message.author.id
         await inst.runSQL(message, args)
 
     # Punsih player
@@ -115,8 +114,10 @@ class commands:
     async def win(message, inst, args):
         try:
             gameID = int(args[0])
-        except:
-            await message.channel.send("Please include the gameID found at the top of the match summary screen.\nIf this is unavailable for some reason, use 0.")
+        except Exception:
+            await message.channel.send(
+                "Please include the gameID found at the top of the match summary screen.\nIf this is unavailable for some reason, use 0."
+            )
         else:
             await inst.win(message, gameID)
 
@@ -153,19 +154,23 @@ class commands:
             return
         id_list = []
         for arg in args:
-            arg_int = re.sub(r'[a-z<>@]', '', arg)
+            arg_int = re.sub(r"[a-z<>@]", "", arg)
             arg_int = arg_int.strip()
-            if arg_int != '':
+            if arg_int != "":
                 id_list.append(arg_int)
         idint_list = [int(i) for i in id_list]
         if len(idint_list) == 10:
             try:
                 await inst.createCustomMatch(idint_list)
                 await message.channel.send("✅ Match Created")
-            except:
-                await message.channel.send("Match Creation Error, please make all players are valid discord @'s.")
+            except Exception:
+                await message.channel.send(
+                    "Match Creation Error, please make all players are valid discord @'s."
+                )
         else:
-            await message.channel.send(f"You need **10** players, you had *{len(idint_list)}*.")
+            await message.channel.send(
+                f"You need **10** players, you had *{len(idint_list)}*."
+            )
 
     async def help(message, inst, args):
         txt = "```List of commands:\n"
@@ -220,7 +225,9 @@ class commands:
         if len(message.mentions) > 0:
             await inst.displayHistoryWith(message.mentions[0], message)
         else:
-            await message.channel.send("Please choose a player to check your history with")
+            await message.channel.send(
+                "Please choose a player to check your history with"
+            )
 
     async def profile(message, inst, args):
         season = 0
@@ -263,49 +270,49 @@ class commands:
         await inst.setNicknames()
 
     userCommands = {
-        'hello': hello,
-        'queue': queue,
-        'dequeue': dequeue,
-        'signup': signup,
-        'add-acc': addAccount,
-        'player': player,
-        'unscheduledgame': unscheduledGame,
-        'rank': rank,
-        'leaderboard': leaderboard,
-        'lb': leaderboard,
-        'bettyboard': bettyboard,
-        'bb': bettyboard,
-        'end-match': endmatch,
-        'punish': punish,
-        'swap': swap,
-        'win': win,
-        'admin': isAdmin,
-        'replace': replace,
-        'roles': roles,
-        'help': help,
-        'resolve-match': adminWin,
-        'queue-switch': switchQueueState,
-        'matchmaketest': matchmakingtest,
-        'custom-match': customMatch,
-        'set-match': setMatch,
-        'test': testTag,
-        'runsql': runSQL,
-        'update': update,
-        'fetch-db': rasp_upload,
-        'git-pull': rasp_update,
-        'restart-pi': rasp_reboot,
-        'history': history,
-        'history-with': history_with,
-        'update-puuids': updatePUUIDs,
-        'get-game-details': getGameDetails,
-        'update-player-match-details': updatePlayerMatchDetails,
-        'profile': profile,
-        'update-api-key': updateAPIKey,
-        'mainaccount': mainAccount,
-        'role-distribution': roleDist,
-        'betties': betties,
-        'update-discord-names': updateDiscordNames,
-        'set-nicknames': setNicknames
+        "hello": hello,
+        "queue": queue,
+        "dequeue": dequeue,
+        "signup": signup,
+        "add-acc": addAccount,
+        "player": player,
+        "unscheduledgame": unscheduledGame,
+        "rank": rank,
+        "leaderboard": leaderboard,
+        "lb": leaderboard,
+        "bettyboard": bettyboard,
+        "bb": bettyboard,
+        "end-match": endmatch,
+        "punish": punish,
+        "swap": swap,
+        "win": win,
+        "admin": isAdmin,
+        "replace": replace,
+        "roles": roles,
+        "help": help,
+        "resolve-match": adminWin,
+        "queue-switch": switchQueueState,
+        "matchmaketest": matchmakingtest,
+        "custom-match": customMatch,
+        "set-match": setMatch,
+        "test": testTag,
+        "runsql": runSQL,
+        "update": update,
+        "fetch-db": rasp_upload,
+        "git-pull": rasp_update,
+        "restart-pi": rasp_reboot,
+        "history": history,
+        "history-with": history_with,
+        "update-puuids": updatePUUIDs,
+        "get-game-details": getGameDetails,
+        "update-player-match-details": updatePlayerMatchDetails,
+        "profile": profile,
+        "update-api-key": updateAPIKey,
+        "mainaccount": mainAccount,
+        "role-distribution": roleDist,
+        "betties": betties,
+        "update-discord-names": updateDiscordNames,
+        "set-nicknames": setNicknames,
     }
 
     async def parseReaction(reaction, inst):
@@ -314,7 +321,9 @@ class commands:
 
     async def parse(message, inst):
         client = inst.client
-        if message.author == client.user or not message.content.startswith(commands.COMMAND_SYMBOL):
+        if message.author == client.user or not message.content.startswith(
+            commands.COMMAND_SYMBOL
+        ):
             return
         text = message.content.split(" ")
         command = (text[0][1:]).lower()
@@ -322,4 +331,6 @@ class commands:
         try:
             await commands.userCommands[command](message, inst, args)
         except KeyError:
-            await message.channel.send("Command not recognised.\nUse !help to see a list of commands")
+            await message.channel.send(
+                "Command not recognised.\nUse !help to see a list of commands"
+            )

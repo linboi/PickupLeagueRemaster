@@ -2,15 +2,16 @@ import subprocess
 
 
 class rasp:
-
     def restart_pi():
         # restart pi
-        process = subprocess.Popen(
-            ["sudo", "reboot"], stdout=subprocess.PIPE)
+        subprocess.Popen(["sudo", "reboot"], stdout=subprocess.PIPE)
 
     def update_pi():
         # update bot version
         process = subprocess.Popen(
-            ["git", "pull", "origin", "release"], stdout=subprocess.PIPE, universal_newlines=True)
+            ["git", "pull", "origin", "release"],
+            stdout=subprocess.PIPE,
+            universal_newlines=True,
+        )
         output = process.communicate()[0]
         return output

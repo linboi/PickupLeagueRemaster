@@ -2,8 +2,28 @@ import ranks
 
 
 class Player:
-    def __init__(self, playerID, discordID, winCount, lossCount, internalRating, primaryRole, secondaryRole, QP, isAdmin, missedGameCount, signUpCount, LP, ARAM_rating, ARAM_LP, ARAM_wins, ARAM_losses, cursor, con, discordUser):
-
+    def __init__(
+        self,
+        playerID,
+        discordID,
+        winCount,
+        lossCount,
+        internalRating,
+        primaryRole,
+        secondaryRole,
+        QP,
+        isAdmin,
+        missedGameCount,
+        signUpCount,
+        LP,
+        ARAM_rating,
+        ARAM_LP,
+        ARAM_wins,
+        ARAM_losses,
+        cursor,
+        con,
+        discordUser,
+    ):
         self.playerID = playerID
         self.discordID = discordID
         self.winCount = winCount
@@ -109,7 +129,7 @@ class Player:
         else:
             try:
                 self.username = self.getHighestAccountName()
-            except:
+            except Exception:
                 self.username = self.discordID
 
     def set_role(self, role):
@@ -118,11 +138,11 @@ class Player:
         # Set RoleMMR based on assigned role
         if role.lower() == self.primaryRole.lower():
             self.setRoleMMR(0)
-        elif self.primaryRole == 'FILL':
+        elif self.primaryRole == "FILL":
             self.setRoleMMR(0)
         elif role.lower() == self.secondaryRole.lower():
             self.setRoleMMR(1)
-        elif self.secondaryRole == 'FILL':
+        elif self.secondaryRole == "FILL":
             self.setRoleMMR(1)
         else:
             self.setRoleMMR(2)
@@ -156,7 +176,8 @@ class Player:
         self.cursor.execute(
             f"""UPDATE Player SET winCount = {self.winCount}, lossCount = {self.lossCount}, internalRating = {self.internalRating}, QP = {self.QP}, isAdmin = {self.isAdmin}, 
             missedGames = {self.missedGameCount}, signupCount = {self.signUpCount}, leaderboardPoints = {self.LP}, aram_internalRating = {self.ARAM_rating},
-            aram_winCount = {self.ARAM_wins}, aram_lossCount = {self.ARAM_losses}, aram_leaderboardPoints = {self.ARAM_LP}  WHERE playerID = {self.playerID}""")
+            aram_winCount = {self.ARAM_wins}, aram_lossCount = {self.ARAM_losses}, aram_leaderboardPoints = {self.ARAM_LP}  WHERE playerID = {self.playerID}"""
+        )
         self.con.commit()
 
     def set_QP(self, QP):
@@ -175,9 +196,9 @@ class Player:
     def getMMRinRole(self, role=None):
         if role is None:
             role = self.get_role()
-        if self.get_pRole() == role or self.get_pRole() == 'FILL':
+        if self.get_pRole() == role or self.get_pRole() == "FILL":
             return self.internalRating
-        elif self.get_sRole() == role or self.get_sRole() == 'FILL':
+        elif self.get_sRole() == role or self.get_sRole() == "FILL":
             return self.internalRating - 200
         else:
             return self.internalRating - 300
@@ -199,14 +220,16 @@ class Player:
 
     def getHighestAccountName(self):
         res = self.con.execute(
-            f"SELECT name, accountID FROM Account WHERE playerID = {self.playerID}").fetchall()
+            f"SELECT name, accountID FROM Account WHERE playerID = {self.playerID}"
+        ).fetchall()
         highestRating = 0
-        nameOfHighest = ''
+        nameOfHighest = ""
         for name, accountID in res:
             rankList = self.con.execute(
                 f"""SELECT tier, division, lp, offset FROM Ranks 
                 JOIN Offset ON Ranks.season = offset.season and ranks.queue = offset.queue 
-                WHERE accountID = {accountID}""").fetchall()
+                WHERE accountID = {accountID}"""
+            ).fetchall()
             if len(rankList) > 0:
                 highestAccountMMR = ranks.getHighestMMR(rankList)
                 if highestAccountMMR > highestRating:
@@ -216,14 +239,16 @@ class Player:
 
     def fetchPlayerAccounts(self):
         res = self.cursor.execute(
-            f"SELECT * FROM Account WHERE playerID = {self.playerID}")
+            f"SELECT * FROM Account WHERE playerID = {self.playerID}"
+        )
         result = res.fetchall()
         self.playerAccounts = result
 
     # Fetch player details from DB, and updates player obj
     def fetchPlayerDB(self):
         res = self.cursor.execute(
-            f"SELECT * FROM Player WHERE discordID = {self.discordID}")
+            f"SELECT * FROM Player WHERE discordID = {self.discordID}"
+        )
         result = res.fetchone()
         self.winCount = result[2]
         self.lossCount = result[3]
@@ -239,18 +264,19 @@ class Player:
                 JOIN Account ON Account.accountID = Ranks.accountID
                 JOIN Offset ON Ranks.season = offset.season and ranks.queue = offset.queue 
                 WHERE Account.playerID = {self.playerID};""").fetchall()
-        if (len(res) == 0):
+        if len(res) == 0:
             print("no rank found for player " + str(self.get_username()))
             maxMMR = 1500
         else:
             maxMMR = ranks.getHighestMMR(res)
 
         ratings = self.cursor.execute(
-            f"SELECT ratingChange FROM PlayerMatch JOIN Match ON Match.matchID = PlayerMatch.matchID WHERE playerID = {self.playerID} AND mode = '{mode}' AND season = 2").fetchall()
+            f"SELECT ratingChange FROM PlayerMatch JOIN Match ON Match.matchID = PlayerMatch.matchID WHERE playerID = {self.playerID} AND mode = '{mode}' AND season = 2"
+        ).fetchall()
         totalRatingChange = 0
-        for rating, in ratings:
+        for (rating,) in ratings:
             totalRatingChange += rating
         if mode == "ARAM":
-            self.ARAM_rating = maxMMR/2 + totalRatingChange
+            self.ARAM_rating = maxMMR / 2 + totalRatingChange
         else:
             self.internalRating = maxMMR + totalRatingChange
